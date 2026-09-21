@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -20,9 +21,17 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use CentralConnection, HasApiTokens, HasFactory, HasRoles, Notifiable;
 
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class)->withTimestamps();
+    }
+
+    public function acessaTenant(string $tenantId): bool
+    {
+        return $this->tenants()->whereKey($tenantId)->exists();
+    }
+
     /**
-     * Get the attributes that should be cast.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
