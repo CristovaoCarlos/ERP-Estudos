@@ -1,50 +1,47 @@
-import { useQuery } from '@tanstack/react-query'
-import { LogOut, Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
-import { useLogout, useUsuario } from '@/lib/auth'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useUsuario } from '@/lib/auth'
+import { menu } from '@/lib/navegacao'
+import { nomeDaPrefeitura, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 
 export default function Inicio() {
-  const { resolvedTheme, setTheme } = useTheme()
   const usuario = useUsuario()
-  const logout = useLogout()
-  const tenant = useQuery({
-    queryKey: ['tenant'],
-    queryFn: async () => (await api.get<{ id: string }>('/tenant')).data,
-  })
+  const prefeitura = usePrefeitura(subdominioDaPrefeitura())
+  const modulos = menu.filter((modulo) => modulo.url !== '/')
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 p-8">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">STM</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{usuario.data?.name}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Alternar tema"
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Olá, {usuario.data?.name.split(' ')[0]}
+        </h1>
+        <p className="text-muted-foreground">
+          {prefeitura.data && nomeDaPrefeitura(prefeitura.data.id)} · Sistema de Tributação
+          Municipal
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {modulos.map((modulo) => (
+          <Link
+            key={modulo.url}
+            to={modulo.paginas?.[0]?.url ?? modulo.url}
+            className="rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            {resolvedTheme === 'dark' ? <Sun /> : <Moon />}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => logout.mutate()}
-            disabled={logout.isPending}
-          >
-            <LogOut />
-            Sair
-          </Button>
-        </div>
-      </header>
-      <p className="text-muted-foreground">Sistema de Tributação Municipal</p>
-      <p className="font-mono text-sm">
-        Tenant:{' '}
-        {tenant.isPending ? 'carregando…' : tenant.isError ? 'indisponível' : tenant.data.id}
-      </p>
-    </main>
+            <Card className="h-full transition-colors hover:bg-accent">
+              <CardHeader>
+                <modulo.icone className="text-muted-foreground" />
+                <CardTitle>{modulo.titulo}</CardTitle>
+                <CardDescription>
+                  {modulo.paginas
+                    ? modulo.paginas.map((pagina) => pagina.titulo).join(' · ')
+                    : 'Abrir módulo'}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
   )
 }

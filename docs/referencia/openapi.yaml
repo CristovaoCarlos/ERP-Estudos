@@ -81,7 +81,7 @@ paths:
                     type: string
                     examples: [lemarq]
         '404':
-          description: Domínio não pertence a nenhuma prefeitura
+          $ref: '#/components/responses/PrefeituraNaoEncontrada'
   /api/login:
     post:
       tags: [Autenticação]
@@ -174,7 +174,7 @@ components:
   schemas:
     Usuario:
       type: object
-      required: [id, name, email]
+      required: [id, name, email, prefeituras]
       properties:
         id:
           type: integer
@@ -186,15 +186,19 @@ components:
           type: string
           format: email
           examples: [admin@stm.localhost]
-        email_verified_at:
-          type: [string, 'null']
-          format: date-time
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+        prefeituras:
+          type: array
+          description: Prefeituras a que o usuário tem acesso, para o seletor de prefeitura.
+          items:
+            type: object
+            required: [id, dominio]
+            properties:
+              id:
+                type: string
+                examples: [lemarq]
+              dominio:
+                type: [string, 'null']
+                examples: [lemarq.localhost]
     ErroDeValidacao:
       type: object
       required: [message, errors]
@@ -214,6 +218,14 @@ components:
         message:
           type: string
   responses:
+    PrefeituraNaoEncontrada:
+      description: O domínio não pertence a nenhuma prefeitura
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Mensagem'
+          example:
+            message: Prefeitura não encontrada.
     NaoAutenticado:
       description: Token ausente, inválido ou revogado
       content:

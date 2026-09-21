@@ -4,10 +4,16 @@ import { useNavigate } from 'react-router-dom'
 
 import { api, getToken, setToken } from '@/lib/api'
 
+export type PrefeituraDoUsuario = {
+  id: string
+  dominio: string | null
+}
+
 export type Usuario = {
   id: number
   name: string
   email: string
+  prefeituras: PrefeituraDoUsuario[]
 }
 
 export type Credenciais = {

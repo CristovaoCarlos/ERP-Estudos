@@ -17,7 +17,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `GET` | `/api/status` | central | — | Nome da aplicação e status |
 | `GET` | `/api/tenant` | prefeitura | — | Id da prefeitura atual |
 | `POST` | `/api/login` | prefeitura | — | Entrar; devolve token e usuário |
-| `GET` | `/api/me` | prefeitura | token + vínculo | Usuário atual |
+| `GET` | `/api/me` | prefeitura | token + vínculo | Usuário atual, com as prefeituras a que tem acesso |
 | `POST` | `/api/logout` | prefeitura | token + vínculo | Revoga o token atual |
 
 ## Códigos de resposta
@@ -28,7 +28,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `204` | Sucesso sem corpo (logout) |
 | `401` | Token ausente, inválido ou revogado |
 | `403` | Usuário autenticado sem vínculo com a prefeitura |
-| `404` | Domínio não pertence a nenhuma prefeitura, ou rota inexistente |
+| `404` | Domínio não pertence a nenhuma prefeitura (`{"message": "Prefeitura não encontrada."}`), ou rota inexistente |
 | `422` | Dados inválidos ou credenciais erradas |
 | `429` | Mais de 5 tentativas de login por minuto (mesmo e-mail + IP) |
 

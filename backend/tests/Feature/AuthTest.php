@@ -34,7 +34,7 @@ class AuthTest extends TestCase
 
     private function criarUsuario(Tenant ...$tenants): User
     {
-        $user = User::factory()->create(['email' => 'fiscal@stm.localhost', 'password' => 'senha-correta']);
+        $user = User::factory()->create(['name' => 'Teste', 'email' => 'fiscal@stm.localhost', 'password' => 'senha-correta']);
         $user->tenants()->attach(array_map(fn (Tenant $t) => $t->id, $tenants));
 
         return $user;
@@ -61,6 +61,27 @@ class AuthTest extends TestCase
         $this->withToken($token)->getJson('http://lemarq.localhost/api/me')
             ->assertOk()
             ->assertJsonPath('email', 'fiscal@stm.localhost');
+    }
+
+    public function test_me_lista_as_prefeituras_do_usuario_com_dominio(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'), $this->criarTenant('outra'));
+        $this->criarTenant('sem_vinculo');
+
+        $token = $this->login('lemarq')
+            ->assertJsonPath('usuario.prefeituras.0.id', 'lemarq')
+            ->json('token');
+
+        $this->withToken($token)->getJson('http://lemarq.localhost/api/me')
+            ->assertExactJson([
+                'id' => 1,
+                'name' => 'Teste',
+                'email' => 'fiscal@stm.localhost',
+                'prefeituras' => [
+                    ['id' => 'lemarq', 'dominio' => 'lemarq.localhost'],
+                    ['id' => 'outra', 'dominio' => 'outra.localhost'],
+                ],
+            ]);
     }
 
     public function test_senha_errada_e_recusada(): void
@@ -107,6 +128,13 @@ class AuthTest extends TestCase
         $this->criarTenant('lemarq');
 
         $this->getJson('http://lemarq.localhost/api/me')->assertUnauthorized();
+    }
+
+    public function test_prefeitura_inexistente_responde_404(): void
+    {
+        $this->getJson('http://nao-existe.localhost/api/tenant')
+            ->assertNotFound()
+            ->assertExactJson(['message' => 'Prefeitura não encontrada.']);
     }
 
     public function test_login_e_limitado_apos_cinco_tentativas(): void

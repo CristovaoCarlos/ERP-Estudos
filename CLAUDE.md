@@ -41,6 +41,10 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 
 - Nomes de domínio em português (`Relatorios`, `usuarios:criar`, `acessaTenant`); termos do framework em inglês.
 - Componentes de UI: shadcn/ui sobre `radix-ui` em `src/components/ui` (skill `shadcn` em `.claude/skills/`). O projeto usa **Radix**; não migre para Base UI sem pedido explícito.
+- `npx shadcn@latest add ...` (rode no contêiner node, com `HOME=/tmp`) gera imports `from "cn"` e instala o pacote `cn`. O projeto usa `cn` de `@/lib/utils`: depois de todo `add`, troque os imports e rode `npm uninstall cn`. Use `--overwrite` se o CLI perguntar sobre arquivo existente (sem TTY ele aborta).
+- Layout do sistema: modelo `sidebar-07` (`src/components/AppLayout.tsx`). Módulos e telas ficam **só** em `src/lib/navegacao.ts`, que alimenta menu, rotas e breadcrumb. Tela nova: adicione ali e troque `EmConstrucao` pela página real em `App.tsx`.
+- Sem prefeitura no endereço (domínio central ou prefeitura inexistente) o frontend mostra a landing page (`src/pages/Landing.tsx`).
+- Testes de menus Radix (`DropdownMenu`): abra pelo teclado (`gatilho.focus()` + `{Enter}`), como no helper `abrirMenu` de `src/App.test.tsx`. Clique via `user-event` abre e fecha o menu no jsdom quando outro teste renderizou o login antes.
 - Gráficos: SVG próprio em `src/components/graficos/`, sem biblioteca de charts.
 - HTML do editor rico deve passar por `mews/purifier` antes de ser salvo (o token fica no `localStorage`).
 - Commits: Conventional Commits em português (`feat(auth): ...`). Só commite quando pedido.

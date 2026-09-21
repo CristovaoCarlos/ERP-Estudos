@@ -60,6 +60,7 @@ O `phpunit.xml` define `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:`, `CACHE_S
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
 | `VITE_BACKEND_URL` | `http://localhost:8000` | Destino do proxy de `/api` no `npm run dev`. Lida pelo `vite.config.ts`. |
+| `VITE_CENTRAL_DOMAIN` | `localhost` | Domínio central do frontend. Endereços `<prefeitura>.<VITE_CENTRAL_DOMAIN>` abrem o sistema da prefeitura; qualquer outro abre a landing page. Em produção, o domínio principal (ex.: `stm.gov.br`). |
 
 ## Docker Compose
 

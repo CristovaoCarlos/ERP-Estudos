@@ -22,4 +22,13 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Código gerado pelo CLI do shadcn: exporta variantes junto com o componente e o
+    // skeleton do sidebar sorteia a largura com Math.random.
+    files: ['src/components/ui/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/purity': 'off',
+    },
+  },
 ])

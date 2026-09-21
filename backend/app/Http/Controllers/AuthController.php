@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UsuarioResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,12 +29,12 @@ class AuthController extends Controller
 
         $token = $user->createToken('web:'.tenant('id'))->plainTextToken;
 
-        return response()->json(['token' => $token, 'usuario' => $user]);
+        return response()->json(['token' => $token, 'usuario' => new UsuarioResource($user)]);
     }
 
-    public function me(Request $request): User
+    public function me(Request $request): UsuarioResource
     {
-        return $request->user();
+        return new UsuarioResource($request->user());
     }
 
     public function logout(Request $request): Response
