@@ -41,7 +41,7 @@ services:
     image: mariadb:11
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
-      MARIADB_DATABASE: ${DB_DATABASE:-stm}
+      MARIADB_DATABASE: ${DB_DATABASE:-stm_central}
     ports:
       - "127.0.0.1:33061:3306"
     volumes:
