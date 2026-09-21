@@ -1,29 +1,27 @@
 # STM — Sistema de Tributação Municipal
 
-Monorepo: `backend/` (Laravel 13, API only, multi-tenant por subdomínio) + `frontend/` (React 19 + Vite).
+Sistema multi-prefeitura: cada prefeitura acessa pelo seu subdomínio e tem banco de dados próprio. Monorepo com `backend/` (Laravel 13, API) e `frontend/` (React 19 + Vite).
 
-## Desenvolvimento
+## Início rápido
 
 ```bash
 cp backend/.env.example backend/.env
-docker compose up -d --build
+HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose up -d --build
+docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 
-# criar um tenant (o banco é provisionado pelo worker)
-docker compose exec app php artisan tinker --execute \
-  'App\Models\Tenant::create(["id" => "lemarq"])->domains()->create(["domain" => "lemarq.localhost"]);'
-
-cd frontend && npm ci && npm run dev   # http://lemarq.localhost:5173
+cd frontend && npm ci && npm run dev
 ```
 
+Passo a passo completo, com criação de prefeitura e usuário: **[Primeiros passos](docs/tutoriais/primeiros-passos.md)**.
+
 | Serviço | Endereço |
-| ------- | -------- |
+| --- | --- |
+| Frontend (fora do Docker) | http://&lt;prefeitura&gt;.localhost:5173 |
 | API (nginx) | http://localhost:8000 |
 | MariaDB | 127.0.0.1:33061 (root / secret) |
 | Mailpit | http://localhost:8025 |
-
-O frontend roda fora do Docker; o Vite faz proxy de `/api` para o backend preservando o header `Host`, que identifica o tenant.
 
 ## Qualidade
 
@@ -34,3 +32,11 @@ docker compose exec app php artisan test
 cd frontend
 npm run typecheck && npm run lint && npm run format:check && npm test
 ```
+
+## Documentação
+
+Toda a documentação está em **[docs/](docs/README.md)**:
+
+- [Tutorial](docs/tutoriais/primeiros-passos.md) · [Guias](docs/README.md) · [Referência da API](docs/referencia/api.md) · [Configuração](docs/referencia/configuracao.md)
+- [Arquitetura (arc42)](docs/arquitetura/arc42.md) · [Decisões (ADRs)](docs/adr/README.md)
+- [Como contribuir](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)

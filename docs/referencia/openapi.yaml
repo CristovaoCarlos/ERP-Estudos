@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: STM API
+  version: 0.1.0
+  summary: API do Sistema de Tributação Municipal
+  description: |
+    API JSON consumida pelo frontend do STM.
+
+    **Prefeitura (tenant):** as rotas de prefeitura são identificadas pelo header `Host`.
+    A mesma rota `/api/login` em `lemarq.localhost` e em `prefeitura-teste.localhost`
+    atende prefeituras diferentes, com bancos diferentes.
+
+    **Autenticação:** token Bearer obtido em `POST /api/login`.
+
+    **Erros de validação** seguem o formato padrão do Laravel (`422` com `message` e `errors`).
+servers:
+  - url: 'http://{prefeitura}.localhost:8000'
+    description: Prefeitura em desenvolvimento (nginx do Docker)
+    variables:
+      prefeitura:
+        default: lemarq
+        description: Subdomínio da prefeitura
+  - url: 'http://localhost:8000'
+    description: Domínio central em desenvolvimento
+tags:
+  - name: Central
+    description: Rotas dos domínios centrais (`CENTRAL_DOMAINS`)
+  - name: Prefeitura
+    description: Rotas que identificam a prefeitura pelo domínio
+  - name: Autenticação
+    description: Login, usuário atual e logout (por prefeitura)
+paths:
+  /up:
+    get:
+      tags: [Central]
+      summary: Verificação de saúde
+      operationId: saude
+      security: []
+      responses:
+        '200':
+          description: Aplicação no ar
+  /api/status:
+    get:
+      tags: [Central]
+      summary: Status da aplicação
+      description: Disponível apenas nos domínios centrais.
+      operationId: status
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app, status]
+                properties:
+                  app:
+                    type: string
+                    examples: [STM]
+                  status:
+                    type: string
+                    examples: [ok]
+  /api/tenant:
+    get:
+      tags: [Prefeitura]
+      summary: Prefeitura atual
+      description: Retorna o id da prefeitura identificada pelo domínio.
+      operationId: tenantAtual
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id:
+                    type: string
+                    examples: [lemarq]
+        '404':
+          description: Domínio não pertence a nenhuma prefeitura
+  /api/login:
+    post:
+      tags: [Autenticação]
+      summary: Entrar
+      description: |
+        Confere e-mail, senha e o vínculo do usuário com a prefeitura do domínio.
+        Limite: 5 tentativas por minuto por e-mail + IP.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login feito
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, usuario]
+                properties:
+                  token:
+                    type: string
+                    description: 'Token para o header `Authorization: Bearer`'
+                    examples: ['3|kX9…']
+                  usuario:
+                    $ref: '#/components/schemas/Usuario'
+        '422':
+          description: Dados inválidos, senha errada ou usuário sem acesso à prefeitura
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+              example:
+                message: E-mail ou senha inválidos.
+                errors:
+                  email: [E-mail ou senha inválidos.]
+        '429':
+          description: Muitas tentativas
+  /api/me:
+    get:
+      tags: [Autenticação]
+      summary: Usuário atual
+      operationId: usuarioAtual
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  /api/logout:
+    post:
+      tags: [Autenticação]
+      summary: Sair
+      description: Revoga o token usado na requisição.
+      operationId: logout
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Token revogado
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+components:
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+      description: Token do Laravel Sanctum
+  schemas:
+    Usuario:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: integer
+          examples: [1]
+        name:
+          type: string
+          examples: [Administrador]
+        email:
+          type: string
+          format: email
+          examples: [admin@stm.localhost]
+        email_verified_at:
+          type: [string, 'null']
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ErroDeValidacao:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    Mensagem:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+  responses:
+    NaoAutenticado:
+      description: Token ausente, inválido ou revogado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Mensagem'
+          example:
+            message: Unauthenticated.
+    SemAcesso:
+      description: Usuário sem vínculo com esta prefeitura
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Mensagem'
+          example:
+            message: Sem acesso a esta prefeitura.
