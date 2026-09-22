@@ -13,6 +13,7 @@ import Landing from '@/pages/Landing'
 const usuario = {
   id: 1,
   name: 'Fiscal Teste',
+  cpf: '52998224725',
   email: 'fiscal@stm.localhost',
   prefeituras: [
     { id: 'lemarq', dominio: 'lemarq.localhost' },
@@ -125,7 +126,7 @@ describe('login', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByText('Informe um e-mail válido.')).toBeInTheDocument()
+    expect(await screen.findByText('Informe um CPF válido.')).toBeInTheDocument()
     expect(screen.getByText('Informe a senha.')).toBeInTheDocument()
     expect(post).not.toHaveBeenCalled()
   })
@@ -135,12 +136,14 @@ describe('login', () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { token: 'tok-123', usuario } })
     renderizar(<App />, '/login')
 
-    await userEvent.type(await screen.findByLabelText('E-mail'), usuario.email)
+    const campoCpf = await screen.findByLabelText('CPF')
+    await userEvent.type(campoCpf, '52998224725')
+    expect(campoCpf).toHaveValue('529.982.247-25')
     await userEvent.type(screen.getByLabelText('Senha'), 'segredo')
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
     expect(await screen.findByText('Fiscal Teste')).toBeInTheDocument()
-    expect(post).toHaveBeenCalledWith('/login', { email: usuario.email, password: 'segredo' })
+    expect(post).toHaveBeenCalledWith('/login', { cpf: '52998224725', password: 'segredo' })
     expect(getToken()).toBe('tok-123')
     expect(screen.getByRole('heading', { name: 'Olá, Fiscal' })).toBeInTheDocument()
   })
@@ -148,15 +151,15 @@ describe('login', () => {
   it('mostra a mensagem do servidor quando as credenciais são inválidas', async () => {
     mockGet({ '/tenant': { id: 'lemarq' } })
     vi.spyOn(api, 'post').mockRejectedValue(
-      erroHttp(422, { errors: { email: ['E-mail ou senha inválidos.'] } }),
+      erroHttp(422, { errors: { cpf: ['CPF ou senha inválidos.'] } }),
     )
     renderizar(<App />, '/login')
 
-    await userEvent.type(await screen.findByLabelText('E-mail'), usuario.email)
+    await userEvent.type(await screen.findByLabelText('CPF'), '529.982.247-25')
     await userEvent.type(screen.getByLabelText('Senha'), 'errada')
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('CPF ou senha inválidos.')
     expect(getToken()).toBeNull()
   })
 

@@ -24,7 +24,7 @@ Se o banco não aparecer, veja o worker: `docker compose logs worker`.
 ## Dar acesso a usuários
 
 ```bash
-docker compose exec app php artisan usuarios:criar fulano@exemplo.com "Fulano" --tenant=prefeitura_teste
+docker compose exec app php artisan usuarios:criar fulano@exemplo.com "Fulano" --cpf=<cpf> --tenant=prefeitura_teste
 ```
 
 Veja [Criar e vincular usuários](gerenciar-usuarios.md).

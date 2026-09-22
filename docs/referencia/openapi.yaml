@@ -87,8 +87,8 @@ paths:
       tags: [Autenticação]
       summary: Entrar
       description: |
-        Confere e-mail, senha e o vínculo do usuário com a prefeitura do domínio.
-        Limite: 5 tentativas por minuto por e-mail + IP.
+        Confere CPF, senha e o vínculo do usuário com a prefeitura do domínio.
+        Limite: 5 tentativas por minuto por CPF + IP.
       operationId: login
       security: []
       requestBody:
@@ -97,11 +97,12 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, password]
+              required: [cpf, password]
               properties:
-                email:
+                cpf:
                   type: string
-                  format: email
+                  description: CPF com ou sem máscara. Os dígitos verificadores são conferidos.
+                  examples: ['529.982.247-25', '52998224725']
                 password:
                   type: string
                   format: password
@@ -127,9 +128,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
               example:
-                message: E-mail ou senha inválidos.
+                message: CPF ou senha inválidos.
                 errors:
-                  email: [E-mail ou senha inválidos.]
+                  cpf: [CPF ou senha inválidos.]
         '429':
           description: Muitas tentativas
   /api/me:
@@ -174,7 +175,7 @@ components:
   schemas:
     Usuario:
       type: object
-      required: [id, name, email, prefeituras]
+      required: [id, name, cpf, email, prefeituras]
       properties:
         id:
           type: integer
@@ -182,6 +183,10 @@ components:
         name:
           type: string
           examples: [Administrador]
+        cpf:
+          type: [string, 'null']
+          description: Só dígitos. `null` em usuários antigos ainda sem CPF (não conseguem entrar).
+          examples: ['52998224725']
         email:
           type: string
           format: email

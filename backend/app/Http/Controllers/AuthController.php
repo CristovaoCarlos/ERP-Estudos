@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UsuarioResource;
 use App\Models\User;
+use App\Rules\Cpf;
+use App\Support\Cpf as CpfSupport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,15 +17,15 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $dados = $request->validate([
-            'email' => ['required', 'string', 'email'],
+            'cpf' => ['required', 'string', new Cpf],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $dados['email'])->first();
+        $user = User::where('cpf', CpfSupport::digitos($dados['cpf']))->first();
 
         if (! $user || ! Hash::check($dados['password'], $user->password) || ! $user->acessaTenant(tenant('id'))) {
             throw ValidationException::withMessages([
-                'email' => 'E-mail ou senha inválidos.',
+                'cpf' => 'CPF ou senha inválidos.',
             ]);
         }
 

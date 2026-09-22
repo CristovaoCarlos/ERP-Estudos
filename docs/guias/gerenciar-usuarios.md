@@ -5,10 +5,10 @@ Usuários ficam no banco central (`stm_central`) e só entram nas prefeituras a 
 ## Criar um usuário
 
 ```bash
-docker compose exec app php artisan usuarios:criar maria@exemplo.com "Maria Souza" --tenant=lemarq
+docker compose exec app php artisan usuarios:criar maria@exemplo.com "Maria Souza" --cpf=529.982.247-25 --tenant=lemarq
 ```
 
-A senha é pedida no terminal, sem aparecer na tela. Para scripts, use `--senha=...` (a senha fica no histórico do shell).
+O login é feito com o **CPF** e a senha. A senha é pedida no terminal, sem aparecer na tela. Para scripts, use `--senha=...` (a senha fica no histórico do shell).
 
 ## Dar acesso a mais prefeituras
 
@@ -18,7 +18,15 @@ Rode o mesmo comando com as novas prefeituras. Os vínculos existentes são mant
 docker compose exec app php artisan usuarios:criar maria@exemplo.com "Maria Souza" --tenant=prefeitura_teste
 ```
 
-> O comando também **troca a senha** do usuário existente pela informada.
+> O comando também **troca a senha** do usuário existente pela informada. O CPF é mantido se `--cpf` for omitido.
+
+## Cadastrar o CPF de um usuário antigo
+
+Usuários criados antes do login por CPF não têm CPF e não conseguem entrar. Rode o comando com `--cpf`:
+
+```bash
+docker compose exec app php artisan usuarios:criar maria@exemplo.com "Maria Souza" --cpf=529.982.247-25
+```
 
 ## Ver os vínculos
 

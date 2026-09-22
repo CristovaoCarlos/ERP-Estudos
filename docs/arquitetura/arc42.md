@@ -135,7 +135,7 @@ sequenceDiagram
     participant A as API (tenant)
     participant C as stm_central
 
-    U->>F: e-mail e senha em lemarq.dominio
+    U->>F: CPF e senha em lemarq.dominio
     F->>A: POST /api/login (Host: lemarq.dominio)
     A->>C: identifica o tenant pelo domínio
     A->>C: busca usuário, confere senha e vínculo tenant_user
@@ -144,9 +144,9 @@ sequenceDiagram
         A-->>F: 200 { token, usuario }
         F->>F: guarda token (localStorage)
     else inválido ou sem vínculo
-        A-->>F: 422 "E-mail ou senha inválidos."
+        A-->>F: 422 "CPF ou senha inválidos."
     end
-    Note over A: 5 tentativas por minuto<br/>por e-mail + IP (429 depois)
+    Note over A: 5 tentativas por minuto<br/>por CPF + IP (429 depois)
 ```
 
 ### Requisição autenticada
@@ -226,7 +226,8 @@ Servidor próprio (bare-metal), sem Docker. O workflow `deploy.yml` roda o CI co
 
 - Senhas com bcrypt (`password` com cast `hashed`).
 - Tokens do Sanctum guardados como hash no `stm_central`; logout apaga o token.
-- Limite de 5 tentativas de login por minuto por e-mail + IP.
+- Limite de 5 tentativas de login por minuto por CPF + IP.
+- Login por CPF (dígitos verificadores conferidos no backend e no frontend), [ADR-0008](../adr/0008-login-por-cpf.md).
 - Vínculo usuário ↔ prefeitura checado no login e em toda rota autenticada.
 - HTML vindo do editor rico deve passar pelo `mews/purifier` antes de ser salvo.
 - Serviços de desenvolvimento publicados só em loopback.

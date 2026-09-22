@@ -6,16 +6,17 @@ Comandos do backend rodam dentro do contêiner: `docker compose exec app <comand
 
 ### `usuarios:criar`
 
-Cria um usuário no `stm_central` (ou atualiza nome e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
+Cria um usuário no `stm_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
 
 ```
-php artisan usuarios:criar {email} {nome} [--tenant=ID ...] [--senha=SENHA]
+php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--senha=SENHA]
 ```
 
 | Argumento / opção | Descrição |
 | --- | --- |
-| `email` | E-mail do usuário (login). |
+| `email` | E-mail do usuário. Identifica o cadastro a criar ou atualizar. |
 | `nome` | Nome exibido. |
+| `--cpf` | CPF usado no login, com ou sem máscara (gravado só com dígitos). Se omitido, mantém o CPF do usuário existente ou é pedido no terminal. Falha se for inválido ou já pertencer a outro usuário. |
 | `--tenant` | Id da prefeitura. Repita para várias. Falha se alguma não existir. |
 | `--senha` | Senha. Se omitida, é pedida sem eco no terminal (recomendado). |
 

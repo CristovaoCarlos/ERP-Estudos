@@ -12,6 +12,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0005](0005-frontend-fora-do-docker.md) | Frontend roda fora do Docker em desenvolvimento | Aceita |
 | [0006](0006-testes-em-sqlite.md) | Testes em SQLite, com trava contra o banco real | Aceita |
 | [0007](0007-postgresql.md) | PostgreSQL 17 como banco de dados | Aceita |
+| [0008](0008-login-por-cpf.md) | Login por CPF no lugar do e-mail | Aceita |
 
 ## Como criar um ADR
 
