@@ -43,7 +43,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route element={<RotaProtegida />}>
+      <Route
+        element={<RotaProtegida raizSemSessao={<Landing prefeitura={prefeitura.data.id} />} />}
+      >
         <Route element={<AppLayout />}>
           <Route path="/" element={<Inicio />} />
           {telas

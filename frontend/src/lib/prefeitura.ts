@@ -15,10 +15,6 @@ export function enderecoDoDominio(dominio: string): string {
   return `${protocol}//${dominio}${port ? `:${port}` : ''}/login`
 }
 
-export function enderecoDaPrefeitura(subdominio: string): string {
-  return enderecoDoDominio(`${subdominio}.${DOMINIO_CENTRAL}`)
-}
-
 /** "prefeitura_teste" → "Prefeitura Teste" (as prefeituras ainda não têm nome cadastrado). */
 export function nomeDaPrefeitura(id: string): string {
   return id
