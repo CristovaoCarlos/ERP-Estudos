@@ -15,6 +15,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-marca: var(--marca);
+  --color-marca-foreground: var(--marca-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -43,6 +45,9 @@
 
 :root {
   --radius: 0.625rem;
+  /* Azul da marca (landing page). */
+  --marca: oklch(0.33 0.15 264);
+  --marca-foreground: oklch(0.985 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -72,6 +77,8 @@
 }
 
 .dark {
+  --marca: oklch(0.72 0.13 262);
+  --marca-foreground: oklch(0.145 0 0);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

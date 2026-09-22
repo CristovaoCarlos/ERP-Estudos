@@ -2,12 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AxiosError, AxiosHeaders } from 'axios'
+import { ThemeProvider } from 'next-themes'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import App from '@/App'
 import { api, getToken, setToken } from '@/lib/api'
-import { enderecoDaPrefeitura, subdominioDaPrefeitura } from '@/lib/prefeitura'
+import { subdominioDaPrefeitura } from '@/lib/prefeitura'
 import Landing from '@/pages/Landing'
 
 const usuario = {
@@ -78,10 +79,6 @@ describe('prefeitura pelo endereço', () => {
     expect(subdominioDaPrefeitura('localhost')).toBeNull()
     expect(subdominioDaPrefeitura('127.0.0.1')).toBeNull()
   })
-
-  it('monta o endereço de login da prefeitura', () => {
-    expect(enderecoDaPrefeitura('minha-cidade')).toBe('http://minha-cidade.localhost:5173/login')
-  })
 })
 
 describe('landing page', () => {
@@ -90,8 +87,11 @@ describe('landing page', () => {
     renderizar(<App />, '/login')
 
     expect(await screen.findByText('Prefeitura não encontrada')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('A gestão tributária')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Toda a tributação do seu município',
+    )
     expect(screen.queryByLabelText('Senha')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Painel' })).not.toBeInTheDocument()
   })
 
   it('mostra erro de conexão quando o servidor falha', async () => {
@@ -101,20 +101,50 @@ describe('landing page', () => {
     expect(await screen.findByText('Não foi possível conectar ao servidor')).toBeInTheDocument()
   })
 
-  it('valida o endereço informado', async () => {
+  it('não tem campo para escolher a prefeitura', () => {
     renderizar(<Landing />)
 
-    await userEvent.type(screen.getByLabelText('Endereço da prefeitura'), 'minha cidade!')
-    await userEvent.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Toda a tributação do seu município',
+    )
+    expect(screen.queryByLabelText('Endereço da prefeitura')).not.toBeInTheDocument()
+    expect(screen.queryByText('Acessar minha prefeitura')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Painel' })).not.toBeInTheDocument()
+  })
 
-    expect(await screen.findByText('Use apenas letras, números e hífen.')).toBeInTheDocument()
+  it('alterna entre o tema claro e o escuro pelo botão do cabeçalho', async () => {
+    renderizar(
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <Landing />
+      </ThemeProvider>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mudar para o tema escuro' }))
+    expect(document.documentElement).toHaveClass('dark')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mudar para o tema claro' }))
+    expect(document.documentElement).not.toHaveClass('dark')
+    expect(screen.queryByText('Sistema')).not.toBeInTheDocument()
   })
 })
 
 describe('login', () => {
-  it('redireciona para o login quando não há sessão', async () => {
+  it('sem sessão, a raiz da prefeitura mostra a landing com o botão Painel', async () => {
     mockGet({ '/tenant': { id: 'lemarq' } })
     renderizar(<App />)
+
+    const painel = await screen.findByRole('link', { name: 'Painel' })
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Toda a tributação do seu município',
+    )
+
+    await userEvent.click(painel)
+    expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+  })
+
+  it('redireciona para o login ao abrir uma tela sem sessão', async () => {
+    mockGet({ '/tenant': { id: 'lemarq' } })
+    renderizar(<App />, '/parametros/empresa')
 
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   })
@@ -299,11 +329,9 @@ describe('sistema', () => {
   it('mostra o seletor de tema no topo, fora do menu do usuário', async () => {
     entrarLogado()
 
-    await abrirMenu('Alterar tema')
-    for (const tema of ['Claro', 'Escuro', 'Sistema']) {
-      expect(await screen.findByRole('menuitem', { name: tema })).toBeInTheDocument()
-    }
-    await userEvent.keyboard('{Escape}')
+    expect(
+      await screen.findByRole('button', { name: 'Mudar para o tema escuro' }),
+    ).toBeInTheDocument()
 
     await abrirMenu('Menu do usuário')
     expect(await screen.findByRole('menuitem', { name: 'Sair' })).toBeInTheDocument()

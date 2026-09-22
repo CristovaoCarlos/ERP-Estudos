@@ -117,9 +117,9 @@ flowchart TB
 | Autenticação | `src/lib/auth.ts` | Hooks `useUsuario`, `useLogin`, `useLogout`. |
 | Prefeitura | `src/lib/prefeitura.ts` | Descobre a prefeitura pelo endereço (`VITE_CENTRAL_DOMAIN`) e consulta `/api/tenant`. |
 | Menu | `src/lib/navegacao.ts` | Módulos e telas do sistema. Fonte única do menu lateral, das rotas e do breadcrumb. Todo item tem `icone` (lucide-react). Um item com `paginas` vira submenu, e submenus podem ter outros submenus dentro. |
-| `App` | `src/App.tsx` | Sem prefeitura no endereço (ou prefeitura inexistente) → landing page; senão, rotas do sistema. |
+| `App` | `src/App.tsx` | Sem prefeitura no endereço (ou prefeitura inexistente) → landing page; senão, rotas do sistema. Na prefeitura, `/` sem sessão também mostra a landing, com o botão "Painel" para o login. |
 | `AppLayout` | `src/components` | Layout do sistema no modelo `sidebar-07` do shadcn: seletor de prefeitura, menu de módulos, menu do usuário, breadcrumb. |
-| `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida. |
+| `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida (em `/`, mostra a landing da prefeitura). |
 | Páginas | `src/pages` | `Landing`, `Login`, `Inicio`, `EmConstrucao` (telas do menu ainda não implementadas). |
 | Componentes de UI | `src/components/ui` | shadcn/ui sobre Radix, gerados pelo CLI. |
 | Gráficos | `src/components/graficos` | Gráficos em SVG próprio, sem biblioteca. *A construir.* |
