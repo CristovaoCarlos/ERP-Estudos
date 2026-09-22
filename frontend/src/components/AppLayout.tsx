@@ -2,6 +2,7 @@ import { Fragment, useState, type CSSProperties } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
 import { AppSidebar } from '@/components/app-sidebar'
+import { SeletorDeTema } from '@/components/seletor-de-tema'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -39,7 +40,7 @@ export default function AppLayout() {
         alca={{ largura, aoAlterar: setLargura, aoArrastar: setArrastando }}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
@@ -62,8 +63,11 @@ export default function AppLayout() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <div className="ml-auto px-4">
+            <SeletorDeTema />
+          </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
         </div>
       </SidebarInset>

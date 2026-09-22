@@ -20,7 +20,8 @@ export function AppSidebar({
 }) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      {/* Mesma altura e borda do cabeçalho da página: a linha divisória atravessa a tela toda. */}
+      <SidebarHeader className="h-16 justify-center border-b border-border transition-[height] ease-linear group-data-[collapsible=icon]:h-12">
         <PrefeituraSwitcher atual={prefeitura} prefeituras={usuario.prefeituras} />
       </SidebarHeader>
       <SidebarContent>

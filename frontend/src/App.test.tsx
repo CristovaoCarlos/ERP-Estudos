@@ -220,6 +220,7 @@ describe('sistema', () => {
       '/parametros/juros-e-multa',
     )
     expect(screen.getByRole('link', { name: 'Base Legal' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Empresa' }).querySelector('svg')).not.toBeNull()
   })
 
   it('abre uma tela de submenu aninhado em Tabelas', async () => {
@@ -290,6 +291,20 @@ describe('sistema', () => {
     expect(wrapper.style.getPropertyValue('--sidebar-width')).toBe('288px')
     expect(alca).toHaveAttribute('aria-valuenow', '288')
     expect(localStorage.getItem('stm.menu.largura')).toBe('288')
+  })
+
+  it('mostra o seletor de tema no topo, fora do menu do usuário', async () => {
+    entrarLogado()
+
+    await abrirMenu('Alterar tema')
+    for (const tema of ['Claro', 'Escuro', 'Sistema']) {
+      expect(await screen.findByRole('menuitem', { name: tema })).toBeInTheDocument()
+    }
+    await userEvent.keyboard('{Escape}')
+
+    await abrirMenu('Menu do usuário')
+    expect(await screen.findByRole('menuitem', { name: 'Sair' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /Tema/ })).not.toBeInTheDocument()
   })
 
   it('lista as prefeituras do usuário no seletor', async () => {

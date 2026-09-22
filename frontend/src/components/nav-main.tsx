@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -28,7 +27,6 @@ export function NavMain({ modulos }: { modulos: Modulo[] }) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Módulos</SidebarGroupLabel>
       <SidebarMenu>
         {modulos.map((modulo) =>
           modulo.paginas ? (
@@ -94,6 +92,7 @@ function Submenu({
               <CollapsibleTrigger asChild>
                 <SidebarMenuSubButton asChild>
                   <button type="button" className="w-full">
+                    <pagina.icone />
                     <span className="truncate">{pagina.titulo}</span>
                     <ChevronRight
                       className={cn(seta, 'group-data-[state=open]/submenu:rotate-90')}
@@ -110,6 +109,7 @@ function Submenu({
           <SidebarMenuSubItem key={pagina.url}>
             <SidebarMenuSubButton asChild isActive={pathname === pagina.url}>
               <Link to={pagina.url} title={pagina.titulo} onClick={aoNavegar}>
+                <pagina.icone />
                 <span>{pagina.titulo}</span>
               </Link>
             </SidebarMenuSubButton>
