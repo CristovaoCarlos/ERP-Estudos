@@ -15,7 +15,7 @@ Um teste específico:
 docker compose exec app php artisan test --filter=AuthTest
 ```
 
-Os testes rodam em **SQLite**, nunca no MariaDB. Se aparecer `Testes devem rodar em SQLite`, algo está forçando `DB_CONNECTION` no ambiente — veja [ADR-0006](../adr/0006-testes-em-sqlite.md).
+Os testes rodam em **SQLite**, nunca no PostgreSQL. Se aparecer `Testes devem rodar em SQLite`, algo está forçando `DB_CONNECTION` no ambiente — veja [ADR-0006](../adr/0006-testes-em-sqlite.md).
 
 ## Frontend
 

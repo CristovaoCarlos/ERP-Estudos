@@ -20,10 +20,10 @@ Copie `backend/.env.example` para `backend/.env`. Os valores abaixo são os de d
 
 | Variável | Padrão (dev) | Descrição |
 | --- | --- | --- |
-| `DB_CONNECTION` | `mariadb` | Conexão do banco central. |
-| `DB_HOST` / `DB_PORT` | `db` / `3306` | Endereço dentro da rede do Compose. De fora, use `127.0.0.1:33061`. |
+| `DB_CONNECTION` | `pgsql` | Conexão do banco central. |
+| `DB_HOST` / `DB_PORT` | `db` / `5432` | Endereço dentro da rede do Compose. De fora, use `127.0.0.1:54321`. |
 | `DB_DATABASE` | `stm_central` | Banco central. |
-| `DB_USERNAME` / `DB_PASSWORD` | `root` / `secret` | O usuário precisa poder **criar bancos** (provisionamento de prefeituras). |
+| `DB_USERNAME` / `DB_PASSWORD` | `stm` / `secret` | O usuário precisa poder **criar bancos** (`CREATEDB`; provisionamento de prefeituras). |
 
 Os bancos das prefeituras usam as mesmas credenciais, com nome `stm_tenant_<id>` (prefixo em `config/tenancy.php`, chave `database.prefix`).
 
@@ -67,7 +67,7 @@ O `phpunit.xml` define `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:`, `CACHE_S
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
 | `HOST_UID` / `HOST_GID` | `1000` | Usuário e grupo do `www-data` na imagem PHP, para os arquivos criados no contêiner pertencerem a você. Use `HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose build`. |
-| `DB_PASSWORD` / `DB_DATABASE` | `secret` / `stm_central` | Senha do root e banco criado na **primeira** inicialização do MariaDB. |
+| `DB_USERNAME` / `DB_PASSWORD` / `DB_DATABASE` | `stm` / `secret` / `stm_central` | Superusuário, senha e banco criados na **primeira** inicialização do PostgreSQL. Lidas do ambiente do shell (ou de um `.env` na raiz), não do `backend/.env`. |
 
 ## Arquivos de configuração relevantes
 

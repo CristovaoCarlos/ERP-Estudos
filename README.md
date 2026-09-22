@@ -20,7 +20,7 @@ Passo a passo completo, com criação de prefeitura e usuário: **[Primeiros pas
 | --- | --- |
 | Frontend (fora do Docker) | http://&lt;prefeitura&gt;.localhost:5173 |
 | API (nginx) | http://localhost:8000 |
-| MariaDB | 127.0.0.1:33061 (root / secret) |
+| PostgreSQL 17 | 127.0.0.1:54321 (stm / secret) |
 | Mailpit | http://localhost:8025 |
 
 ## Qualidade

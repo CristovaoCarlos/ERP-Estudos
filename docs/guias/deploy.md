@@ -37,11 +37,11 @@ Em *Settings → Environments → production*:
 
 ### Servidor
 
-- PHP 8.4 com as mesmas extensões da imagem de dev (veja [Serviços Docker](../referencia/servicos-docker.md#imagem-php)), `php8.4-fpm`, Composer, Node 22, MariaDB 11, Redis, nginx.
+- PHP 8.4 com as mesmas extensões da imagem de dev (veja [Serviços Docker](../referencia/servicos-docker.md#imagem-php)), `php8.4-fpm`, Composer, Node 22, PostgreSQL 17, Redis, nginx.
 - Repositório clonado em `DEPLOY_PATH`, com `backend/.env` de produção:
   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` próprio.
   - `CENTRAL_DOMAINS` com o domínio principal.
-  - Usuário de banco próprio (não `root`) com permissão para criar bancos `stm_tenant_*`.
+  - `DB_CONNECTION=pgsql` e usuário de banco próprio (não superusuário) com `CREATEDB`, para criar os bancos `stm_tenant_*`.
   - `FILESYSTEM_DISK=s3` e credenciais AWS.
 - Worker de fila rodando continuamente (ex.: systemd ou Supervisor com `php artisan queue:work --timeout=300`).
 - nginx servindo `frontend/dist` e repassando `/api` ao PHP-FPM, com DNS curinga (`*.dominio`) para os subdomínios das prefeituras.

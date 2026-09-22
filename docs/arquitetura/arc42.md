@@ -29,7 +29,7 @@ O STM (Sistema de Tributação Municipal) é um sistema SaaS usado por várias p
 | --- | --- |
 | PHP 8.4 | Dev, CI e produção rodam 8.4 (`composer.json` aceita `^8.3`). |
 | Laravel 13, somente API | O backend não renderiza páginas; o frontend é uma SPA separada. |
-| MariaDB 11 | Banco de dados em todos os ambientes, exceto testes (SQLite). |
+| PostgreSQL 17 | Banco de dados em todos os ambientes, exceto testes (SQLite) ([ADR-0007](../adr/0007-postgresql.md)). |
 | Node 22 | Versão do frontend no CI. |
 | Frontend fora do Docker | Em desenvolvimento, o frontend roda direto na máquina ([ADR-0005](../adr/0005-frontend-fora-do-docker.md)). |
 | Deploy bare-metal | Produção roda em servidor próprio, publicado por SSH, sem contêineres. |
@@ -80,8 +80,8 @@ flowchart TB
         nginx["<b>Nginx</b> 1.27<br/>servidor web"]
         app["<b>API</b><br/>Laravel 13 / PHP-FPM 8.4"]
         worker["<b>Worker</b><br/>Laravel queue:work"]
-        central[("<b>stm_central</b><br/>MariaDB<br/>tenants, domínios,<br/>usuários, tokens")]
-        tenants[("<b>stm_tenant_*</b><br/>MariaDB<br/>um banco por prefeitura")]
+        central[("<b>stm_central</b><br/>PostgreSQL<br/>tenants, domínios,<br/>usuários, tokens")]
+        tenants[("<b>stm_tenant_*</b><br/>PostgreSQL<br/>um banco por prefeitura")]
         redis[("<b>Redis</b><br/>cache, sessão, fila")]
     end
 
@@ -166,7 +166,7 @@ sequenceDiagram
     participant C as stm_central
     participant R as Redis
     participant W as Worker
-    participant DB as MariaDB
+    participant DB as PostgreSQL
 
     Op->>A: Tenant::create + domínio
     A->>C: grava tenant e domínio
@@ -188,7 +188,7 @@ flowchart LR
             nginx["nginx :8000"]
             app["app"]
             worker["worker"]
-            db[("db :33061")]
+            db[("db :54321")]
             redis[("redis")]
             mailpit["mailpit :8025"]
         end

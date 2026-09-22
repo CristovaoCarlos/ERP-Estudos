@@ -1,26 +1,31 @@
 # Como acessar o banco de dados
 
-O MariaDB do Docker fica acessível só na sua máquina.
+O PostgreSQL 17 do Docker fica acessível só na sua máquina.
 
 | Campo | Valor |
 | --- | --- |
-| Tipo | MariaDB ou MySQL (TCP/IP) |
+| Tipo | PostgreSQL |
 | Host | `127.0.0.1` |
-| Porta | `33061` |
-| Usuário | `root` |
+| Porta | `54321` |
+| Usuário | `stm` |
 | Senha | `secret` |
+| Banco | `stm_central` (ou `stm_tenant_<id>`) |
 
-## HeidiSQL
+## DBeaver / pgAdmin / HeidiSQL
 
-1. **Nova sessão** → tipo de rede *MariaDB or MySQL (TCP/IP)*.
-2. Preencha os campos da tabela acima e deixe *Bancos de dados* vazio para ver todos.
-3. Abrir.
+1. Nova conexão do tipo *PostgreSQL*.
+2. Preencha os campos da tabela acima. No DBeaver, marque *Show all databases* para ver os bancos das prefeituras.
+3. Conectar.
+
+> Feche a conexão com o banco de uma prefeitura antes de excluí-la: o PostgreSQL não apaga um banco com conexões abertas.
 
 ## Linha de comando
 
 ```bash
-docker compose exec db mariadb -uroot -psecret stm_central
+docker compose exec db psql -U stm stm_central
 ```
+
+Liste os bancos com `\l` e troque de banco com `\c stm_tenant_<id>`.
 
 ## Bancos
 
@@ -34,5 +39,11 @@ docker compose exec db mariadb -uroot -psecret stm_central
 ## Backup
 
 ```bash
-docker compose exec db mariadb-dump -uroot -psecret --all-databases > backup.sql
+docker compose exec db pg_dumpall -U stm > backup.sql
+```
+
+Para restaurar num banco vazio:
+
+```bash
+docker compose exec -T db psql -U stm -d postgres < backup.sql
 ```

@@ -17,8 +17,8 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 ## Segurança do banco de desenvolvimento
 
 - Testes rodam **só em SQLite**. `tests/TestCase.php` aborta se a conexão for outra. Nunca contorne essa trava.
-- **Não** adicione `env_file` ao `docker-compose.yml`: ele injeta `DB_CONNECTION=mariadb` no ambiente e faz os testes (com `RefreshDatabase` e exclusão de tenants) apagarem o banco real. Isso já aconteceu (ADR-0006).
-- Antes de qualquer operação destrutiva no MariaDB, faça dump: `docker compose exec db mariadb-dump -uroot -psecret --all-databases > backup.sql`.
+- **Não** adicione `env_file` ao `docker-compose.yml`: ele injeta `DB_CONNECTION=pgsql` no ambiente e faz os testes (com `RefreshDatabase` e exclusão de tenants) apagarem o banco real. Isso já aconteceu (ADR-0006).
+- Banco de desenvolvimento: PostgreSQL 17 (ADR-0007). Antes de qualquer operação destrutiva, faça dump: `docker compose exec db pg_dumpall -U stm > backup.sql`.
 
 ## Multi-tenancy (não óbvio)
 
@@ -28,6 +28,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Papéis/permissões (spatie) ficam **no banco de cada prefeitura**.
 - Rotas de prefeitura: `routes/tenant.php`. Rotas centrais: `routes/api.php` (restritas a `CENTRAL_DOMAINS`).
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
+- No PostgreSQL, `DROP DATABASE` falha se houver conexão aberta no banco da prefeitura (ex.: psql/DBeaver): feche-as antes de excluir um tenant.
 - Ids de tenant podem ter `_`, mas domínios usam `-` (hostnames não aceitam `_`).
 - O proxy do Vite usa `changeOrigin: false` para preservar o `Host`; não mude.
 

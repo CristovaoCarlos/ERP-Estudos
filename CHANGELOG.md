@@ -15,13 +15,17 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Rotas `POST /api/login`, `GET /api/me`, `POST /api/logout` e `GET /api/tenant`.
 - Tela de login, rotas protegidas e botão Sair no frontend.
 - Comando `php artisan usuarios:criar`.
-- Ambiente Docker Compose: app, worker, nginx, MariaDB, Redis e Mailpit.
+- Ambiente Docker Compose: app, worker, nginx, PostgreSQL, Redis e Mailpit.
 - CI (`ci.yml`) e deploy por SSH (`deploy.yml`) no GitHub Actions.
 - Documentação em `docs/`: tutorial, guias, referência, arquitetura (arc42 + C4), ADRs (MADR) e contrato OpenAPI.
 - Skills do Claude Code para shadcn/ui em `.claude/skills/` (versões fixadas em `skills-lock.json`).
 - Landing page do STM, exibida no domínio central e em endereços de prefeitura inexistente, com campo para ir ao login da prefeitura.
 - Layout do sistema no modelo `sidebar-07` do shadcn/ui: seletor de prefeitura, menu de módulos (Cadastros, Tributos, Arrecadação, Dívida ativa, Relatórios, Administração), menu do usuário com tema claro/escuro e breadcrumb. Telas dos módulos ainda em construção.
 - `GET /api/me` e `POST /api/login` retornam as prefeituras do usuário.
+
+### Alterado
+
+- Banco de dados trocado de MariaDB 11 para PostgreSQL 17 (`DB_CONNECTION=pgsql`, porta `54321` no host, usuário `stm`). Os dados do MariaDB não são migrados; o volume antigo `stm_db-data` fica intacto ([ADR-0007](docs/adr/0007-postgresql.md)).
 
 ### Corrigido
 
