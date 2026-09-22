@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useState, type CSSProperties } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
 import { AppSidebar } from '@/components/app-sidebar'
@@ -12,22 +12,32 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { useLarguraDoMenu } from '@/hooks/use-largura-do-menu'
 import { useUsuario } from '@/lib/auth'
-import { localizar, type Pagina } from '@/lib/navegacao'
+import { localizar, primeiraTela } from '@/lib/navegacao'
 import { subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 
 export default function AppLayout() {
   const { pathname } = useLocation()
   const usuario = useUsuario()
   const prefeitura = usePrefeitura(subdominioDaPrefeitura())
-  const { modulo, pagina } = localizar(pathname)
-  const trilha: Pagina[] = [modulo, pagina].filter((item): item is Pagina => item !== undefined)
+  const trilha = localizar(pathname)
+  const [largura, setLargura] = useLarguraDoMenu()
+  const [arrastando, setArrastando] = useState(false)
 
   if (!usuario.data || !prefeitura.data) return null
 
   return (
-    <SidebarProvider>
-      <AppSidebar usuario={usuario.data} prefeitura={prefeitura.data.id} />
+    <SidebarProvider
+      style={{ '--sidebar-width': `${largura}px` } as CSSProperties}
+      // Sem animação nem seleção de texto enquanto arrasta a borda do menu.
+      className={arrastando ? 'select-none **:transition-none' : undefined}
+    >
+      <AppSidebar
+        usuario={usuario.data}
+        prefeitura={prefeitura.data.id}
+        alca={{ largura, aoAlterar: setLargura, aoArrastar: setArrastando }}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
@@ -43,7 +53,7 @@ export default function AppLayout() {
                         <BreadcrumbPage>{item.titulo}</BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink asChild>
-                          <Link to={modulo?.paginas?.[0]?.url ?? item.url}>{item.titulo}</Link>
+                          <Link to={primeiraTela(item).url}>{item.titulo}</Link>
                         </BreadcrumbLink>
                       )}
                     </BreadcrumbItem>

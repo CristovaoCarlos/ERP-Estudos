@@ -5,8 +5,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { localizar } from '@/lib/navegacao'
 
 export default function EmConstrucao() {
-  const { modulo, pagina } = localizar(useLocation().pathname)
-  const titulo = pagina?.titulo ?? modulo?.titulo ?? 'Página'
+  const titulo = localizar(useLocation().pathname).at(-1)?.titulo ?? 'Página'
 
   return (
     <Empty className="flex-1 border border-dashed">

@@ -63,6 +63,7 @@ function sidebar() {
 afterEach(() => {
   vi.restoreAllMocks()
   setToken(null)
+  localStorage.removeItem('stm.menu.largura')
 })
 
 describe('prefeitura pelo endereço', () => {
@@ -184,32 +185,111 @@ describe('sistema', () => {
   it('mostra os módulos no menu lateral', async () => {
     entrarLogado()
 
-    for (const modulo of [
-      'Cadastros',
-      'Tributos',
-      'Arrecadação',
-      'Dívida ativa',
-      'Administração',
-    ]) {
+    for (const modulo of ['Parâmetros', 'Tabelas', 'Lançamentos', 'Relatórios', 'Administração']) {
       expect(await screen.findByRole('button', { name: modulo })).toBeInTheDocument()
     }
+    for (const removido of ['Cadastros', 'Tributos', 'Arrecadação', 'Dívida ativa']) {
+      expect(screen.queryByRole('button', { name: removido })).not.toBeInTheDocument()
+    }
     expect(sidebar().getByRole('link', { name: 'Início' })).toHaveAttribute('data-active', 'true')
-    expect(sidebar().getByRole('link', { name: 'Relatórios' })).toHaveAttribute(
-      'href',
-      '/relatorios',
-    )
   })
 
   it('abre uma tela do menu com breadcrumb', async () => {
     entrarLogado()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Tributos' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'IPTU' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Administração' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Usuários' }))
 
     expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).toHaveTextContent('Tributos')
-    expect(trilha).toHaveTextContent('IPTU')
+    expect(trilha).toHaveTextContent('Administração')
+    expect(trilha).toHaveTextContent('Usuários')
+  })
+
+  it('lista as telas de Parâmetros no submenu', async () => {
+    entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Parâmetros' }))
+
+    expect(await screen.findByRole('link', { name: 'Empresa' })).toHaveAttribute(
+      'href',
+      '/parametros/empresa',
+    )
+    expect(screen.getByRole('link', { name: 'Juros e Multa' })).toHaveAttribute(
+      'href',
+      '/parametros/juros-e-multa',
+    )
+    expect(screen.getByRole('link', { name: 'Base Legal' })).toBeInTheDocument()
+  })
+
+  it('abre uma tela de submenu aninhado em Tabelas', async () => {
+    entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
+    expect(await screen.findByRole('link', { name: 'Receitas Tributárias' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Tabelas internas' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Cidades' }))
+
+    expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
+    const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
+    expect(trilha).toHaveTextContent('Tabelas')
+    expect(trilha).toHaveTextContent('Tabelas internas')
+    expect(trilha).toHaveTextContent('Cidades')
+    expect(within(trilha).getByRole('link', { name: 'Tabelas internas' })).toHaveAttribute(
+      'href',
+      '/tabelas/internas/cidades',
+    )
+  })
+
+  it('lista as telas de Lançamentos com os submenus Imóveis e DAM', async () => {
+    entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Lançamentos' }))
+    expect(await screen.findByRole('link', { name: 'Documentos Avulsos' })).toHaveAttribute(
+      'href',
+      '/lancamentos/documentos-avulsos',
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'DAM' }))
+
+    expect(await screen.findByRole('link', { name: 'Arquivo Retorno' })).toHaveAttribute(
+      'href',
+      '/lancamentos/dam/arquivo-retorno',
+    )
+    expect(screen.getByRole('button', { name: 'Imóveis' })).toBeInTheDocument()
+  })
+
+  it('lista as telas de Relatórios com o submenu Notas Fiscais', async () => {
+    entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Relatórios' }))
+    expect(await screen.findByRole('link', { name: 'Receitas Apuradas' })).toHaveAttribute(
+      'href',
+      '/relatorios/receitas-apuradas',
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Notas Fiscais' }))
+
+    expect(await screen.findByRole('link', { name: 'NFs Canceladas' })).toHaveAttribute(
+      'href',
+      '/relatorios/notas-fiscais/canceladas',
+    )
+    for (const submenu of ['Alvarás', 'Contribuintes']) {
+      expect(screen.getByRole('button', { name: submenu })).toBeInTheDocument()
+    }
+  })
+
+  it('ajusta a largura do menu pela borda e lembra a escolha', async () => {
+    entrarLogado()
+
+    const alca = await screen.findByRole('separator', { name: 'Largura do menu' })
+    const wrapper = document.querySelector<HTMLElement>('[data-slot="sidebar-wrapper"]')!
+    expect(wrapper.style.getPropertyValue('--sidebar-width')).toBe('256px')
+
+    alca.focus()
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}')
+
+    expect(wrapper.style.getPropertyValue('--sidebar-width')).toBe('288px')
+    expect(alca).toHaveAttribute('aria-valuenow', '288')
+    expect(localStorage.getItem('stm.menu.largura')).toBe('288')
   })
 
   it('lista as prefeituras do usuário no seletor', async () => {
