@@ -12,12 +12,14 @@ export type PrefeituraDoUsuario = {
 export type Usuario = {
   id: number
   name: string
+  cpf: string | null
   email: string
   prefeituras: PrefeituraDoUsuario[]
 }
 
 export type Credenciais = {
-  email: string
+  /** Só dígitos. */
+  cpf: string
   password: string
 }
 
@@ -59,7 +61,7 @@ export function useLogout() {
 export function mensagemDeErroDoLogin(error: unknown): string {
   if (axios.isAxiosError(error)) {
     if (error.response?.status === 422) {
-      return error.response.data?.errors?.email?.[0] ?? 'E-mail ou senha inválidos.'
+      return error.response.data?.errors?.cpf?.[0] ?? 'CPF ou senha inválidos.'
     }
     if (error.response?.status === 429) {
       return 'Muitas tentativas de login. Aguarde um minuto e tente novamente.'

@@ -64,10 +64,10 @@ curl -H 'Host: lemarq.localhost' http://127.0.0.1:8000/api/tenant
 ## 5. Crie um usuário com acesso a ela
 
 ```bash
-docker compose exec app php artisan usuarios:criar admin@stm.localhost "Administrador" --tenant=lemarq
+docker compose exec app php artisan usuarios:criar admin@stm.localhost "Administrador" --cpf=529.982.247-25 --tenant=lemarq
 ```
 
-O comando pede a senha.
+O comando pede a senha. Use o seu CPF no lugar do exemplo: é ele que você digita no login.
 
 ## 6. Rode o frontend
 
@@ -79,7 +79,7 @@ npm run dev
 
 ## 7. Entre no sistema
 
-Abra <http://lemarq.localhost:5173>. Você vai cair na tela de login. Entre com o e-mail e a senha do passo 5: a página inicial mostra seu nome e a prefeitura `lemarq`.
+Abra <http://lemarq.localhost:5173>. Você vai cair na tela de login. Entre com o CPF e a senha do passo 5: a página inicial mostra seu nome e a prefeitura `lemarq`.
 
 Clique em **Sair** para encerrar a sessão.
 

@@ -30,7 +30,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `403` | Usuário autenticado sem vínculo com a prefeitura |
 | `404` | Domínio não pertence a nenhuma prefeitura (`{"message": "Prefeitura não encontrada."}`), ou rota inexistente |
 | `422` | Dados inválidos ou credenciais erradas |
-| `429` | Mais de 5 tentativas de login por minuto (mesmo e-mail + IP) |
+| `429` | Mais de 5 tentativas de login por minuto (mesmo CPF + IP) |
 
 ## Exemplo
 
@@ -38,7 +38,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 # login
 curl -s http://lemarq.localhost:8000/api/login \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
-  -d '{"email":"admin@stm.localhost","password":"<senha>"}'
+  -d '{"cpf":"529.982.247-25","password":"<senha>"}'
 
 # usuário atual
 curl -s http://lemarq.localhost:8000/api/me \

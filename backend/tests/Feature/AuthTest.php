@@ -34,16 +34,16 @@ class AuthTest extends TestCase
 
     private function criarUsuario(Tenant ...$tenants): User
     {
-        $user = User::factory()->create(['name' => 'Teste', 'email' => 'fiscal@stm.localhost', 'password' => 'senha-correta']);
+        $user = User::factory()->create(['name' => 'Teste', 'cpf' => '52998224725', 'email' => 'fiscal@stm.localhost', 'password' => 'senha-correta']);
         $user->tenants()->attach(array_map(fn (Tenant $t) => $t->id, $tenants));
 
         return $user;
     }
 
-    private function login(string $tenant, string $senha = 'senha-correta')
+    private function login(string $tenant, string $senha = 'senha-correta', string $cpf = '529.982.247-25')
     {
         return $this->postJson("http://{$tenant}.localhost/api/login", [
-            'email' => 'fiscal@stm.localhost',
+            'cpf' => $cpf,
             'password' => $senha,
         ]);
     }
@@ -54,7 +54,7 @@ class AuthTest extends TestCase
 
         $token = $this->login('lemarq')
             ->assertOk()
-            ->assertJsonPath('usuario.email', 'fiscal@stm.localhost')
+            ->assertJsonPath('usuario.cpf', '52998224725')
             ->assertJsonMissingPath('usuario.password')
             ->json('token');
 
@@ -76,6 +76,7 @@ class AuthTest extends TestCase
             ->assertExactJson([
                 'id' => 1,
                 'name' => 'Teste',
+                'cpf' => '52998224725',
                 'email' => 'fiscal@stm.localhost',
                 'prefeituras' => [
                     ['id' => 'lemarq', 'dominio' => 'lemarq.localhost'],
@@ -90,7 +91,33 @@ class AuthTest extends TestCase
 
         $this->login('lemarq', 'senha-errada')
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['email' => 'E-mail ou senha inválidos.']);
+            ->assertJsonValidationErrors(['cpf' => 'CPF ou senha inválidos.']);
+    }
+
+    public function test_aceita_cpf_sem_mascara(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'));
+
+        $this->login('lemarq', cpf: '52998224725')->assertOk();
+    }
+
+    public function test_cpf_invalido_e_recusado(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'));
+
+        $this->login('lemarq', cpf: '529.982.247-26')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['cpf' => 'Informe um CPF válido.']);
+    }
+
+    public function test_email_nao_serve_mais_para_login(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'));
+
+        $this->postJson('http://lemarq.localhost/api/login', [
+            'email' => 'fiscal@stm.localhost',
+            'password' => 'senha-correta',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['cpf']);
     }
 
     public function test_usuario_sem_vinculo_com_o_tenant_nao_faz_login(): void

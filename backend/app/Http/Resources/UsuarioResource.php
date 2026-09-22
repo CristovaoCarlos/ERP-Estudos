@@ -20,6 +20,7 @@ class UsuarioResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'cpf' => $this->cpf,
             'email' => $this->email,
             'prefeituras' => $this->tenants()->with('domains')->orderBy('id')->get()->map(fn (Tenant $tenant) => [
                 'id' => $tenant->id,

@@ -19,9 +19,10 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { getToken } from '@/lib/api'
 import { mensagemDeErroDoLogin, useLogin } from '@/lib/auth'
+import { cpfValido, formatarCpf, somenteDigitos } from '@/lib/cpf'
 
 const esquema = z.object({
-  email: z.email('Informe um e-mail válido.'),
+  cpf: z.string().refine(cpfValido, 'Informe um CPF válido.'),
   password: z.string().min(1, 'Informe a senha.'),
 })
 
@@ -40,9 +41,13 @@ export default function Login() {
   if (getToken() !== null && !login.isSuccess) return <Navigate to="/" replace />
 
   const destino = (location.state as { de?: string } | null)?.de ?? '/'
-  const entrar = handleSubmit((dados) =>
-    login.mutate(dados, { onSuccess: () => navigate(destino, { replace: true }) }),
+  const entrar = handleSubmit(({ cpf, password }) =>
+    login.mutate(
+      { cpf: somenteDigitos(cpf), password },
+      { onSuccess: () => navigate(destino, { replace: true }) },
+    ),
   )
+  const campoCpf = register('cpf')
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
@@ -60,17 +65,23 @@ export default function Login() {
           )}
           <form id="form-login" onSubmit={entrar} noValidate>
             <FieldGroup>
-              <Field data-invalid={errors.email ? true : undefined}>
-                <FieldLabel htmlFor="email">E-mail</FieldLabel>
+              <Field data-invalid={errors.cpf ? true : undefined}>
+                <FieldLabel htmlFor="cpf">CPF</FieldLabel>
                 <Input
-                  id="email"
-                  type="email"
+                  id="cpf"
+                  inputMode="numeric"
                   autoComplete="username"
+                  placeholder="000.000.000-00"
+                  maxLength={14}
                   autoFocus
-                  aria-invalid={errors.email ? true : undefined}
-                  {...register('email')}
+                  aria-invalid={errors.cpf ? true : undefined}
+                  {...campoCpf}
+                  onChange={(evento) => {
+                    evento.target.value = formatarCpf(evento.target.value)
+                    return campoCpf.onChange(evento)
+                  }}
                 />
-                <FieldError>{errors.email?.message}</FieldError>
+                <FieldError>{errors.cpf?.message}</FieldError>
               </Field>
               <Field data-invalid={errors.password ? true : undefined}>
                 <FieldLabel htmlFor="password">Senha</FieldLabel>
