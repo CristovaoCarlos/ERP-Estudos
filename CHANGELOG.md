@@ -19,6 +19,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - CI (`ci.yml`) e deploy por SSH (`deploy.yml`) no GitHub Actions.
 - Documentação em `docs/`: tutorial, guias, referência, arquitetura (arc42 + C4), ADRs (MADR) e contrato OpenAPI.
 - Skills do Claude Code para shadcn/ui em `.claude/skills/` (versões fixadas em `skills-lock.json`).
+- Skill `criar-pr` do Claude Code: commita as mudanças e abre um Pull Request para a `main`, na branch atual ou numa branch nova.
 - Landing page do STM, exibida no domínio central e em endereços de prefeitura inexistente, com campo para ir ao login da prefeitura.
 - Layout do sistema no modelo `sidebar-07` do shadcn/ui: seletor de prefeitura, menu de módulos (Início, Parâmetros, Tabelas, Lançamentos, Relatórios, Administração), menu do usuário com tema claro/escuro e breadcrumb. Parâmetros com as telas Empresa, Receitas, Nota Fiscal, Alvará, ITBI, IPTU, Habite-se, Certidão Negativa, Juros e Multa e Base Legal. Tabelas com as telas de cadastro de apoio e os submenus Tomadores de Serviço e Tabelas internas (o menu aceita submenus aninhados). Lançamentos com Documentos Avulsos, Nota Fiscal, Alvará, ITBI, Habite-se, IPTU, Certidão Negativa e os submenus Imóveis e DAM. Relatórios com rendimentos, receitas, relações de ISS, INSS e IRPF, Imóveis, ITBI, Habite-se, DAMs e os submenus Notas Fiscais, Alvarás e Contribuintes. Telas dos módulos ainda em construção.
 - `GET /api/me` e `POST /api/login` retornam as prefeituras do usuário.
@@ -26,7 +27,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Alterado
 
 - Banco de dados trocado de MariaDB 11 para PostgreSQL 17 (`DB_CONNECTION=pgsql`, porta `54321` no host, usuário `stm`). Os dados do MariaDB não são migrados; o volume antigo `stm_db-data` fica intacto ([ADR-0007](docs/adr/0007-postgresql.md)).
-- Menu lateral: linha separando cada módulo do menu principal.
+- Menu lateral: linha separando cada módulo do menu principal, sem o rótulo "Módulos".
+- Menu lateral: ícone em cada tela e submenu, não só nos módulos.
+- Seletor de tema (Claro, Escuro, Sistema) movido do menu do usuário para o canto superior direito.
+- Linha divisória de ponta a ponta entre o cabeçalho (seletor de prefeitura, breadcrumb e tema) e a área da tela.
 - Menu lateral com largura ajustável: arraste a borda direita (de 224 a 480 px). A largura fica salva no navegador.
 
 ### Corrigido

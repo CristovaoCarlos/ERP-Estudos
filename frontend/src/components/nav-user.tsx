@@ -1,5 +1,4 @@
-import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { ChevronsUpDown, LogOut } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -42,9 +41,7 @@ function Identificacao({ usuario }: { usuario: Usuario }) {
 
 export function NavUser({ usuario }: { usuario: Usuario }) {
   const { isMobile } = useSidebar()
-  const { resolvedTheme, setTheme } = useTheme()
   const logout = useLogout()
-  const escuro = resolvedTheme === 'dark'
 
   return (
     <SidebarMenu>
@@ -71,13 +68,6 @@ export function NavUser({ usuario }: { usuario: Usuario }) {
                 <Identificacao usuario={usuario} />
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => setTheme(escuro ? 'light' : 'dark')}>
-                {escuro ? <Sun /> : <Moon />}
-                {escuro ? 'Tema claro' : 'Tema escuro'}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem disabled={logout.isPending} onSelect={() => logout.mutate()}>
