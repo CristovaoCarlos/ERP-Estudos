@@ -27,6 +27,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Tela de login em duas colunas, no visual da landing: à esquerda, painel azul-marinho (sempre escuro) com a apresentação do STM e três destaques; à direita, o formulário de CPF e senha com o nome da prefeitura, o botão de tema e o link para voltar à página inicial. No celular, só o formulário.
 - Login por CPF e senha no lugar de e-mail e senha. O campo CPF tem máscara `000.000.000-00`, e os dígitos verificadores são conferidos. O e-mail continua no cadastro. Usuários antigos precisam receber um CPF (`usuarios:criar <email> <nome> --cpf=...`) para entrar ([ADR-0008](docs/adr/0008-login-por-cpf.md)).
 - Banco de dados trocado de MariaDB 11 para PostgreSQL 17 (`DB_CONNECTION=pgsql`, porta `54321` no host, usuário `stm`). Os dados do MariaDB não são migrados; o volume antigo `stm_db-data` fica intacto ([ADR-0007](docs/adr/0007-postgresql.md)).
 - Menu lateral: linha separando cada módulo do menu principal, sem o rótulo "Módulos".
