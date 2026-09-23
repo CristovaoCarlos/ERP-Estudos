@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -58,6 +59,61 @@ class CriarUsuarioTest extends TestCase
             'nome' => 'Maria',
             '--cpf' => '52998224725',
             '--senha' => 'segredo',
+        ])->assertFailed();
+    }
+
+    public function test_marca_superadmin_e_da_grupos_na_prefeitura(): void
+    {
+        $tenant = Tenant::create(['id' => 'lemarq']);
+
+        try {
+            $this->artisan('usuarios:criar', [
+                'email' => 'maria@exemplo.com',
+                'nome' => 'Maria',
+                '--cpf' => '52998224725',
+                '--senha' => 'segredo',
+                '--tenant' => ['lemarq'],
+                '--grupo' => ['Parâmetros', 'Tabelas'],
+                '--superadmin' => true,
+            ])->assertSuccessful();
+
+            $user = User::first();
+            $this->assertTrue($user->superadmin);
+            $tenant->run(fn () => $this->assertEqualsCanonicalizing(
+                ['Parâmetros', 'Tabelas'],
+                $user->getRoleNames()->all(),
+            ));
+        } finally {
+            $tenant->delete();
+        }
+    }
+
+    public function test_recusa_grupo_inexistente(): void
+    {
+        $tenant = Tenant::create(['id' => 'lemarq']);
+
+        try {
+            $this->artisan('usuarios:criar', [
+                'email' => 'maria@exemplo.com',
+                'nome' => 'Maria',
+                '--cpf' => '52998224725',
+                '--senha' => 'segredo',
+                '--tenant' => ['lemarq'],
+                '--grupo' => ['Fiscalização'],
+            ])->assertFailed();
+        } finally {
+            $tenant->delete();
+        }
+    }
+
+    public function test_grupo_exige_tenant(): void
+    {
+        $this->artisan('usuarios:criar', [
+            'email' => 'maria@exemplo.com',
+            'nome' => 'Maria',
+            '--cpf' => '52998224725',
+            '--senha' => 'segredo',
+            '--grupo' => ['Tabelas'],
         ])->assertFailed();
     }
 }

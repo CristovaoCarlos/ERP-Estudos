@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom'
 
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUsuario } from '@/lib/auth'
-import { menu } from '@/lib/navegacao'
-import { nomeDaPrefeitura, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
+import { menuPermitido } from '@/lib/navegacao'
+import { nomeExibido, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 
 export default function Inicio() {
   const usuario = useUsuario()
   const prefeitura = usePrefeitura(subdominioDaPrefeitura())
-  const modulos = menu.filter((modulo) => modulo.url !== '/')
+  const modulos = menuPermitido(usuario.data?.permissoes ?? []).filter(
+    (modulo) => modulo.url !== '/',
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -17,8 +19,7 @@ export default function Inicio() {
           Olá, {usuario.data?.name.split(' ')[0]}
         </h1>
         <p className="text-muted-foreground">
-          {prefeitura.data && nomeDaPrefeitura(prefeitura.data.id)} · Sistema de Tributação
-          Municipal
+          {prefeitura.data && nomeExibido(prefeitura.data)} · Sistema de Tributação Municipal
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

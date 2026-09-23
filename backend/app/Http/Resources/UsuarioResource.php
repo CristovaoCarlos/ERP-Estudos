@@ -22,8 +22,13 @@ class UsuarioResource extends JsonResource
             'name' => $this->name,
             'cpf' => $this->cpf,
             'email' => $this->email,
+            'foto' => $this->foto ? '/api/fotos/'.$this->foto : null,
+            'superadmin' => $this->ehSuperadmin(),
+            'grupos' => $this->getRoleNames()->sort()->values(),
+            'permissoes' => $this->permissoesNaPrefeitura(),
             'prefeituras' => $this->tenants()->with('domains')->orderBy('id')->get()->map(fn (Tenant $tenant) => [
                 'id' => $tenant->id,
+                'nome' => $tenant->nome,
                 'dominio' => $tenant->domains->first()?->domain,
             ]),
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Cpf;
@@ -12,7 +13,7 @@ use Illuminate\Console\Command;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
-#[Signature('usuarios:criar {email} {nome} {--cpf= : CPF usado no login (se omitido num usuário sem CPF, é solicitado)} {--tenant=* : Id do tenant a que o usuário terá acesso} {--senha= : Senha (se omitida, é solicitada)}')]
+#[Signature('usuarios:criar {email} {nome} {--cpf= : CPF usado no login (se omitido num usuário sem CPF, é solicitado)} {--tenant=* : Id do tenant a que o usuário terá acesso} {--grupo=* : Grupo de acesso nos tenants informados (ex.: Parâmetros)} {--superadmin : Marca como superadmin da Lemarq} {--senha= : Senha (se omitida, é solicitada)}')]
 #[Description('Cria ou atualiza um usuário central e o vincula aos tenants informados')]
 class CriarUsuario extends Command
 {
@@ -23,6 +24,13 @@ class CriarUsuario extends Command
 
         if ($inexistentes) {
             $this->error('Tenant(s) inexistente(s): '.implode(', ', $inexistentes));
+
+            return self::FAILURE;
+        }
+
+        $grupos = $this->option('grupo');
+        if ($grupos && ! $tenantIds) {
+            $this->error('Informe --tenant para dar grupos de acesso.');
 
             return self::FAILURE;
         }
@@ -51,6 +59,27 @@ class CriarUsuario extends Command
             ['name' => $this->argument('nome'), 'cpf' => $cpf, 'password' => $senha],
         );
         $user->tenants()->syncWithoutDetaching($tenantIds);
+
+        if ($this->option('superadmin')) {
+            $user->update(['superadmin' => true]);
+        }
+
+        foreach (Tenant::findMany($tenantIds) as $tenant) {
+            $faltando = $tenant->run(function () use ($user, $grupos) {
+                $faltando = array_diff($grupos, Role::whereIn('name', $grupos)->pluck('name')->all());
+                if (! $faltando) {
+                    $user->assignRole($grupos);
+                }
+
+                return $faltando;
+            });
+
+            if ($faltando) {
+                $this->error("Grupo(s) inexistente(s) em {$tenant->id}: ".implode(', ', $faltando).'. Rode acesso:sincronizar.');
+
+                return self::FAILURE;
+            }
+        }
 
         $this->info("Usuário {$user->email} (CPF {$user->cpf}) com acesso a: ".($user->tenants()->pluck('id')->implode(', ') ?: 'nenhum tenant'));
 

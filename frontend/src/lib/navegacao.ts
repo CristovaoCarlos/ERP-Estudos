@@ -74,7 +74,6 @@ export const menu: Modulo[] = [
     url: '/parametros',
     icone: SlidersHorizontal,
     paginas: [
-      { titulo: 'Empresa', url: '/parametros/empresa', icone: Building2 },
       { titulo: 'Receitas', url: '/parametros/receitas', icone: HandCoins },
       { titulo: 'Nota Fiscal', url: '/parametros/nota-fiscal', icone: ReceiptText },
       { titulo: 'Alvará', url: '/parametros/alvara', icone: BadgeCheck },
@@ -277,10 +276,33 @@ export const menu: Modulo[] = [
     icone: Settings2,
     paginas: [
       { titulo: 'Usuários', url: '/administracao/usuarios', icone: UserCog },
-      { titulo: 'Papéis e permissões', url: '/administracao/papeis', icone: LockKeyhole },
+      { titulo: 'Grupos de acesso', url: '/administracao/grupos', icone: LockKeyhole },
+      { titulo: 'Empresas', url: '/administracao/empresas', icone: Landmark },
     ],
   },
 ]
+
+/**
+ * Permissão exigida pela tela: a URL sem a barra inicial, com `.` no lugar de `/`
+ * (`/parametros/receitas` → `parametros.receitas`). Tem que bater com `backend/config/acesso.php`.
+ */
+export function permissaoDaTela(url: string): string {
+  return url.slice(1).replaceAll('/', '.')
+}
+
+/** O Início é de todos; as demais telas dependem das permissões do usuário na prefeitura. */
+export function podeAcessar(url: string, permissoes: string[]): boolean {
+  return url === '/' || permissoes.includes(permissaoDaTela(url))
+}
+
+/** Menu só com as telas permitidas. Submenus e módulos que ficam vazios somem. */
+export function menuPermitido(permissoes: string[], itens: Pagina[] = menu): Pagina[] {
+  return itens.flatMap((item) => {
+    if (!item.paginas) return podeAcessar(item.url, permissoes) ? [item] : []
+    const paginas = menuPermitido(permissoes, item.paginas)
+    return paginas.length ? [{ ...item, paginas }] : []
+  })
+}
 
 /** Telas que abrem uma página: itens sem submenu, em qualquer nível. */
 function folhas(pagina: Pagina): Pagina[] {
@@ -289,6 +311,22 @@ function folhas(pagina: Pagina): Pagina[] {
 
 /** Todas as telas navegáveis do menu. */
 export const telas: Pagina[] = menu.flatMap(folhas)
+
+/**
+ * Telas de cada módulo, para montar grupos de acesso. Início (sem permissão) e Empresas
+ * (exclusiva do superadmin) ficam de fora.
+ */
+export function telasPorModulo(): { modulo: Pagina; telas: Pagina[] }[] {
+  return menu
+    .filter((modulo) => modulo.paginas)
+    .map((modulo) => ({
+      modulo,
+      telas: folhas(modulo).filter(
+        (tela) => permissaoDaTela(tela.url) !== 'administracao.empresas',
+      ),
+    }))
+    .filter(({ telas }) => telas.length > 0)
+}
 
 /** Primeira tela navegável de um item (ele mesmo, se não tiver submenu). */
 export function primeiraTela(pagina: Pagina): Pagina {

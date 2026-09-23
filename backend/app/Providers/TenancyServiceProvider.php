@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Jobs\PrepararPrefeitura;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\PermissionRegistrar;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
@@ -29,6 +31,7 @@ class TenancyServiceProvider extends ServiceProvider
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
                     // Jobs\SeedDatabase::class,
+                    PrepararPrefeitura::class,
 
                     // Your own jobs to prepare the tenant.
                     // Provision API keys, create S3 buckets, anything you want!
@@ -79,9 +82,16 @@ class TenancyServiceProvider extends ServiceProvider
             ],
 
             Events\BootstrappingTenancy::class => [],
-            Events\TenancyBootstrapped::class => [],
+            Events\TenancyBootstrapped::class => [
+                // Papéis e permissões ficam no banco de cada prefeitura: cache separado por prefeitura.
+                fn (Events\TenancyBootstrapped $event) => $this->usarCacheDePermissoes(
+                    config('permission.cache.key').'.tenant.'.$event->tenancy->tenant->getTenantKey()
+                ),
+            ],
             Events\RevertingToCentralContext::class => [],
-            Events\RevertedToCentralContext::class => [],
+            Events\RevertedToCentralContext::class => [
+                fn () => $this->usarCacheDePermissoes(config('permission.cache.key')),
+            ],
 
             // Resource syncing
             Events\SyncedResourceSaved::class => [
@@ -91,6 +101,13 @@ class TenancyServiceProvider extends ServiceProvider
             // Fired only when a synced resource is changed in a different DB than the origin DB (to avoid infinite loops)
             Events\SyncedResourceChangedInForeignDatabase::class => [],
         ];
+    }
+
+    private function usarCacheDePermissoes(string $chave): void
+    {
+        $registrar = $this->app->make(PermissionRegistrar::class);
+        $registrar->cacheKey = $chave;
+        $registrar->clearPermissionsCollection();
     }
 
     public function register()

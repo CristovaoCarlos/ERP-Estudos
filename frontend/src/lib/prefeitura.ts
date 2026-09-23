@@ -15,7 +15,7 @@ export function enderecoDoDominio(dominio: string): string {
   return `${protocol}//${dominio}${port ? `:${port}` : ''}/login`
 }
 
-/** "prefeitura_teste" → "Prefeitura Teste" (as prefeituras ainda não têm nome cadastrado). */
+/** "prefeitura_teste" → "Prefeitura Teste": nome de reserva para prefeitura sem nome cadastrado. */
 export function nomeDaPrefeitura(id: string): string {
   return id
     .split(/[_-]+/)
@@ -24,10 +24,15 @@ export function nomeDaPrefeitura(id: string): string {
     .join(' ')
 }
 
+/** Nome cadastrado em Administração › Empresas ou, sem ele, o gerado a partir do id. */
+export function nomeExibido(prefeitura: { id: string; nome?: string | null }): string {
+  return prefeitura.nome ?? nomeDaPrefeitura(prefeitura.id)
+}
+
 export function usePrefeitura(subdominio: string | null) {
   return useQuery({
     queryKey: ['tenant'],
-    queryFn: async () => (await api.get<{ id: string }>('/tenant')).data,
+    queryFn: async () => (await api.get<{ id: string; nome: string | null }>('/tenant')).data,
     enabled: subdominio !== null,
     retry: false,
     staleTime: Infinity,

@@ -106,7 +106,12 @@ flowchart TB
 | `Tenant` | `app/Models` | Prefeitura; tem domínios, banco próprio e usuários vinculados. |
 | `User`, `PersonalAccessToken` | `app/Models` | Sempre na conexão central (`CentralConnection`). |
 | `TenancyServiceProvider` | `app/Providers` | Eventos do tenancy: criação (em fila) e exclusão do banco do tenant. |
-| `usuarios:criar` | `app/Console/Commands` | Cria usuário e vincula a prefeituras. |
+| `SenhaController` | `app/Http/Controllers` | Pedido e redefinição de senha; o e-mail sai em fila (`RedefinirSenha`). |
+| `usuarios:criar` | `app/Console/Commands` | Cria usuário, vincula a prefeituras, dá grupos de acesso e marca superadmin. |
+| `acesso:sincronizar` | `app/Console/Commands` | Cria ou atualiza grupos e permissões nas prefeituras. |
+| `EmpresaController` | `app/Http/Controllers` | Lista e cadastra empresas (prefeituras clientes) com o administrador de cada uma; só superadmin. |
+| `GrupoController` | `app/Http/Controllers` | Grupos de acesso da prefeitura: cria, altera as telas e exclui. |
+| `UsuarioController` | `app/Http/Controllers` | Usuários da prefeitura: lista, cadastra ou vincula, altera grupos e tira o acesso. |
 | Relatórios | `app/Relatorios/` | Camada própria de relatórios (PDF via mPDF). *A construir.* |
 
 ### Blocos do frontend
@@ -118,10 +123,12 @@ flowchart TB
 | Prefeitura | `src/lib/prefeitura.ts` | Descobre a prefeitura pelo endereço (`VITE_CENTRAL_DOMAIN`) e consulta `/api/tenant`. |
 | Menu | `src/lib/navegacao.ts` | Módulos e telas do sistema. Fonte única do menu lateral, das rotas e do breadcrumb. Todo item tem `icone` (lucide-react). Um item com `paginas` vira submenu, e submenus podem ter outros submenus dentro. |
 | `App` | `src/App.tsx` | Sem prefeitura no endereço (ou prefeitura inexistente) → landing page; senão, rotas do sistema. Na prefeitura, `/` sem sessão também mostra a landing, com o botão "Painel" para o login. |
+| `Listagem` | `src/components/listagem.tsx` | Padrão das telas de listagem: busca rápida, Filtros, Colunas (lembradas no navegador), tabela e paginação no rodapé. |
 | `AppLayout` | `src/components` | Layout do sistema no modelo `sidebar-07` do shadcn: seletor de prefeitura, menu de módulos, menu do usuário, breadcrumb. |
 | `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida (em `/`, mostra a landing da prefeitura). |
-| Páginas | `src/pages` | `Landing`, `Login`, `Inicio`, `EmConstrucao` (telas do menu ainda não implementadas). |
-| Componentes de UI | `src/components/ui` | shadcn/ui sobre Radix, gerados pelo CLI. |
+| Recuperação de senha | `src/pages/EsqueciSenha.tsx`, `RedefinirSenha.tsx` | Pede o link por CPF e troca a senha com o token do e-mail. |
+| Páginas | `src/pages` | `Landing`, `Login`, `Inicio`, `administracao/Empresas`, `administracao/Usuarios`, `administracao/Grupos`, `EmConstrucao` (telas do menu ainda não implementadas). |
+| Componentes de UI | `src/components/ui` | shadcn/ui sobre Radix, gerados pelo CLI. Tema (cores, raio e sombras) em `src/index.css`, no preset `modern-minimal` do tweakcn, com o token extra `--marca` da landing e do login. |
 | Gráficos | `src/components/graficos` | Gráficos em SVG próprio, sem biblioteca. *A construir.* |
 
 ## 6. Visão de tempo de execução
@@ -220,7 +227,7 @@ Servidor próprio (bare-metal), sem Docker. O workflow `deploy.yml` roda o CI co
 | Banco | Tabelas |
 | --- | --- |
 | `stm_central` | `tenants`, `domains`, `tenant_user`, `users`, `personal_access_tokens`, `password_reset_tokens`, `sessions`, `cache`, `jobs`, tabelas de permissão |
-| `stm_tenant_*` | tabelas de permissão (`roles`, `permissions`, …) e, futuramente, os dados tributários da prefeitura |
+| `stm_tenant_*` | tabelas de permissão (`roles`, `permissions`, …): grupos de acesso e permissões por tela; futuramente, os dados tributários da prefeitura |
 
 ### Segurança
 
@@ -228,13 +235,20 @@ Servidor próprio (bare-metal), sem Docker. O workflow `deploy.yml` roda o CI co
 - Tokens do Sanctum guardados como hash no `stm_central`; logout apaga o token.
 - Limite de 5 tentativas de login por minuto por CPF + IP.
 - Login por CPF (dígitos verificadores conferidos no backend e no frontend), [ADR-0008](../adr/0008-login-por-cpf.md).
-- Vínculo usuário ↔ prefeitura checado no login e em toda rota autenticada.
+- Recuperação de senha por e-mail: token de 60 minutos, uso único, guardado no `stm_central`; a resposta não revela se o CPF existe, e trocar a senha revoga todos os tokens do usuário.
+- Vínculo usuário ↔ prefeitura checado no login e em toda rota autenticada; o vínculo tem status (`tenant_user.ativo`), e o acesso desativado impede o login e derruba os tokens daquela prefeitura.
 - HTML vindo do editor rico deve passar pelo `mews/purifier` antes de ser salvo.
 - Serviços de desenvolvimento publicados só em loopback.
 
 ### Papéis e permissões
 
-`spatie/laravel-permission`, com as tabelas **no banco de cada prefeitura**: o mesmo usuário pode ter papéis diferentes em cada uma.
+`spatie/laravel-permission`, com as tabelas **no banco de cada prefeitura**: o mesmo usuário pode ter papéis diferentes em cada uma ([ADR-0009](../adr/0009-grupos-de-acesso-e-empresas.md)).
+
+- **Permissões:** uma por tela do menu, com o nome da URL (`/parametros/receitas` → `parametros.receitas`), catalogadas em `config/acesso.php`.
+- **Grupos de acesso:** `Administrador` (todas as telas, do sistema, acompanha o catálogo e não pode ser alterado nem excluído) e `Parâmetros`, `Tabelas` e `Lançamentos`, cada um com as telas do seu módulo, criados no provisionamento. Cada prefeitura monta os seus em Administração › Grupos de acesso; `acesso:sincronizar` só recria os que faltam ([ADR-0010](../adr/0010-grupos-editaveis-na-tela.md)).
+- **Frontend:** o `GET /api/me` traz `permissoes`. O menu mostra só as telas permitidas, e a rota de uma tela sem permissão mostra "Sem acesso".
+- **Superadmin da Lemarq** (`users.superadmin`): pode tudo, mas só na prefeitura `TENANT_ADMINISTRADOR`. É o único que usa Administração › Empresas, que cadastra prefeituras clientes e provisiona o tenant delas.
+- Models `App\Models\Role`/`Permission` fixos na conexão `tenant`; cache do spatie com chave por prefeitura.
 
 ### Idioma
 
@@ -254,6 +268,8 @@ Registradas como ADRs no formato MADR em [docs/adr](../adr/).
 | Atributo | Cenário | Como é verificado |
 | --- | --- | --- |
 | Isolamento | Usuário da prefeitura A usa seu token na prefeitura B, sem vínculo → 403 | `AuthTest::test_token_de_um_tenant_nao_acessa_tenant_sem_vinculo` |
+| Isolamento | Grupos do usuário na prefeitura A não valem na prefeitura B | `AcessoTest::test_grupos_e_permissoes_sao_separados_por_prefeitura` |
+| Segurança | Superadmin fora da prefeitura da Lemarq não cadastra empresas → 403 | `EmpresasTest::test_superadmin_fora_da_lemarq_nao_acessa_empresas` |
 | Segurança | 6ª tentativa de login em 1 minuto → 429 | `AuthTest::test_login_e_limitado_apos_cinco_tentativas` |
 | Segurança | Token após logout → 401 | `AuthTest::test_logout_revoga_o_token` |
 | Manutenibilidade | PR com código fora do padrão ou teste quebrado não entra na `main` | `ci.yml` |

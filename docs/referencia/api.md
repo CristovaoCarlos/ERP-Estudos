@@ -15,10 +15,29 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | --- | --- | --- | --- | --- |
 | `GET` | `/up` | qualquer | — | Verificação de saúde |
 | `GET` | `/api/status` | central | — | Nome da aplicação e status |
-| `GET` | `/api/tenant` | prefeitura | — | Id da prefeitura atual |
+| `GET` | `/api/tenant` | prefeitura | — | Id e nome da prefeitura atual |
 | `POST` | `/api/login` | prefeitura | — | Entrar; devolve token e usuário |
-| `GET` | `/api/me` | prefeitura | token + vínculo | Usuário atual, com as prefeituras a que tem acesso |
+| `POST` | `/api/senha/esqueci` | prefeitura | — | Envia e-mail com o link para redefinir a senha |
+| `POST` | `/api/senha/redefinir` | prefeitura | — | Redefine a senha com o token do e-mail |
+| `PUT` | `/api/me` | prefeitura | token + vínculo | Altera o próprio nome e e-mail (Minha conta) |
+| `PUT` | `/api/me/senha` | prefeitura | token + vínculo | Troca a própria senha, conferindo a atual |
+| `POST` | `/api/me/foto` | prefeitura | token + vínculo | Envia a foto do usuário (JPEG, PNG ou WebP, até 2 MB) |
+| `DELETE` | `/api/me/foto` | prefeitura | token + vínculo | Remove a foto |
+| `GET` | `/api/fotos/{arquivo}` | prefeitura | — | Serve a foto; o nome aleatório do arquivo é o segredo |
+| `GET` | `/api/me` | prefeitura | token + vínculo | Usuário atual: grupos e permissões nesta prefeitura, se é superadmin e as prefeituras a que tem acesso |
 | `POST` | `/api/logout` | prefeitura | token + vínculo | Revoga o token atual |
+| `GET` | `/api/usuarios` | prefeitura | `administracao.usuarios` | Usuários com acesso à prefeitura, com os grupos |
+| `POST` | `/api/usuarios` | prefeitura | `administracao.usuarios` | Cadastra o usuário ou vincula um já existente (CPF) à prefeitura |
+| `PUT` | `/api/usuarios/{id}` | prefeitura | `administracao.usuarios` | Altera nome, e-mail e senha (não mexe nos grupos) |
+| `PUT` | `/api/usuarios/{id}/vinculos` | prefeitura | `administracao.usuarios` | Define os grupos do usuário na prefeitura |
+| `PUT` | `/api/usuarios/{id}/status` | prefeitura | `administracao.usuarios` | Ativa ou desativa o acesso do usuário à prefeitura |
+| `DELETE` | `/api/usuarios/{id}` | prefeitura | `administracao.usuarios` | Tira o acesso do usuário à prefeitura |
+| `GET` | `/api/grupos` | prefeitura | `administracao.grupos` ou `administracao.usuarios` | Grupos de acesso, com as telas e a contagem de usuários |
+| `POST` | `/api/grupos` | prefeitura | `administracao.grupos` | Cria um grupo com as telas escolhidas |
+| `PUT` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Altera nome e telas do grupo |
+| `DELETE` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Exclui o grupo (recusa se houver usuários nele) |
+| `GET` | `/api/empresas` | prefeitura administradora | superadmin | Lista as empresas (prefeituras clientes) |
+| `POST` | `/api/empresas` | prefeitura administradora | superadmin | Cadastra uma empresa, cria o administrador dela (`admin_<subdomínio>`) e provisiona a prefeitura (em fila) |
 
 ## Códigos de resposta
 
@@ -27,10 +46,10 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `200` | Sucesso |
 | `204` | Sucesso sem corpo (logout) |
 | `401` | Token ausente, inválido ou revogado |
-| `403` | Usuário autenticado sem vínculo com a prefeitura |
+| `403` | Usuário autenticado sem vínculo com a prefeitura, ou sem permissão (ex.: `/api/empresas` para quem não é superadmin na prefeitura administradora) |
 | `404` | Domínio não pertence a nenhuma prefeitura (`{"message": "Prefeitura não encontrada."}`), ou rota inexistente |
 | `422` | Dados inválidos ou credenciais erradas |
-| `429` | Mais de 5 tentativas de login por minuto (mesmo CPF + IP) |
+| `429` | Mais de 5 tentativas de login (ou de pedidos de recuperação de senha) por minuto, mesmo CPF + IP |
 
 ## Exemplo
 

@@ -78,9 +78,13 @@ class AuthTest extends TestCase
                 'name' => 'Teste',
                 'cpf' => '52998224725',
                 'email' => 'fiscal@stm.localhost',
+                'foto' => null,
+                'superadmin' => false,
+                'grupos' => [],
+                'permissoes' => [],
                 'prefeituras' => [
-                    ['id' => 'lemarq', 'dominio' => 'lemarq.localhost'],
-                    ['id' => 'outra', 'dominio' => 'outra.localhost'],
+                    ['id' => 'lemarq', 'nome' => null, 'dominio' => 'lemarq.localhost'],
+                    ['id' => 'outra', 'nome' => null, 'dominio' => 'outra.localhost'],
                 ],
             ]);
     }
@@ -162,6 +166,53 @@ class AuthTest extends TestCase
         $this->getJson('http://nao-existe.localhost/api/tenant')
             ->assertNotFound()
             ->assertExactJson(['message' => 'Prefeitura não encontrada.']);
+    }
+
+    public function test_usuario_troca_a_propria_senha_e_derruba_as_outras_sessoes(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'));
+        $token = $this->login('lemarq')->json('token');
+        tenancy()->end();
+        $outraSessao = User::first()->createToken('web:lemarq')->plainTextToken;
+
+        $this->withToken($token)->putJson('http://lemarq.localhost/api/me/senha', [
+            'senha_atual' => 'senha-correta',
+            'password' => 'senha-nova-forte',
+            'password_confirmation' => 'senha-nova-forte',
+        ])->assertOk()->assertJsonPath('message', 'Senha alterada.');
+        tenancy()->end();
+        $this->app['auth']->forgetGuards();
+
+        // A sessão que trocou a senha continua; as outras caem.
+        $this->withToken($token)->getJson('http://lemarq.localhost/api/me')->assertOk();
+        tenancy()->end();
+        $this->app['auth']->forgetGuards();
+        $this->withToken($outraSessao)->getJson('http://lemarq.localhost/api/me')->assertUnauthorized();
+        tenancy()->end();
+
+        $this->login('lemarq', 'senha-nova-forte')->assertOk();
+    }
+
+    public function test_troca_de_senha_exige_a_senha_atual_e_confirmacao(): void
+    {
+        $this->criarUsuario($this->criarTenant('lemarq'));
+        $token = $this->login('lemarq')->json('token');
+        tenancy()->end();
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($token)->putJson('http://lemarq.localhost/api/me/senha', [
+            'senha_atual' => 'senha-errada',
+            'password' => 'senha-nova-forte',
+            'password_confirmation' => 'senha-nova-forte',
+        ])->assertUnprocessable()->assertJsonValidationErrors(['senha_atual' => 'Senha atual incorreta.']);
+        tenancy()->end();
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($token)->putJson('http://lemarq.localhost/api/me/senha', [
+            'senha_atual' => 'senha-correta',
+            'password' => 'senha-nova-forte',
+            'password_confirmation' => 'outra',
+        ])->assertJsonValidationErrors(['password']);
     }
 
     public function test_login_e_limitado_apos_cinco_tentativas(): void

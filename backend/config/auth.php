@@ -96,6 +96,8 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            // Usuários e tokens ficam no banco central, não no da prefeitura.
+            'connection' => env('DB_CONNECTION', 'sqlite'),
             'expire' => 60,
             'throttle' => 60,
         ],
