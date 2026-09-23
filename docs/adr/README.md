@@ -16,6 +16,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0009](0009-grupos-de-acesso-e-empresas.md) | Grupos de acesso por módulo, superadmin da Lemarq e cadastro de empresas | Aceita |
 | [0010](0010-grupos-editaveis-na-tela.md) | Grupos de acesso montados pela prefeitura, na tela | Aceita |
 | [0011](0011-grupo-administrador-e-admin-da-prefeitura.md) | Grupo Administrador do sistema e o usuário admin de cada prefeitura | Aceita |
+| [0012](0012-schema-do-sistema-legado.md) | Estrutura do banco herdada do sistema legado | Aceita |
 
 ## Como criar um ADR
 
