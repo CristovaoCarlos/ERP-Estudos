@@ -16,8 +16,6 @@ cd frontend && npm ci && npm run dev
 
 Passo a passo completo, com criação de prefeitura e usuário: **[Primeiros passos](docs/tutoriais/primeiros-passos.md)**.
 
-Depois de cada `git pull`: `bash scripts/atualizar.sh` (migrations, dependências, permissões e worker). Veja [Atualizar o ambiente](docs/guias/atualizar-ambiente.md).
-
 | Serviço | Endereço |
 | --- | --- |
 | Frontend (fora do Docker) | http://&lt;prefeitura&gt;.localhost:5173 |
