@@ -29,6 +29,14 @@ tags:
     description: Rotas que identificam a prefeitura pelo domínio
   - name: Autenticação
     description: Login, usuário atual e logout (por prefeitura)
+  - name: Senha
+    description: Recuperação de senha por e-mail (sem autenticação)
+  - name: Usuários
+    description: Usuários da prefeitura (permissão `administracao.usuarios`)
+  - name: Grupos de acesso
+    description: Grupos da prefeitura e as telas de cada um
+  - name: Empresas
+    description: Prefeituras clientes. Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`)
 paths:
   /up:
     get:
@@ -65,7 +73,7 @@ paths:
     get:
       tags: [Prefeitura]
       summary: Prefeitura atual
-      description: Retorna o id da prefeitura identificada pelo domínio.
+      description: Retorna o id e o nome da prefeitura identificada pelo domínio.
       operationId: tenantAtual
       security: []
       responses:
@@ -75,11 +83,15 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [id]
+                required: [id, nome]
                 properties:
                   id:
                     type: string
                     examples: [lemarq]
+                  nome:
+                    type: [string, 'null']
+                    description: Nome cadastrado em Administração › Empresas.
+                    examples: [Lemarq]
         '404':
           $ref: '#/components/responses/PrefeituraNaoEncontrada'
   /api/login:
@@ -133,6 +145,94 @@ paths:
                   cpf: [CPF ou senha inválidos.]
         '429':
           description: Muitas tentativas
+  /api/senha/esqueci:
+    post:
+      tags: [Senha]
+      summary: Pedir o link de redefinição
+      description: |
+        Envia ao e-mail do usuário um link para redefinir a senha, apontando para o endereço da
+        prefeitura em que o pedido foi feito. A resposta é sempre a mesma, exista ou não o CPF,
+        para não revelar quem está cadastrado. Nada é enviado se o acesso do usuário à prefeitura
+        estiver desativado. Limite: 5 pedidos por minuto por CPF + IP.
+      operationId: esqueciSenha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cpf]
+              properties:
+                cpf:
+                  type: string
+                  examples: ['529.982.247-25']
+      responses:
+        '200':
+          description: Pedido recebido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mensagem'
+              example:
+                message: Se o CPF estiver cadastrado nesta prefeitura, enviamos um e-mail com o link para redefinir a senha.
+        '422':
+          description: CPF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+        '429':
+          description: Muitos pedidos
+  /api/senha/redefinir:
+    post:
+      tags: [Senha]
+      summary: Redefinir a senha
+      description: |
+        Usa o token do e-mail, que vale 60 minutos e só serve uma vez. Ao trocar a senha, todos os
+        tokens de acesso do usuário são revogados, em todas as prefeituras.
+      operationId: redefinirSenha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cpf, token, password, password_confirmation]
+              properties:
+                cpf:
+                  type: string
+                token:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                password_confirmation:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Senha alterada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mensagem'
+              example:
+                message: Senha alterada. Entre com a senha nova.
+        '422':
+          description: Link inválido ou expirado, ou senha fraca
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+              example:
+                message: Link inválido ou expirado. Peça um novo.
+                errors:
+                  token: [Link inválido ou expirado. Peça um novo.]
+        '429':
+          description: Muitas tentativas
   /api/me:
     get:
       tags: [Autenticação]
@@ -151,6 +251,133 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
+  /api/me/foto:
+    post:
+      tags: [Autenticação]
+      summary: Enviar a foto do usuário
+      description: |
+        `multipart/form-data` com o campo `foto`: JPEG, PNG ou WebP, até 2 MB e 4000×4000.
+        Substitui e apaga a foto anterior. A foto é do usuário e aparece em todas as prefeituras.
+      operationId: enviarFoto
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [foto]
+              properties:
+                foto:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Foto atualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [foto]
+                properties:
+                  foto:
+                    type: string
+                    examples: ['/api/fotos/Xq15ZGSD1MlIQsHBOd3GrQ1VGH5I50YQSAL4oS53.png']
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '422':
+          description: Arquivo grande demais ou fora dos formatos aceitos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Autenticação]
+      summary: Remover a foto do usuário
+      operationId: removerFoto
+      security:
+        - token: []
+      responses:
+        '200':
+          description: Foto removida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  foto:
+                    type: 'null'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+  '/api/fotos/{arquivo}':
+    get:
+      tags: [Autenticação]
+      summary: Ver a foto de um usuário
+      description: |
+        Sem autenticação: o nome aleatório do arquivo (40 caracteres) é a credencial.
+        A pasta `public` servida pelo nginx não enxerga o storage, por isso a foto sai por aqui.
+      operationId: verFoto
+      security: []
+      parameters:
+        - name: arquivo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Imagem
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Nome inválido ou arquivo inexistente
+  /api/me/senha:
+    put:
+      tags: [Autenticação]
+      summary: Trocar a própria senha
+      description: Confere a senha atual. As outras sessões do usuário são encerradas; a que trocou continua.
+      operationId: trocarPropriaSenha
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senha_atual, password, password_confirmation]
+              properties:
+                senha_atual:
+                  type: string
+                  format: password
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                password_confirmation:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Senha alterada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mensagem'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Senha atual incorreta ou nova senha inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
   /api/logout:
     post:
       tags: [Autenticação]
@@ -166,6 +393,471 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
+  /api/usuarios:
+    get:
+      tags: [Usuários]
+      summary: Listar usuários da prefeitura
+      operationId: listarUsuarios
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UsuarioDaPrefeitura'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Usuários]
+      summary: Cadastrar ou vincular usuário
+      description: |
+        Cria o usuário no banco central e o vincula à prefeitura do domínio.
+        Se o CPF já existir no STM, **vincula o usuário existente** (mantendo nome e senha) e
+        responde com `vinculado: true`.
+      operationId: cadastrarUsuario
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, cpf, email, password]
+              properties:
+                name:
+                  type: string
+                  maxLength: 150
+                cpf:
+                  type: string
+                  description: Com ou sem máscara; dígitos verificadores conferidos.
+                  examples: ['529.982.247-25']
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                grupos:
+                  type: array
+                  description: Grupos de acesso desta prefeitura (`GET /api/grupos`).
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Usuário cadastrado ou vinculado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UsuarioDaPrefeitura'
+                  - type: object
+                    required: [vinculado]
+                    properties:
+                      vinculado:
+                        type: boolean
+                        description: O usuário já existia no STM e só ganhou acesso a esta prefeitura.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/usuarios/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Usuários]
+      summary: Alterar dados do usuário
+      description: |
+        Altera nome, e-mail e senha; senha em branco mantém a atual. **Não mexe nos grupos**
+        (use `PUT /api/usuarios/{id}/vinculos`). Se o usuário também estiver em outra prefeitura,
+        nada muda aqui: nome, e-mail e senha são dele, não desta prefeitura.
+      operationId: alterarUsuario
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: [string, 'null']
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDaPrefeitura'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: O usuário não tem acesso a esta prefeitura
+        '422':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Usuários]
+      summary: Tirar o acesso do usuário à prefeitura
+      description: |
+        Remove o vínculo, os grupos e os tokens do usuário **nesta** prefeitura.
+        O cadastro continua no STM. Ninguém pode remover o próprio acesso.
+      operationId: removerUsuario
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Acesso removido
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: O usuário não tem acesso a esta prefeitura
+        '422':
+          description: Tentativa de remover o próprio acesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/usuarios/{id}/vinculos':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Usuários]
+      summary: Definir os grupos do usuário na prefeitura
+      description: A lista substitui os grupos atuais; vazia, o usuário fica só com o Início.
+      operationId: alterarVinculosDoUsuario
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grupos]
+              properties:
+                grupos:
+                  type: array
+                  items:
+                    type: string
+                  examples: [[Parâmetros, Tabelas]]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDaPrefeitura'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: O usuário não tem vínculo com esta prefeitura
+        '422':
+          description: Grupo inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/usuarios/{id}/status':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Usuários]
+      summary: Ativar ou desativar o acesso do usuário
+      description: |
+        O status vale **só nesta prefeitura**: desativado aqui, o usuário continua trabalhando nas
+        outras. Desativar encerra as sessões dele nesta prefeitura; o login passa a responder
+        "Seu acesso a esta prefeitura está desativado.". O cadastro e os grupos são mantidos.
+        Ninguém pode desativar o próprio acesso.
+      operationId: alterarStatusDoUsuario
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ativo]
+              properties:
+                ativo:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDaPrefeitura'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: O usuário não tem vínculo com esta prefeitura
+        '422':
+          description: Tentativa de desativar o próprio acesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/grupos:
+    get:
+      tags: [Grupos de acesso]
+      summary: Listar grupos da prefeitura
+      description: Aceita `administracao.grupos` **ou** `administracao.usuarios` (o formulário de usuários usa esta lista).
+      operationId: listarGrupos
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Grupo'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Grupos de acesso]
+      summary: Criar grupo
+      operationId: criarGrupo
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoGrupo'
+      responses:
+        '201':
+          description: Grupo criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grupo'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Nome repetido ou tela desconhecida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/grupos/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Grupos de acesso]
+      summary: Alterar grupo
+      description: As telas informadas substituem as atuais. Os usuários do grupo passam a enxergar as novas telas.
+      operationId: alterarGrupo
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoGrupo'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grupo'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Nome repetido ou tela desconhecida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Grupos de acesso]
+      summary: Excluir grupo
+      description: |
+        Recusa se algum usuário estiver no grupo, e sempre para o grupo `Administrador`.
+        Grupos padrão excluídos voltam no próximo `acesso:sincronizar`.
+      operationId: excluirGrupo
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Grupo excluído
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Grupo em uso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/empresas:
+    get:
+      tags: [Empresas]
+      summary: Listar empresas
+      description: Todas as prefeituras clientes, em ordem de nome.
+      operationId: listarEmpresas
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Empresa'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Empresas]
+      summary: Cadastrar empresa
+      description: |
+        Cria o tenant `<subdominio com _ no lugar de ->`, o domínio `<subdominio>.<primeiro CENTRAL_DOMAINS>`
+        e, em fila, o banco `stm_tenant_<id>` com as migrations e os grupos de acesso.
+        A empresa volta com `situacao: provisionando` até o banco ficar pronto.
+      operationId: cadastrarEmpresa
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, cnpj, subdominio, administrador]
+              properties:
+                nome:
+                  type: string
+                  maxLength: 150
+                  examples: [Prefeitura de Nova Esperança]
+                cnpj:
+                  type: string
+                  description: Numérico ou alfanumérico, com ou sem máscara. Dígitos verificadores conferidos; único.
+                  examples: ['11.222.333/0001-81', '12.ABC.345/01DE-35']
+                subdominio:
+                  type: string
+                  maxLength: 40
+                  pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+                  description: Não pode ser reservado (www, api, admin, app, mail, stm) nem estar em uso.
+                  examples: [nova-esperanca]
+                administrador:
+                  type: object
+                  description: |
+                    Primeiro usuário da prefeitura, criado como `admin_<subdominio>` e colocado no
+                    grupo Administrador (acesso a todas as telas). Se o CPF já existir no STM,
+                    o usuário existente é aproveitado, mantendo nome e senha.
+                  required: [cpf, email, senha]
+                  properties:
+                    cpf:
+                      type: string
+                      examples: ['529.982.247-25']
+                    email:
+                      type: string
+                      format: email
+                    senha:
+                      type: string
+                      format: password
+                      minLength: 8
+      responses:
+        '201':
+          description: Empresa cadastrada; provisionamento em andamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Dados inválidos, CNPJ ou endereço já usados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+              example:
+                message: Este endereço já está em uso.
+                errors:
+                  subdominio: [Este endereço já está em uso.]
 components:
   securitySchemes:
     token:
@@ -175,7 +867,7 @@ components:
   schemas:
     Usuario:
       type: object
-      required: [id, name, cpf, email, prefeituras]
+      required: [id, name, cpf, email, superadmin, grupos, permissoes, prefeituras]
       properties:
         id:
           type: integer
@@ -191,19 +883,127 @@ components:
           type: string
           format: email
           examples: [admin@stm.localhost]
+        foto:
+          type: [string, 'null']
+          description: Endereço da foto (`/api/fotos/...`).
+        superadmin:
+          type: boolean
+          description: Superadmin com efeito nesta prefeitura (só na prefeitura administradora).
+        grupos:
+          type: array
+          description: Grupos de acesso do usuário nesta prefeitura.
+          items:
+            type: string
+          examples: [[Parâmetros, Tabelas]]
+        permissoes:
+          type: array
+          description: |
+            Permissões nesta prefeitura, uma por tela (`/parametros/receitas` → `parametros.receitas`).
+            O superadmin recebe todas, mais `administracao.empresas`.
+          items:
+            type: string
+          examples: [[parametros.receitas, parametros.iptu]]
         prefeituras:
           type: array
           description: Prefeituras a que o usuário tem acesso, para o seletor de prefeitura.
           items:
             type: object
-            required: [id, dominio]
+            required: [id, nome, dominio]
             properties:
               id:
                 type: string
                 examples: [lemarq]
+              nome:
+                type: [string, 'null']
+                examples: [Lemarq]
               dominio:
                 type: [string, 'null']
                 examples: [lemarq.localhost]
+    Grupo:
+      type: object
+      required: [id, nome, telas, usuarios, sistema]
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+          examples: [Fiscalização]
+        telas:
+          type: array
+          description: Uma permissão por tela (`/parametros/alvara` → `parametros.alvara`).
+          items:
+            type: string
+        usuarios:
+          type: integer
+          description: Quantos usuários da prefeitura estão no grupo.
+        sistema:
+          type: boolean
+          description: |
+            Grupo do sistema (`Administrador`): tem todas as telas, acompanha o catálogo e
+            não pode ser alterado nem excluído (`PUT` e `DELETE` respondem 422).
+    DadosDoGrupo:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          maxLength: 60
+        telas:
+          type: array
+          description: Telas do catálogo (`config/acesso.php`). `administracao.empresas` não é aceita.
+          items:
+            type: string
+    UsuarioDaPrefeitura:
+      type: object
+      required: [id, name, cpf, email, superadmin, ativo, grupos, somente_grupos]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        cpf:
+          type: [string, 'null']
+          description: Só dígitos.
+        email:
+          type: string
+          format: email
+        superadmin:
+          type: boolean
+        ativo:
+          type: boolean
+          description: Acesso ativo nesta prefeitura. Desativado, o usuário não entra aqui.
+        grupos:
+          type: array
+          items:
+            type: string
+        somente_grupos:
+          type: boolean
+          description: O usuário está em outra prefeitura também; aqui só os grupos podem mudar.
+    Empresa:
+      type: object
+      required: [id, nome, cnpj, dominio, situacao, criada_em]
+      properties:
+        id:
+          type: string
+          description: Id do tenant; o banco é `stm_tenant_<id>`.
+          examples: [nova_esperanca]
+        nome:
+          type: [string, 'null']
+          examples: [Prefeitura de Nova Esperança]
+        cnpj:
+          type: [string, 'null']
+          description: Sem máscara, em maiúsculas. `null` em prefeituras anteriores ao cadastro de empresas.
+          examples: ['11222333000181']
+        dominio:
+          type: [string, 'null']
+          examples: [nova-esperanca.localhost]
+        situacao:
+          type: string
+          enum: [provisionando, ativa]
+          description: '`provisionando` até o worker criar o banco, migrar e criar os grupos.'
+        criada_em:
+          type: [string, 'null']
+          format: date-time
     ErroDeValidacao:
       type: object
       required: [message, errors]
@@ -240,7 +1040,7 @@ components:
           example:
             message: Unauthenticated.
     SemAcesso:
-      description: Usuário sem vínculo com esta prefeitura
+      description: Usuário sem vínculo com esta prefeitura, ou sem permissão para a rota
       content:
         application/json:
           schema:

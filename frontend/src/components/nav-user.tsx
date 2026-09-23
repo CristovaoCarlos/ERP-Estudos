@@ -1,6 +1,9 @@
-import { ChevronsUpDown, LogOut } from 'lucide-react'
+import { ChevronsUpDown, IdCard, LogOut, UserRound } from 'lucide-react'
+import { useState } from 'react'
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { MinhaConta } from '@/components/minha-conta'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,19 +19,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useLogout, type Usuario } from '@/lib/auth'
-
-function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/)
-  return (
-    (partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')
-  ).toUpperCase()
-}
+import { formatarCpf } from '@/lib/cpf'
+import { iniciais, useLogout, type Usuario } from '@/lib/auth'
 
 function Identificacao({ usuario }: { usuario: Usuario }) {
   return (
     <>
       <Avatar className="size-8 rounded-lg">
+        {usuario.foto && <AvatarImage src={usuario.foto} alt="" className="rounded-lg" />}
         <AvatarFallback className="rounded-lg">{iniciais(usuario.name)}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
@@ -42,6 +40,7 @@ function Identificacao({ usuario }: { usuario: Usuario }) {
 export function NavUser({ usuario }: { usuario: Usuario }) {
   const { isMobile } = useSidebar()
   const logout = useLogout()
+  const [conta, setConta] = useState(false)
 
   return (
     <SidebarMenu>
@@ -70,13 +69,28 @@ export function NavUser({ usuario }: { usuario: Usuario }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem disabled={logout.isPending} onSelect={() => logout.mutate()}>
+              {usuario.cpf && (
+                <DropdownMenuItem disabled className="opacity-100">
+                  <IdCard />
+                  <span className="font-mono text-xs">{formatarCpf(usuario.cpf)}</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onSelect={() => setConta(true)}>
+                <UserRound />
+                Minha conta
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={logout.isPending}
+                onSelect={() => logout.mutate()}
+                variant="destructive"
+              >
                 <LogOut />
                 Sair
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        {conta && <MinhaConta usuario={usuario} aoFechar={() => setConta(false)} />}
       </SidebarMenuItem>
     </SidebarMenu>
   )

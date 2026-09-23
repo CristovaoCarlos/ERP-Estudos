@@ -6,6 +6,7 @@ import { api, getToken, setToken } from '@/lib/api'
 
 export type PrefeituraDoUsuario = {
   id: string
+  nome: string | null
   dominio: string | null
 }
 
@@ -14,6 +15,14 @@ export type Usuario = {
   name: string
   cpf: string | null
   email: string
+  /** Endereço da foto (`/api/fotos/...`) ou `null`. */
+  foto: string | null
+  /** Superadmin da Lemarq com efeito nesta prefeitura (só na prefeitura administradora). */
+  superadmin: boolean
+  /** Grupos de acesso nesta prefeitura. */
+  grupos: string[]
+  /** Permissões nesta prefeitura: uma por tela (ver `permissaoDaTela`). */
+  permissoes: string[]
   prefeituras: PrefeituraDoUsuario[]
 }
 
@@ -21,6 +30,14 @@ export type Credenciais = {
   /** Só dígitos. */
   cpf: string
   password: string
+}
+
+/** "Maria Souza Lima" → "ML" (primeiro e último nome). */
+export function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/)
+  return (
+    (partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')
+  ).toUpperCase()
 }
 
 export function useUsuario() {

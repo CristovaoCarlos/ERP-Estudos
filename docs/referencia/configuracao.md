@@ -14,7 +14,8 @@ Copie `backend/.env.example` para `backend/.env`. Os valores abaixo são os de d
 | `APP_DEBUG` | `true` | Mostra detalhes de erro. **`false` em produção.** |
 | `APP_URL` | `http://localhost:8000` | URL base do backend. |
 | `APP_LOCALE` / `APP_FAKER_LOCALE` | `pt_BR` | Idioma da aplicação e dos dados falsos. |
-| `CENTRAL_DOMAINS` | `localhost,127.0.0.1` | Domínios que **não** são prefeituras, separados por vírgula. Em produção, o domínio principal (ex.: `stm.gov.br`). |
+| `CENTRAL_DOMAINS` | `localhost,127.0.0.1` | Domínios que **não** são prefeituras, separados por vírgula. Em produção, o domínio principal (ex.: `stm.gov.br`). O **primeiro** é a base dos endereços das empresas cadastradas (`<subdomínio>.<primeiro domínio>`). |
+| `TENANT_ADMINISTRADOR` | `lemarq` | Id da prefeitura da Lemarq. Só entrando por ela o superadmin tem acesso total e o cadastro de empresas ([ADR-0009](../adr/0009-grupos-de-acesso-e-empresas.md)). |
 
 ### Banco de dados
 
@@ -37,6 +38,8 @@ Os bancos das prefeituras usam as mesmas credenciais, com nome `stm_tenant_<id>`
 | `REDIS_HOST` / `REDIS_PORT` | `redis` / `6379` | |
 
 ### E-mail
+
+Usado na recuperação de senha. Em desenvolvimento, as mensagens ficam no Mailpit (<http://127.0.0.1:8025>).
 
 | Variável | Padrão (dev) | Descrição |
 | --- | --- | --- |
@@ -75,7 +78,9 @@ O `phpunit.xml` define `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:`, `CACHE_S
 | --- | --- |
 | `backend/config/tenancy.php` | Modelo `Tenant`, domínios centrais, prefixo dos bancos, bootstrappers. |
 | `backend/app/Providers/TenancyServiceProvider.php` | Jobs de criação (em fila) e exclusão do banco da prefeitura. |
-| `backend/config/permission.php` | Papéis e permissões. |
+| `backend/config/permission.php` | Papéis e permissões (models `App\Models\Role` e `Permission`, na conexão da prefeitura). |
+| `backend/config/acesso.php` | Grupos de acesso e catálogo de permissões (uma por tela do menu). |
+| `backend/config/filesystems.php` | Disco `fotos` (`storage/app/fotos`), com as fotos dos usuários. Fica fora dos discos isolados por prefeitura, porque o usuário é o mesmo em todas. |
 | `backend/config/purifier.php` | Regras de sanitização de HTML. |
 | `backend/config/sanctum.php` | Expiração de tokens (padrão: não expiram). |
 | `docker/php/php.ini` | Limites do PHP (memória 512M, upload 50M, fuso `America/Sao_Paulo`). |

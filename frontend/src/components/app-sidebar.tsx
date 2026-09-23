@@ -6,7 +6,7 @@ import { NavUser } from '@/components/nav-user'
 import { PrefeituraSwitcher } from '@/components/prefeitura-switcher'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar'
 import type { Usuario } from '@/lib/auth'
-import { menu } from '@/lib/navegacao'
+import { menuPermitido } from '@/lib/navegacao'
 
 export function AppSidebar({
   usuario,
@@ -25,7 +25,7 @@ export function AppSidebar({
         <PrefeituraSwitcher atual={prefeitura} prefeituras={usuario.prefeituras} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain modulos={menu} />
+        <NavMain modulos={menuPermitido(usuario.permissoes)} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser usuario={usuario} />

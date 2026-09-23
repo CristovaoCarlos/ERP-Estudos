@@ -30,6 +30,14 @@ return [
 
     'disks' => [
 
+        // Fotos dos usuários: fora dos discos isolados por prefeitura (`config/tenancy.php`),
+        // porque o usuário é o mesmo em todas. Servidas por `GET /api/fotos/{arquivo}`.
+        'fotos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/fotos'),
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

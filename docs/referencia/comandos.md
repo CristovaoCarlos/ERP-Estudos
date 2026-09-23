@@ -9,7 +9,7 @@ Comandos do backend rodam dentro do contêiner: `docker compose exec app <comand
 Cria um usuário no `stm_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
 
 ```
-php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--senha=SENHA]
+php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--grupo=GRUPO ...] [--superadmin] [--senha=SENHA]
 ```
 
 | Argumento / opção | Descrição |
@@ -18,7 +18,21 @@ php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--senha
 | `nome` | Nome exibido. |
 | `--cpf` | CPF usado no login, com ou sem máscara (gravado só com dígitos). Se omitido, mantém o CPF do usuário existente ou é pedido no terminal. Falha se for inválido ou já pertencer a outro usuário. |
 | `--tenant` | Id da prefeitura. Repita para várias. Falha se alguma não existir. |
+| `--grupo` | Grupo de acesso (ex.: `Parâmetros`, `Tabelas`, `Lançamentos`) dado em **cada** prefeitura de `--tenant`. Repita para vários. Grupos que o usuário já tem são mantidos. Exige `--tenant`; falha se o grupo não existir na prefeitura. |
+| `--superadmin` | Marca o usuário como superadmin da Lemarq. Só tem efeito quando ele entra pela prefeitura `TENANT_ADMINISTRADOR`. |
 | `--senha` | Senha. Se omitida, é pedida sem eco no terminal (recomendado). |
+
+### `acesso:sincronizar`
+
+Acerta, no banco de cada prefeitura, as permissões de `config/acesso.php` (uma por tela) e **cria os grupos padrão que não existirem**. Permissões fora do catálogo são apagadas. Grupos existentes **não são alterados**: quem manda neles é a tela Administração › Grupos de acesso ([ADR-0010](../adr/0010-grupos-editaveis-na-tela.md)). Rode depois de mudar o catálogo (tela nova no menu). Prefeituras novas já recebem tudo no provisionamento.
+
+```
+php artisan acesso:sincronizar [--tenant=ID ...]
+```
+
+| Opção | Descrição |
+| --- | --- |
+| `--tenant` | Id da prefeitura. Repita para várias. Sem a opção, todas. |
 
 ## Comandos de prefeituras (`stancl/tenancy`)
 

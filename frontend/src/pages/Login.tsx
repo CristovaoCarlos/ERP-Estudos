@@ -8,6 +8,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
@@ -21,7 +22,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { getToken } from '@/lib/api'
 import { mensagemDeErroDoLogin, useLogin } from '@/lib/auth'
 import { cpfValido, formatarCpf, somenteDigitos } from '@/lib/cpf'
-import { nomeDaPrefeitura, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
+import { nomeExibido, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 
 const esquema = z.object({
   cpf: z.string().refine(cpfValido, 'Informe um CPF válido.'),
@@ -102,27 +103,17 @@ function Apresentacao() {
   )
 }
 
-export default function Login() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const login = useLogin()
+/** Moldura das telas de acesso: apresentação à esquerda e o conteúdo à direita. */
+export function PaginaDeAcesso({
+  titulo,
+  descricao,
+  children,
+}: {
+  titulo: string
+  descricao: string
+  children: ReactNode
+}) {
   const prefeitura = usePrefeitura(subdominioDaPrefeitura())
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<Campos>({ resolver: zodResolver(esquema) })
-
-  if (getToken() !== null && !login.isSuccess) return <Navigate to="/" replace />
-
-  const destino = (location.state as { de?: string } | null)?.de ?? '/'
-  const entrar = handleSubmit(({ cpf, password }) =>
-    login.mutate(
-      { cpf: somenteDigitos(cpf), password },
-      { onSuccess: () => navigate(destino, { replace: true }) },
-    ),
-  )
-  const campoCpf = register('cpf')
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -148,77 +139,110 @@ export default function Login() {
             <div className="flex flex-col gap-2">
               {prefeitura.data && (
                 <span className="font-mono text-xs tracking-widest text-marca uppercase">
-                  {nomeDaPrefeitura(prefeitura.data.id)}
+                  {nomeExibido(prefeitura.data)}
                 </span>
               )}
-              <h1 className="text-2xl font-semibold tracking-tight">Entrar</h1>
-              <p className="text-sm text-muted-foreground">
-                Acesse com o CPF cadastrado na sua prefeitura.
-              </p>
+              <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
+              <p className="text-sm text-muted-foreground">{descricao}</p>
             </div>
-
-            {login.isError && (
-              <Alert variant="destructive">
-                <CircleAlert />
-                <AlertDescription>{mensagemDeErroDoLogin(login.error)}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={entrar} noValidate className="flex flex-col gap-6">
-              <FieldGroup>
-                <Field data-invalid={errors.cpf ? true : undefined}>
-                  <FieldLabel htmlFor="cpf">CPF</FieldLabel>
-                  <Input
-                    id="cpf"
-                    inputMode="numeric"
-                    autoComplete="username"
-                    placeholder="000.000.000-00"
-                    maxLength={14}
-                    autoFocus
-                    className="h-10 bg-background"
-                    aria-invalid={errors.cpf ? true : undefined}
-                    {...campoCpf}
-                    onChange={(evento) => {
-                      evento.target.value = formatarCpf(evento.target.value)
-                      return campoCpf.onChange(evento)
-                    }}
-                  />
-                  <FieldError>{errors.cpf?.message}</FieldError>
-                </Field>
-                <Field data-invalid={errors.password ? true : undefined}>
-                  <FieldLabel htmlFor="password">Senha</FieldLabel>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    className="h-10 bg-background"
-                    aria-invalid={errors.password ? true : undefined}
-                    {...register('password')}
-                  />
-                  <FieldError>{errors.password?.message}</FieldError>
-                </Field>
-              </FieldGroup>
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full bg-marca text-marca-foreground hover:bg-marca/90"
-                disabled={login.isPending}
-              >
-                {login.isPending && <Spinner data-icon="inline-start" />}
-                Entrar
-              </Button>
-            </form>
-
-            <Link
-              to="/"
-              className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              <ArrowLeft className="size-3.5" />
-              Voltar para a página inicial
-            </Link>
+            {children}
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+export default function Login() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const login = useLogin()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Campos>({ resolver: zodResolver(esquema) })
+
+  if (getToken() !== null && !login.isSuccess) return <Navigate to="/" replace />
+
+  const destino = (location.state as { de?: string } | null)?.de ?? '/'
+  const entrar = handleSubmit(({ cpf, password }) =>
+    login.mutate(
+      { cpf: somenteDigitos(cpf), password },
+      { onSuccess: () => navigate(destino, { replace: true }) },
+    ),
+  )
+  const campoCpf = register('cpf')
+
+  return (
+    <PaginaDeAcesso titulo="Entrar" descricao="Acesse com o CPF cadastrado na sua prefeitura.">
+      {login.isError && (
+        <Alert variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{mensagemDeErroDoLogin(login.error)}</AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={entrar} noValidate className="flex flex-col gap-6">
+        <FieldGroup>
+          <Field data-invalid={errors.cpf ? true : undefined}>
+            <FieldLabel htmlFor="cpf">CPF</FieldLabel>
+            <Input
+              id="cpf"
+              inputMode="numeric"
+              autoComplete="username"
+              placeholder="000.000.000-00"
+              maxLength={14}
+              autoFocus
+              className="h-10 bg-background"
+              aria-invalid={errors.cpf ? true : undefined}
+              {...campoCpf}
+              onChange={(evento) => {
+                evento.target.value = formatarCpf(evento.target.value)
+                return campoCpf.onChange(evento)
+              }}
+            />
+            <FieldError>{errors.cpf?.message}</FieldError>
+          </Field>
+          <Field data-invalid={errors.password ? true : undefined}>
+            <div className="flex items-center justify-between gap-2">
+              <FieldLabel htmlFor="password">Senha</FieldLabel>
+              <Link
+                to="/esqueci-senha"
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              className="h-10 bg-background"
+              aria-invalid={errors.password ? true : undefined}
+              {...register('password')}
+            />
+            <FieldError>{errors.password?.message}</FieldError>
+          </Field>
+        </FieldGroup>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full bg-marca text-marca-foreground hover:bg-marca/90"
+          disabled={login.isPending}
+        >
+          {login.isPending && <Spinner data-icon="inline-start" />}
+          Entrar
+        </Button>
+      </form>
+
+      <Link
+        to="/"
+        className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        <ArrowLeft className="size-3.5" />
+        Voltar para a página inicial
+      </Link>
+    </PaginaDeAcesso>
   )
 }

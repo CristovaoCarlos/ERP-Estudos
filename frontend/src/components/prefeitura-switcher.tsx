@@ -15,7 +15,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import type { PrefeituraDoUsuario } from '@/lib/auth'
-import { enderecoDoDominio, nomeDaPrefeitura } from '@/lib/prefeitura'
+import { enderecoDoDominio, nomeExibido } from '@/lib/prefeitura'
 
 export function PrefeituraSwitcher({
   atual,
@@ -39,7 +39,11 @@ export function PrefeituraSwitcher({
                 <Landmark className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{nomeDaPrefeitura(atual)}</span>
+                <span className="truncate font-medium">
+                  {nomeExibido(
+                    prefeituras.find((prefeitura) => prefeitura.id === atual) ?? { id: atual },
+                  )}
+                </span>
                 <span className="truncate text-xs">STM</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -69,7 +73,7 @@ export function PrefeituraSwitcher({
                   <div className="flex size-6 items-center justify-center rounded-md border">
                     <Landmark className="size-3.5 shrink-0" />
                   </div>
-                  {nomeDaPrefeitura(prefeitura.id)}
+                  {nomeExibido(prefeitura)}
                   {prefeitura.id === atual && <Check className="ml-auto" />}
                 </DropdownMenuItem>
               ))}

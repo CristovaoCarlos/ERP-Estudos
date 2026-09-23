@@ -25,10 +25,13 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Banco central: `stm_central`. Bancos de prefeitura: `stm_tenant_<id>` (prefixo em `config/tenancy.php`). O nome também fica gravado em `tenants.data.tenancy_db_name` — renomear banco exige atualizar esse campo.
 - Usuários, tokens, sessões e reset de senha ficam **só no central**. `User` e `PersonalAccessToken` usam `CentralConnection`. Não crie essas tabelas em `database/migrations/tenant/`.
 - Acesso usuário ↔ prefeitura: tabela `tenant_user`. Toda rota autenticada de prefeitura usa `auth:sanctum` + `EnsureUserBelongsToTenant`.
-- Papéis/permissões (spatie) ficam **no banco de cada prefeitura**.
+- Papéis/permissões (spatie) ficam **no banco de cada prefeitura**. Use `App\Models\Role`/`Permission` (conexão `tenant` fixa); os models do spatie herdariam a conexão central do `User`.
+- Grupo `Administrador` (todas as telas) existe em toda prefeitura e é mantido pelo sistema: não é alterado nem excluído pela API. Cadastrar empresa cria o usuário `admin_<subdominio>` nele.
+- Tela nova no menu: adicione a permissão (nome = URL com `.` no lugar de `/`) em `backend/config/acesso.php` e rode `acesso:sincronizar` (ele não mexe em grupos já existentes; quem edita grupos é a tela Administração › Grupos de acesso). Superadmin só vale na prefeitura `TENANT_ADMINISTRADOR` (`lemarq`); só ele acessa Administração › Empresas, que provisiona tenants.
 - Rotas de prefeitura: `routes/tenant.php`. Rotas centrais: `routes/api.php` (restritas a `CENTRAL_DOMAINS`).
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
 - No PostgreSQL, `DROP DATABASE` falha se houver conexão aberta no banco da prefeitura (ex.: psql/DBeaver): feche-as antes de excluir um tenant.
+- Fotos de usuário ficam no disco `fotos` (`storage/app/fotos`), fora dos discos com sufixo por prefeitura (`config/tenancy.php`), porque o usuário é o mesmo em todas. São servidas por `GET /api/fotos/{arquivo}`: a pasta `public` montada no nginx não enxerga o storage.
 - Ids de tenant podem ter `_`, mas domínios usam `-` (hostnames não aceitam `_`).
 - O proxy do Vite usa `changeOrigin: false` para preservar o `Host`; não mude.
 
@@ -43,6 +46,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Nomes de domínio em português (`Relatorios`, `usuarios:criar`, `acessaTenant`); termos do framework em inglês.
 - Componentes de UI: shadcn/ui sobre `radix-ui` em `src/components/ui` (skill `shadcn` em `.claude/skills/`). O projeto usa **Radix**; não migre para Base UI sem pedido explícito.
 - `npx shadcn@latest add ...` (rode no contêiner node, com `HOME=/tmp`) gera imports `from "cn"` e instala o pacote `cn`. O projeto usa `cn` de `@/lib/utils`: depois de todo `add`, troque os imports e rode `npm uninstall cn`. Use `--overwrite` se o CLI perguntar sobre arquivo existente (sem TTY ele aborta).
+- Toda tela de listagem usa `src/components/listagem.tsx`: busca rápida à esquerda, Filtros e Colunas à direita, tabela e rodapé com total e paginação. A tela só declara as colunas (`Coluna<T>`, com `busca` para entrar na busca rápida) e, se houver, o conteúdo do menu Filtros.
 - Layout do sistema: modelo `sidebar-07` (`src/components/AppLayout.tsx`). Módulos e telas ficam **só** em `src/lib/navegacao.ts`, que alimenta menu, rotas e breadcrumb. Tela nova: adicione ali e troque `EmConstrucao` pela página real em `App.tsx`.
 - Sem prefeitura no endereço (domínio central ou prefeitura inexistente) o frontend mostra a landing page (`src/pages/Landing.tsx`).
 - Testes de menus Radix (`DropdownMenu`): abra pelo teclado (`gatilho.focus()` + `{Enter}`), como no helper `abrirMenu` de `src/App.test.tsx`. Clique via `user-event` abre e fecha o menu no jsdom quando outro teste renderizou o login antes.
