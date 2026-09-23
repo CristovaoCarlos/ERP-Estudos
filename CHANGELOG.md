@@ -8,6 +8,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Script `scripts/atualizar.sh` para atualizar o ambiente de desenvolvimento depois de um `git pull`: backup do banco, `composer install`, migrations do central e das prefeituras, `acesso:sincronizar` e reinício do worker, com aviso de variáveis faltando no `.env` ([guia](docs/guias/atualizar-ambiente.md)).
 - Grupo de acesso `Administrador` em toda prefeitura, com todas as telas: é do sistema, acompanha o catálogo (tela nova entra sozinha no próximo `acesso:sincronizar`) e não pode ser alterado nem excluído. O cadastro de empresa passa a exigir CPF, e-mail e senha do administrador e cria o usuário `admin_<subdomínio>` nesse grupo, vinculado à prefeitura nova ([ADR-0011](docs/adr/0011-grupo-administrador-e-admin-da-prefeitura.md)).
 - Padrão de listagem (`components/listagem.tsx`) usado por todas as telas de lista, atuais e futuras: busca rápida à esquerda; Filtros e Colunas à direita (as colunas escolhidas ficam lembradas no navegador, por tela); rodapé com o total de registros, tamanho de página (15, 30, 50 ou 100) e navegação entre páginas. Aplicado em Empresas, Usuários e Grupos de acesso, com filtro por situação em Empresas e Usuários.
 - Menu do usuário (rodapé do menu lateral) com o CPF, "Minha conta" e "Sair" em vermelho. "Minha conta" abre um diálogo com as abas **Meus dados** (nome e e-mail, que valem em todas as prefeituras) e **Senha** (troca conferindo a senha atual, encerrando as outras sessões). Rotas `PUT /api/me` e `PUT /api/me/senha`.
