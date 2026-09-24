@@ -59,9 +59,9 @@ class CnaeTest extends TestCase
     public function test_exige_a_permissao_da_tela(): void
     {
         $this->criarTenant();
-        $token = $this->entrar(['administracao.tabelas-internas.cidades']);
+        $token = $this->entrar(['tabelas-comuns.cidades']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/cnae')->assertForbidden();
+        $this->emLemarq($token, '/api/tabelas-comuns/cnae')->assertForbidden();
     }
 
     public function test_lista_na_ordem_da_hierarquia_com_nivel_e_codigo(): void
@@ -74,9 +74,9 @@ class CnaeTest extends TestCase
             $linha(['sessao' => 'P', 'divisao' => '85', 'grupo' => null, 'classe' => null, 'subclasse' => null, 'denominacao' => 'EDUCAÇÃO']),
             $linha(['sessao' => 'A', 'denominacao' => 'AGRICULTURA', 'versao' => '2.2', 'ativo' => false]),
         ]);
-        $token = $this->entrar(['administracao.tabelas-internas.cnae']);
+        $token = $this->entrar(['tabelas-comuns.cnae']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/cnae')
+        $this->emLemarq($token, '/api/tabelas-comuns/cnae')
             ->assertOk()
             ->assertJsonCount(4, 'data')
             ->assertJsonPath('data.0.nivel', 'secao')

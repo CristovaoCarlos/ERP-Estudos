@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { niveis, useCnae, type Cnae, type Nivel } from '@/lib/administracao-tabelas-internas-cnae'
+import { niveis, useCnae, type Cnae, type Nivel } from '@/lib/tabelas-comuns-cnae'
 
 const rotuloDoNivel = Object.fromEntries(niveis.map(({ valor, rotulo }) => [valor, rotulo]))
 
@@ -112,13 +112,12 @@ export default function CnaePagina() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">CNAE</h1>
         <p className="text-muted-foreground">
-          Classificação Nacional de Atividades Econômicas, da seção à subclasse. A tabela é a mesma
-          para todas as prefeituras.
+          Classificação Nacional de Atividades Econômicas, da seção à subclasse.
         </p>
       </div>
 
       <Listagem
-        chave="administracao-tabelas-internas-cnae"
+        chave="tabelas-comuns-cnae"
         itens={filtradas}
         carregando={cnae.isPending}
         erro={cnae.isError}

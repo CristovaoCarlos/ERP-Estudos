@@ -37,7 +37,7 @@ tags:
     description: Grupos da prefeitura e as telas de cada um
   - name: Parâmetros
     description: Parâmetros da prefeitura (permissão da tela, ex. `parametros.receitas`)
-  - name: Tabelas internas
+  - name: Tabelas Comuns
     description: Tabelas de apoio do banco central, iguais para todas as prefeituras
   - name: Empresas
     description: Prefeituras clientes. Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`)
@@ -847,9 +847,9 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
-  /api/administracao/tabelas-internas/cidades:
+  /api/tabelas-comuns/cidades:
     get:
-      tags: [Tabelas internas]
+      tags: [Tabelas Comuns]
       summary: Listar as cidades
       description: Todas as cidades de `tc_cidade` (banco central), por UF e nome. São cerca de 5.600 e vêm de uma vez, sem paginação.
       operationId: listarCidades
@@ -872,9 +872,9 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
-  /api/administracao/tabelas-internas/bancos:
+  /api/tabelas-comuns/bancos:
     get:
-      tags: [Tabelas internas]
+      tags: [Tabelas Comuns]
       summary: Listar os bancos
       description: Todos os bancos de `tc_banco` (banco central), por nome.
       operationId: listarBancos
@@ -897,9 +897,9 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
-  /api/administracao/tabelas-internas/cnae:
+  /api/tabelas-comuns/cnae:
     get:
-      tags: [Tabelas internas]
+      tags: [Tabelas Comuns]
       summary: Listar as atividades da CNAE
       description: |
         Todas as linhas de `ti_cnae` (banco central), das versões 2.2 e 2.3: a mais nova primeiro e,
@@ -921,6 +921,221 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Cnae'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  /api/tabelas-comuns/lista-de-servicos:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar a lista de serviços da LC 116/2003
+      description: Todos os itens e subitens de `ti_lcp116` (banco central), ordenados pelo código.
+      operationId: listarLcp116
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ItemLcp116'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  '/api/tabelas-comuns/lista-de-servicos/{codigo}':
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+          examples: ['01.02']
+    put:
+      tags: [Tabelas Comuns]
+      summary: Alterar a descrição de um item
+      description: Só a descrição muda; o código é a chave. Vale para todas as prefeituras.
+      operationId: alterarItemLcp116
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  maxLength: 1000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemLcp116'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Código inexistente
+        '422':
+          description: Descrição vazia ou longa demais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/tabelas-comuns/selic:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar as taxas SELIC
+      description: Todas as taxas mensais de `tc_selic` (banco central), do mês mais recente ao mais antigo.
+      operationId: listarSelic
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Selic'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  /api/tabelas-comuns/segmentos:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar os segmentos de arrecadação
+      description: Todos os segmentos da FEBRABAN de `ti_segmentos` (banco central), ordenados pelo código.
+      operationId: listarSegmentos
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Segmento'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  '/api/tabelas-comuns/segmentos/{codigo}':
+    parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+          examples: ['1']
+    put:
+      tags: [Tabelas Comuns]
+      summary: Alterar a descrição de um segmento
+      description: Só a descrição muda; o código é a chave. Vale para todas as prefeituras.
+      operationId: alterarSegmento
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  maxLength: 50
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Segmento'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Código inexistente
+        '422':
+          description: Descrição vazia ou com mais de 50 caracteres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/tabelas-comuns/numeracao-de-notas:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar os tipos de numeração de nota
+      description: Todos os tipos de `ti_nota_numeracao` (banco central), ordenados pelo código.
+      operationId: listarNumeracaoDeNotas
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotaNumeracao'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  /api/tabelas-comuns/tipos-de-dam:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar os tipos de DAM
+      description: Todos os tipos de `ti_dam_tipo` (banco central), ordenados pelo código.
+      operationId: listarTiposDeDam
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DamTipo'
         '401':
           $ref: '#/components/responses/NaoAutenticado'
         '403':
@@ -1252,6 +1467,70 @@ components:
           examples: ['2.3']
         ativo:
           type: boolean
+    ItemLcp116:
+      type: object
+      required: [codigo, tipo, descricao]
+      properties:
+        codigo:
+          type: string
+          examples: ['01.02']
+        tipo:
+          type: string
+          enum: [item, subitem]
+          description: '`item` quando o código tem 2 dígitos; `subitem` quando tem ponto.'
+        descricao:
+          type: string
+          examples: [Programação.]
+    Selic:
+      type: object
+      required: [id, ano, mes, valor]
+      properties:
+        id:
+          type: integer
+        ano:
+          type: integer
+          examples: [2026]
+        mes:
+          type: integer
+          minimum: 1
+          maximum: 12
+        valor:
+          type: [string, 'null']
+          description: Taxa do mês, em texto com 2 casas para não perder precisão.
+          examples: ['1.16']
+    Segmento:
+      type: object
+      required: [codigo, descricao]
+      properties:
+        codigo:
+          type: string
+          description: Um dígito, usado no código de barras de arrecadação.
+          examples: ['1']
+        descricao:
+          type: string
+          maxLength: 50
+          examples: [PREFEITURA]
+    NotaNumeracao:
+      type: object
+      required: [codigo, descricao]
+      properties:
+        codigo:
+          type: string
+          description: Uma letra, gravada em `tb_parametro_nota_fiscal.tipo_numeracao`.
+          examples: [A]
+        descricao:
+          type: string
+          examples: [AUTOMÁTICO]
+    DamTipo:
+      type: object
+      required: [codigo, descricao]
+      properties:
+        codigo:
+          type: integer
+          examples: [3]
+        descricao:
+          type: string
+          examples: [IPTU]
     Cidade:
       type: object
       required: [id, codigo_ibge, nome, uf]

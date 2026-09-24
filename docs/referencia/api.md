@@ -39,9 +39,16 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `GET` | `/api/parametros/receitas` | prefeitura | `parametros.receitas` | Receita usada por cada tributo (um registro só por prefeitura) |
 | `PUT` | `/api/parametros/receitas` | prefeitura | `parametros.receitas` | Grava as receitas dos tributos (tributo ausente fica sem receita) |
 | `GET` | `/api/parametros/receitas/opcoes` | prefeitura | `parametros.receitas` | Receitas (`tb_receita`) para o formulário |
-| `GET` | `/api/administracao/tabelas-internas/cidades` | prefeitura | `administracao.tabelas-internas.cidades` | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
-| `GET` | `/api/administracao/tabelas-internas/bancos` | prefeitura | `administracao.tabelas-internas.bancos` | Bancos do banco central (`tc_banco`), com o código de compensação |
-| `GET` | `/api/administracao/tabelas-internas/cnae` | prefeitura | `administracao.tabelas-internas.cnae` | Atividades da CNAE do banco central (`ti_cnae`), versões 2.2 e 2.3, com nível e código |
+| `GET` | `/api/tabelas-comuns/cidades` | prefeitura | `tabelas-comuns.cidades` | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
+| `GET` | `/api/tabelas-comuns/bancos` | prefeitura | `tabelas-comuns.bancos` | Bancos do banco central (`tc_banco`), com o código de compensação |
+| `GET` | `/api/tabelas-comuns/cnae` | prefeitura | `tabelas-comuns.cnae` | Atividades da CNAE do banco central (`ti_cnae`), versões 2.2 e 2.3, com nível e código |
+| `GET` | `/api/tabelas-comuns/lista-de-servicos` | prefeitura | `tabelas-comuns.lista-de-servicos` | Itens e subitens da LC 116/2003 (`ti_lcp116`), ordenados pelo código |
+| `PUT` | `/api/tabelas-comuns/lista-de-servicos/{codigo}` | prefeitura | `tabelas-comuns.lista-de-servicos` | Altera a descrição do item (o código não muda; vale para todas as prefeituras) |
+| `GET` | `/api/tabelas-comuns/selic` | prefeitura | `tabelas-comuns.selic` | Taxas SELIC mensais do banco central (`tc_selic`), da mais recente à mais antiga |
+| `GET` | `/api/tabelas-comuns/segmentos` | prefeitura | `tabelas-comuns.segmentos` | Segmentos de arrecadação da FEBRABAN (`ti_segmentos`), ordenados pelo código |
+| `PUT` | `/api/tabelas-comuns/segmentos/{codigo}` | prefeitura | `tabelas-comuns.segmentos` | Altera a descrição do segmento (o código não muda; vale para todas as prefeituras) |
+| `GET` | `/api/tabelas-comuns/numeracao-de-notas` | prefeitura | `tabelas-comuns.numeracao-de-notas` | Tipos de numeração da nota fiscal (`ti_nota_numeracao`), ordenados pelo código |
+| `GET` | `/api/tabelas-comuns/tipos-de-dam` | prefeitura | `tabelas-comuns.tipos-de-dam` | Tipos de DAM (`ti_dam_tipo`), ordenados pelo código |
 | `GET` | `/api/empresas` | prefeitura administradora | superadmin | Lista as empresas (prefeituras clientes) |
 | `POST` | `/api/empresas` | prefeitura administradora | superadmin | Cadastra uma empresa, cria o administrador dela (`admin_<subdomínio>`) e provisiona a prefeitura (em fila) |
 

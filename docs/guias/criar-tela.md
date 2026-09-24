@@ -4,10 +4,10 @@ Padrão para toda tela nova do menu que lê e grava uma tabela do banco da prefe
 
 | Tipo | Quando | Rotas | Referência |
 | --- | --- | --- | --- |
-| **Formulário único** | a tabela tem um registro só por prefeitura (parâmetros: `tb_parametro_*`, `tb_parametros`…) | `GET` e `PUT` na URL da tela, sem id | **Parâmetros › Receitas** |
+| **Formulário único** | a tabela tem um registro só por prefeitura (parâmetros: `tb_parametro_*`, `tb_parametros`…) | `GET` e `PUT` na URL da tela, sem id | **Parâmetros da Empresa › Receitas** |
 | **Lista com cadastro** | a tabela tem vários registros (receitas, serviços, cartórios…) | `GET`, `POST`, `PUT {id}`, `DELETE {id}` | frontend de **Administração › Grupos**; backend descrito abaixo |
 
-Arquivos da referência (Parâmetros › Receitas):
+Arquivos da referência (Parâmetros da Empresa › Receitas):
 
 | Camada | Arquivo |
 | --- | --- |
@@ -37,7 +37,7 @@ A URL da tela manda em todos os outros nomes. Para `/parametros/receitas`:
 
 ## Tabelas do banco central
 
-As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco central e valem para todas as prefeituras. As telas delas ficam em **Administração › Tabelas internas**. O que muda em relação ao resto do guia:
+As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco central e valem para todas as prefeituras. As telas delas ficam no módulo **Tabelas Comuns** do menu. O que muda em relação ao resto do guia:
 
 - O model usa `CentralConnection` no lugar de `TenantConnection`; se a chave primária não for autoincremento, `$incrementing = false`.
 - A rota continua em `routes/tenant.php` (a tela é aberta pelo endereço da prefeitura), com a permissão da tela.
@@ -45,7 +45,7 @@ As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco 
 - Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`.
 - Tabelas grandes (Cidades tem ~5.600 linhas) ainda cabem numa resposta só; a `Listagem` pagina e busca no navegador.
 
-Referência: **Administração › Tabelas internas › Cidades** (`Cidade`, `CidadeController`, `CidadeResource`, `CidadeTest`, `lib/administracao-tabelas-internas-cidades.ts`, `pages/administracao/tabelas-internas/Cidades.tsx`), só consulta, com filtro por UF no menu Filtros.
+Referência: **Tabelas Comuns › Cidades** (`Cidade`, `CidadeController`, `CidadeResource`, `CidadeTest`, `lib/tabelas-comuns-cidades.ts`, `pages/tabelas-comuns/Cidades.tsx`), só consulta, com filtro por UF no menu Filtros.
 
 ## Sem `id_empresa`
 

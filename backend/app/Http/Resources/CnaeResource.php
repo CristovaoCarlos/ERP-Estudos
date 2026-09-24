@@ -6,7 +6,7 @@ use App\Models\Cnae;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Atividade da CNAE das tabelas internas (banco central). */
+/** Atividade da CNAE das tabelas comuns (banco central). */
 
 /** @mixin Cnae */
 class CnaeResource extends JsonResource

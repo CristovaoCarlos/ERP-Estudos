@@ -59,9 +59,9 @@ class BancoTest extends TestCase
     public function test_exige_a_permissao_da_tela(): void
     {
         $this->criarTenant();
-        $token = $this->entrar(['administracao.tabelas-internas.cidades']);
+        $token = $this->entrar(['tabelas-comuns.cidades']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/bancos')->assertForbidden();
+        $this->emLemarq($token, '/api/tabelas-comuns/bancos')->assertForbidden();
     }
 
     public function test_lista_os_bancos_do_banco_central_por_nome(): void
@@ -71,9 +71,9 @@ class BancoTest extends TestCase
             ['codigo' => '0341', 'descricao' => 'Itaú Unibanco S.A.'],
             ['codigo' => '0001', 'descricao' => 'Banco do Brasil S.A.'],
         ]);
-        $token = $this->entrar(['administracao.tabelas-internas.bancos']);
+        $token = $this->entrar(['tabelas-comuns.bancos']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/bancos')
+        $this->emLemarq($token, '/api/tabelas-comuns/bancos')
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.codigo', '0001')

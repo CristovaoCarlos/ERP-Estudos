@@ -31,9 +31,8 @@ export type Cnae = {
 
 export function useCnae() {
   return useQuery({
-    queryKey: ['administracao', 'tabelas-internas', 'cnae'],
-    queryFn: async () =>
-      (await api.get<{ data: Cnae[] }>('/administracao/tabelas-internas/cnae')).data.data,
+    queryKey: ['tabelas-comuns', 'cnae'],
+    queryFn: async () => (await api.get<{ data: Cnae[] }>('/tabelas-comuns/cnae')).data.data,
     // Tabela de apoio que quase não muda: não precisa buscar de novo a cada visita.
     staleTime: Infinity,
   })

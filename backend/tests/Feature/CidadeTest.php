@@ -59,9 +59,9 @@ class CidadeTest extends TestCase
     public function test_exige_a_permissao_da_tela(): void
     {
         $this->criarTenant();
-        $token = $this->entrar(['administracao.tabelas-internas.bancos']);
+        $token = $this->entrar(['tabelas-comuns.bancos']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/cidades')->assertForbidden();
+        $this->emLemarq($token, '/api/tabelas-comuns/cidades')->assertForbidden();
     }
 
     public function test_lista_as_cidades_do_banco_central_por_uf_e_nome(): void
@@ -72,9 +72,9 @@ class CidadeTest extends TestCase
             ['id_cidade' => 2, 'codigo' => '1100015', 'descricao' => "Alta Floresta D'Oeste", 'uf' => 'RO'],
             ['id_cidade' => 3, 'codigo' => '3509502', 'descricao' => 'Campinas', 'uf' => 'SP'],
         ]);
-        $token = $this->entrar(['administracao.tabelas-internas.cidades']);
+        $token = $this->entrar(['tabelas-comuns.cidades']);
 
-        $this->emLemarq($token, '/api/administracao/tabelas-internas/cidades')
+        $this->emLemarq($token, '/api/tabelas-comuns/cidades')
             ->assertOk()
             ->assertJsonCount(3, 'data')
             ->assertJsonPath('data.0', ['id' => 2, 'codigo_ibge' => '1100015', 'nome' => "Alta Floresta D'Oeste", 'uf' => 'RO'])

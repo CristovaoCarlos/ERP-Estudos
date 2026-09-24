@@ -1,7 +1,7 @@
 import { Landmark } from 'lucide-react'
 
 import { Listagem, type Coluna } from '@/components/listagem'
-import { useBancos, type Banco } from '@/lib/administracao-tabelas-internas-bancos'
+import { useBancos, type Banco } from '@/lib/tabelas-comuns-bancos'
 
 const colunas: Coluna<Banco>[] = [
   {
@@ -28,12 +28,12 @@ export default function Bancos() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Bancos</h1>
         <p className="text-muted-foreground">
-          Bancos com o código de compensação. A tabela é a mesma para todas as prefeituras.
+          Bancos com o código de compensação.
         </p>
       </div>
 
       <Listagem
-        chave="administracao-tabelas-internas-bancos"
+        chave="tabelas-comuns-bancos"
         itens={bancos.data}
         carregando={bancos.isPending}
         erro={bancos.isError}
