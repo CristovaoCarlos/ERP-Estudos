@@ -235,11 +235,10 @@ describe('sistema', () => {
     entrarLogado()
 
     for (const modulo of [
-      'Parâmetros da Empresa',
       'Tabelas',
       'Lançamentos',
       'Relatórios',
-      'Tabelas Comuns',
+      'Parâmetros da Empresa',
       'Administração',
     ]) {
       expect(await screen.findByRole('button', { name: modulo })).toBeInTheDocument()
@@ -295,25 +294,28 @@ describe('sistema', () => {
     expect(trilha).toHaveTextContent('Tomador estrangeiro')
   })
 
-  it('Tabelas Comuns é um módulo do menu principal', async () => {
+  it('Tabelas Comuns fica em Administração, abaixo de Empresas', async () => {
     entrarLogado()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Administração' }))
     await screen.findByRole('link', { name: 'Usuários' })
-    expect(sidebar().queryByRole('button', { name: 'Tabelas Comuns' })).toBeInTheDocument()
+    const itens = within(screen.getByRole('link', { name: 'Usuários' }).closest('ul')!)
+      .getAllByRole('listitem')
+      .map((item) => item.textContent)
+    expect(itens.indexOf('Tabelas Comuns')).toBe(itens.indexOf('Empresas') + 1)
 
     await userEvent.click(screen.getByRole('button', { name: 'Tabelas Comuns' }))
     await userEvent.click(await screen.findByRole('link', { name: 'Tipos de DAM' }))
 
     expect(await screen.findByRole('heading', { name: 'Tipos de DAM' })).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).not.toHaveTextContent('Administração')
+    expect(trilha).toHaveTextContent('Administração')
     expect(trilha).toHaveTextContent('Tabelas Comuns')
     expect(trilha).toHaveTextContent('Tipos de DAM')
     expect(within(trilha).getByRole('link', { name: 'Tabelas Comuns' })).toHaveAttribute(
       'href',
-      // O módulo leva à primeira tela dele.
-      '/tabelas-comuns/cidades',
+      // O submenu leva à primeira tela dele.
+      '/administracao/tabelas-comuns/cidades',
     )
   })
 
@@ -415,13 +417,14 @@ describe('grupos de acesso', () => {
     expect(screen.queryByText('Esta tela ainda está em construção.')).not.toBeInTheDocument()
   })
 
-  it('só o superadmin vê Administração › Empresas', async () => {
+  it('só o superadmin vê Empresas e Tabelas Comuns', async () => {
     entrarComo({ ...usuario, superadmin: false, permissoes: ['administracao.usuarios'] })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Administração' }))
 
     expect(await screen.findByRole('link', { name: 'Usuários' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Empresas' })).not.toBeInTheDocument()
+    expect(sidebar().queryByRole('button', { name: 'Tabelas Comuns' })).not.toBeInTheDocument()
   })
 })
 
@@ -847,7 +850,7 @@ describe('grupos de acesso', () => {
     })
   })
 
-  it('não oferece a tela de Empresas, que é só do superadmin', async () => {
+  it('não oferece Empresas nem Tabelas Comuns, que são só do superadmin', async () => {
     abrirGrupos()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Novo grupo' }))
@@ -856,6 +859,10 @@ describe('grupos de acesso', () => {
     const administracao = within(within(dialogo).getByRole('group', { name: 'Administração' }))
     expect(administracao.getByRole('checkbox', { name: 'Usuários' })).toBeInTheDocument()
     expect(administracao.queryByRole('checkbox', { name: 'Empresas' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('checkbox', { name: 'Cidades' })).not.toBeInTheDocument()
+    expect(
+      within(dialogo).queryByRole('checkbox', { name: 'Tipos de DAM' }),
+    ).not.toBeInTheDocument()
   })
 
   it('abre a alteração com as telas do grupo marcadas', async () => {
@@ -969,7 +976,7 @@ describe('parâmetros › receitas', () => {
   })
 })
 
-describe('tabelas comuns › cidades', () => {
+describe('administração › tabelas comuns › cidades', () => {
   const cidades = [
     { id: 2, codigo_ibge: '1100015', nome: "Alta Floresta D'Oeste", uf: 'RO' },
     { id: 3, codigo_ibge: '3509502', nome: 'Campinas', uf: 'SP' },
@@ -981,9 +988,9 @@ describe('tabelas comuns › cidades', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/cidades': { data: cidades },
+      '/administracao/tabelas-comuns/cidades': { data: cidades },
     })
-    renderizar(<App />, '/tabelas-comuns/cidades')
+    renderizar(<App />, '/administracao/tabelas-comuns/cidades')
   }
 
   it('lista as cidades com UF e código do IBGE', async () => {
@@ -1017,9 +1024,45 @@ describe('tabelas comuns › cidades', () => {
     expect(screen.getByRole('cell', { name: "Alta Floresta D'Oeste" })).toBeInTheDocument()
     expect(screen.queryByRole('cell', { name: 'Campinas' })).not.toBeInTheDocument()
   })
+
+  it('cadastra uma cidade escolhendo a UF', async () => {
+    abrirCidades()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({
+      data: { id: 4, codigo_ibge: '3304557', nome: 'Rio de Janeiro', uf: 'RJ' },
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova cidade' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código IBGE'), '3304557')
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Rio de Janeiro')
+    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'UF' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'RJ' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/cidades', {
+      codigo_ibge: '3304557',
+      nome: 'Rio de Janeiro',
+      uf: 'RJ',
+    })
+  })
+
+  it('não cadastra cidade sem UF nem com código IBGE incompleto', async () => {
+    abrirCidades()
+    const post = vi.spyOn(api, 'post')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova cidade' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código IBGE'), '123')
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'X')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(await within(dialogo).findByText('O código do IBGE tem 7 dígitos.')).toBeInTheDocument()
+    expect(within(dialogo).getByText('Escolha a UF.')).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
 })
 
-describe('tabelas comuns › bancos', () => {
+describe('administração › tabelas comuns › bancos', () => {
   const bancos = [
     { id: 1, codigo: '0001', nome: 'Banco do Brasil S.A.' },
     { id: 2, codigo: '0341', nome: 'Itaú Unibanco S.A.' },
@@ -1030,9 +1073,9 @@ describe('tabelas comuns › bancos', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/bancos': { data: bancos },
+      '/administracao/tabelas-comuns/bancos': { data: bancos },
     })
-    renderizar(<App />, '/tabelas-comuns/bancos')
+    renderizar(<App />, '/administracao/tabelas-comuns/bancos')
   }
 
   it('lista os bancos com o código de compensação', async () => {
@@ -1052,9 +1095,33 @@ describe('tabelas comuns › bancos', () => {
     expect(screen.getByRole('cell', { name: 'Itaú Unibanco S.A.' })).toBeInTheDocument()
     expect(screen.queryByRole('cell', { name: 'Banco do Brasil S.A.' })).not.toBeInTheDocument()
   })
+
+  it('cadastra um banco e mostra no campo o erro do servidor', async () => {
+    abrirBancos()
+    const post = vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, {
+        message: 'erro',
+        errors: { codigo: ['Já existe um banco com este código.'] },
+      }),
+    )
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo banco' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código de compensação'), '0001')
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Banco do Brasil S.A.')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/bancos', {
+      codigo: '0001',
+      nome: 'Banco do Brasil S.A.',
+    })
+    expect(
+      await within(dialogo).findByText('Já existe um banco com este código.'),
+    ).toBeInTheDocument()
+  })
 })
 
-describe('tabelas comuns › cnae', () => {
+describe('administração › tabelas comuns › cnae', () => {
   const atividade = {
     divisao: null,
     grupo: null,
@@ -1094,9 +1161,9 @@ describe('tabelas comuns › cnae', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/cnae': { data: cnae },
+      '/administracao/tabelas-comuns/cnae': { data: cnae },
     })
-    renderizar(<App />, '/tabelas-comuns/cnae')
+    renderizar(<App />, '/administracao/tabelas-comuns/cnae')
   }
 
   it('lista as atividades com nível, versão e situação', async () => {
@@ -1134,9 +1201,54 @@ describe('tabelas comuns › cnae', () => {
     expect(screen.queryByRole('cell', { name: 'Ensino de idiomas' })).not.toBeInTheDocument()
     expect(screen.queryByRole('cell', { name: 'AGRICULTURA' })).not.toBeInTheDocument()
   })
+
+  it('cadastra uma atividade com a versão mais nova já preenchida', async () => {
+    abrirCnae()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: cnae[1] })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova atividade' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByLabelText('Versão')).toHaveValue('2.3')
+    await userEvent.type(within(dialogo).getByLabelText('Seção'), 'p')
+    await userEvent.type(within(dialogo).getByLabelText('Divisão'), '85')
+    await userEvent.type(within(dialogo).getByLabelText('Grupo'), '85.9')
+    await userEvent.type(
+      within(dialogo).getByLabelText('Denominação'),
+      'Outras atividades de ensino',
+    )
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/cnae', {
+      secao: 'P',
+      divisao: '85',
+      grupo: '85.9',
+      classe: null,
+      subclasse: null,
+      denominacao: 'Outras atividades de ensino',
+      versao: '2.3',
+      ativo: true,
+    })
+  })
+
+  it('confere o formato de cada nível antes de enviar', async () => {
+    abrirCnae()
+    const post = vi.spyOn(api, 'post')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova atividade' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Seção'), 'P')
+    await userEvent.type(within(dialogo).getByLabelText('Classe'), '8593-7')
+    await userEvent.type(within(dialogo).getByLabelText('Denominação'), 'X')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText('A classe segue o formato 85.93-7.'),
+    ).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
 })
 
-describe('tabelas comuns › lista de serviços', () => {
+describe('administração › tabelas comuns › lista de serviços', () => {
   const itens = [
     { codigo: '01', tipo: 'item', descricao: 'Serviços de informática e congêneres.' },
     { codigo: '01.01', tipo: 'subitem', descricao: 'Análise e desenvolvimento de sistemas.' },
@@ -1148,9 +1260,9 @@ describe('tabelas comuns › lista de serviços', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/lista-de-servicos': { data: itens },
+      '/administracao/tabelas-comuns/lista-de-servicos': { data: itens },
     })
-    renderizar(<App />, '/tabelas-comuns/lista-de-servicos')
+    renderizar(<App />, '/administracao/tabelas-comuns/lista-de-servicos')
   }
 
   it('lista os itens na ordem do código', async () => {
@@ -1192,7 +1304,7 @@ describe('tabelas comuns › lista de serviços', () => {
     await userEvent.type(descricao, 'Programação de computadores.')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
-    expect(put).toHaveBeenCalledWith('/tabelas-comuns/lista-de-servicos/01.02', {
+    expect(put).toHaveBeenCalledWith('/administracao/tabelas-comuns/lista-de-servicos/01.02', {
       descricao: 'Programação de computadores.',
     })
   })
@@ -1209,9 +1321,27 @@ describe('tabelas comuns › lista de serviços', () => {
     expect(await within(dialogo).findByText('Informe a descrição.')).toBeInTheDocument()
     expect(put).not.toHaveBeenCalled()
   })
+
+  it('cadastra um subitem', async () => {
+    abrirLista()
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { codigo: '01.03', tipo: 'subitem', descricao: 'Hospedagem.' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo item' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código'), '01.03')
+    await userEvent.type(within(dialogo).getByLabelText('Descrição'), 'Hospedagem.')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/lista-de-servicos', {
+      codigo: '01.03',
+      descricao: 'Hospedagem.',
+    })
+  })
 })
 
-describe('tabelas comuns › selic', () => {
+describe('administração › tabelas comuns › selic', () => {
   const taxas = [
     { id: 3, ano: 2026, mes: 2, valor: null },
     { id: 2, ano: 2026, mes: 1, valor: '1.16' },
@@ -1223,9 +1353,9 @@ describe('tabelas comuns › selic', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/selic': { data: dados },
+      '/administracao/tabelas-comuns/selic': { data: dados },
     })
-    renderizar(<App />, '/tabelas-comuns/selic')
+    renderizar(<App />, '/administracao/tabelas-comuns/selic')
   }
 
   it('lista as taxas com competência, mês e percentual', async () => {
@@ -1254,9 +1384,44 @@ describe('tabelas comuns › selic', () => {
 
     expect(await screen.findByText('Nenhuma taxa cadastrada')).toBeInTheDocument()
   })
+
+  it('cadastra a taxa de um mês com vírgula decimal', async () => {
+    abrirSelic()
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { id: 4, ano: 2026, mes: 3, valor: '0.87' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova taxa' }))
+    const dialogo = await screen.findByRole('dialog')
+    const ano = within(dialogo).getByLabelText('Ano')
+    await userEvent.clear(ano)
+    await userEvent.type(ano, '2026')
+    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'Mês' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Março' }))
+    await userEvent.type(within(dialogo).getByLabelText('Taxa (%)'), '0,87')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/selic', {
+      ano: 2026,
+      mes: 3,
+      valor: '0.87',
+    })
+  })
+
+  it('não cadastra taxa sem o mês', async () => {
+    abrirSelic()
+    const post = vi.spyOn(api, 'post')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova taxa' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(await within(dialogo).findByText('Escolha o mês.')).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
 })
 
-describe('tabelas comuns › segmentos', () => {
+describe('administração › tabelas comuns › segmentos', () => {
   const segmentos = [
     { codigo: '1', descricao: 'PREFEITURA' },
     { codigo: '2', descricao: 'SANEAMENTO' },
@@ -1268,9 +1433,9 @@ describe('tabelas comuns › segmentos', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/segmentos': { data: segmentos },
+      '/administracao/tabelas-comuns/segmentos': { data: segmentos },
     })
-    renderizar(<App />, '/tabelas-comuns/segmentos')
+    renderizar(<App />, '/administracao/tabelas-comuns/segmentos')
   }
 
   it('lista os segmentos na ordem do código', async () => {
@@ -1300,7 +1465,7 @@ describe('tabelas comuns › segmentos', () => {
     await userEvent.type(descricao, 'SANEAMENTO BÁSICO')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
-    expect(put).toHaveBeenCalledWith('/tabelas-comuns/segmentos/2', {
+    expect(put).toHaveBeenCalledWith('/administracao/tabelas-comuns/segmentos/2', {
       descricao: 'SANEAMENTO BÁSICO',
     })
   })
@@ -1317,15 +1482,33 @@ describe('tabelas comuns › segmentos', () => {
     expect(await within(dialogo).findByText('Informe a descrição.')).toBeInTheDocument()
     expect(put).not.toHaveBeenCalled()
   })
+
+  it('cadastra um segmento', async () => {
+    abrirSegmentos()
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { codigo: '4', descricao: 'TELECOMUNICACOES' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo segmento' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código'), '4')
+    await userEvent.type(within(dialogo).getByLabelText('Descrição'), 'TELECOMUNICACOES')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/segmentos', {
+      codigo: '4',
+      descricao: 'TELECOMUNICACOES',
+    })
+  })
 })
 
-describe('tabelas comuns › numeração de notas', () => {
+describe('administração › tabelas comuns › numeração de notas', () => {
   it('lista os tipos de numeração na ordem do código', async () => {
     setToken('tok-123')
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/numeracao-de-notas': {
+      '/administracao/tabelas-comuns/numeracao-de-notas': {
         data: [
           { codigo: 'A', descricao: 'AUTOMÁTICO' },
           { codigo: 'D', descricao: 'POR DATA' },
@@ -1333,7 +1516,7 @@ describe('tabelas comuns › numeração de notas', () => {
         ],
       },
     })
-    renderizar(<App />, '/tabelas-comuns/numeracao-de-notas')
+    renderizar(<App />, '/administracao/tabelas-comuns/numeracao-de-notas')
 
     expect(await screen.findByRole('cell', { name: 'POR DATA' })).toBeInTheDocument()
     const codigos = screen
@@ -1343,15 +1526,39 @@ describe('tabelas comuns › numeração de notas', () => {
     expect(codigos).toEqual(['A', 'D', 'N'])
     expect(screen.getByText('3 registros')).toBeInTheDocument()
   })
+
+  it('cadastra uma numeração com o código em maiúscula', async () => {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/administracao/tabelas-comuns/numeracao-de-notas': { data: [] },
+    })
+    renderizar(<App />, '/administracao/tabelas-comuns/numeracao-de-notas')
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { codigo: 'S', descricao: 'POR SÉRIE' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova numeração' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código'), 's')
+    await userEvent.type(within(dialogo).getByLabelText('Descrição'), 'POR SÉRIE')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/numeracao-de-notas', {
+      codigo: 'S',
+      descricao: 'POR SÉRIE',
+    })
+  })
 })
 
-describe('tabelas comuns › tipos de dam', () => {
+describe('administração › tabelas comuns › tipos de dam', () => {
   it('lista os tipos de DAM na ordem do código', async () => {
     setToken('tok-123')
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/tabelas-comuns/tipos-de-dam': {
+      '/administracao/tabelas-comuns/tipos-de-dam': {
         data: [
           { codigo: 1, descricao: 'NOTA FISCAL' },
           { codigo: 2, descricao: 'ALVARÁ' },
@@ -1359,7 +1566,7 @@ describe('tabelas comuns › tipos de dam', () => {
         ],
       },
     })
-    renderizar(<App />, '/tabelas-comuns/tipos-de-dam')
+    renderizar(<App />, '/administracao/tabelas-comuns/tipos-de-dam')
 
     expect(await screen.findByRole('cell', { name: 'ALVARÁ' })).toBeInTheDocument()
     const codigos = screen
@@ -1367,6 +1574,30 @@ describe('tabelas comuns › tipos de dam', () => {
       .slice(1)
       .map((linha) => within(linha).getAllByRole('cell')[0].textContent)
     expect(codigos).toEqual(['1', '2', '3'])
+  })
+
+  it('cadastra um tipo de DAM com código numérico', async () => {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/administracao/tabelas-comuns/tipos-de-dam': { data: [] },
+    })
+    renderizar(<App />, '/administracao/tabelas-comuns/tipos-de-dam')
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { codigo: 8, descricao: 'MULTAS' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo tipo de DAM' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Código'), '8')
+    await userEvent.type(within(dialogo).getByLabelText('Descrição'), 'MULTAS')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(post).toHaveBeenCalledWith('/administracao/tabelas-comuns/tipos-de-dam', {
+      codigo: 8,
+      descricao: 'MULTAS',
+    })
   })
 })
 

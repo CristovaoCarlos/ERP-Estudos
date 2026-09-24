@@ -37,15 +37,16 @@ A URL da tela manda em todos os outros nomes. Para `/parametros/receitas`:
 
 ## Tabelas do banco central
 
-As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco central e valem para todas as prefeituras. As telas delas ficam no módulo **Tabelas Comuns** do menu. O que muda em relação ao resto do guia:
+As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco central e valem para todas as prefeituras. As telas delas ficam em **Administração › Tabelas Comuns** e são **só do superadmin**, na prefeitura administradora ([ADR-0014](../adr/0014-tabelas-comuns-so-do-superadmin.md)). O que muda em relação ao resto do guia:
 
-- O model usa `CentralConnection` no lugar de `TenantConnection`; se a chave primária não for autoincremento, `$incrementing = false`.
-- A rota continua em `routes/tenant.php` (a tela é aberta pelo endereço da prefeitura), com a permissão da tela.
-- No teste, os dados vão direto pelo model, fora do `Tenant::run(...)`.
-- Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`.
+- O model usa `CentralConnection` no lugar de `TenantConnection`; se a chave primária não for autoincremento, `$incrementing = false`. Se ela for um número sem sequência no legado, a inclusão usa o maior + 1 numa transação (veja `CidadeController::store`).
+- **Acesso:** a permissão da tela vai na chave `superadmin` de `config/acesso.php`, não no catálogo de grupos. A rota entra no grupo `can:gerenciar-tabelas-comuns` de `routes/tenant.php`, sob o prefixo `administracao/tabelas-comuns`. No frontend, `exclusivaDoSuperadmin()` (`lib/navegacao.ts`) tira a tela da tela de grupos.
+- **Testes:** entram como superadmin na Lemarq; os dados vão direto pelo model, fora do `Tenant::run(...)`. Rota nova do módulo entra na lista de `TabelasComunsAcessoTest`, que confere o 403 para os demais.
+- **Inclusão:** o botão "Novo…" fica à direita do título e abre o formulário na moldura `DialogoDeCadastro` (`components/dialogo-de-cadastro.tsx`); os erros 422 voltam para os campos com `mostrarErrosDoServidor` (`lib/formularios.ts`). A descrição do diálogo avisa que o registro vale para todas as prefeituras.
+- Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`; as mutações invalidam a consulta.
 - Tabelas grandes (Cidades tem ~5.600 linhas) ainda cabem numa resposta só; a `Listagem` pagina e busca no navegador.
 
-Referência: **Tabelas Comuns › Cidades** (`Cidade`, `CidadeController`, `CidadeResource`, `CidadeTest`, `lib/tabelas-comuns-cidades.ts`, `pages/tabelas-comuns/Cidades.tsx`), só consulta, com filtro por UF no menu Filtros.
+Referências: **Cidades** (listagem com filtro por UF e inclusão com `Select`), **Lista de Serviços** e **Segmentos** (inclusão e alteração da descrição, com o código só para leitura na alteração).
 
 ## Sem `id_empresa`
 

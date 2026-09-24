@@ -30,14 +30,13 @@ class SelicTest extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -47,21 +46,13 @@ class SelicTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $url)
+    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->getJson("http://lemarq.localhost{$url}");
+        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
         return $resposta;
-    }
-
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $token = $this->entrar(['tabelas-comuns.cidades']);
-
-        $this->emLemarq($token, '/api/tabelas-comuns/selic')->assertForbidden();
     }
 
     public function test_lista_do_mes_mais_recente_ao_mais_antigo(): void
@@ -72,12 +63,40 @@ class SelicTest extends TestCase
             ['id' => 2, 'ano' => 2026, 'mes' => 1, 'valor' => 1.16],
             ['id' => 3, 'ano' => 2026, 'mes' => 2, 'valor' => null],
         ]);
-        $token = $this->entrar(['tabelas-comuns.selic']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, '/api/tabelas-comuns/selic')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/selic')
             ->assertOk()
             ->assertJsonPath('data.*.id', [3, 2, 1])
             ->assertJsonPath('data.0.valor', null)
             ->assertJsonPath('data.1', ['id' => 2, 'ano' => 2026, 'mes' => 1, 'valor' => '1.16']);
+    }
+
+    public function test_inclui_mes_com_o_proximo_id(): void
+    {
+        $this->criarTenant();
+        Selic::insert([['id' => 4, 'ano' => 2026, 'mes' => 1, 'valor' => 1.16]]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/selic', ['ano' => 2026, 'mes' => 2, 'valor' => '0.99'])
+            ->assertCreated()
+            ->assertJsonPath('id', 5)
+            ->assertJsonPath('valor', '0.99');
+    }
+
+    public function test_valida_a_inclusao_de_mes(): void
+    {
+        $this->criarTenant();
+        Selic::insert([['id' => 1, 'ano' => 2026, 'mes' => 1, 'valor' => 1.16]]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/selic', ['ano' => 2026, 'mes' => 1, 'valor' => '-1'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'mes' => 'Este mês já tem taxa cadastrada.',
+                'valor' => 'A taxa não pode ser negativa.',
+            ]);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/selic', ['ano' => 2025, 'mes' => 13, 'valor' => '1.234'])
+            ->assertJsonValidationErrors(['mes' => 'Mês inválido.', 'valor' => 'Use no máximo 2 casas decimais.']);
     }
 }

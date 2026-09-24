@@ -26,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
         // Superadmin, na prefeitura da Lemarq, pode tudo; os demais dependem dos grupos de acesso.
         Gate::before(fn (User $user) => $user->ehSuperadmin() ? true : null);
         Gate::define('gerenciar-empresas', fn (User $user) => $user->ehSuperadmin());
+        // Tabelas Comuns gravam no banco central (valem para todas as prefeituras): só o superadmin.
+        Gate::define('gerenciar-tabelas-comuns', fn (User $user) => $user->ehSuperadmin());
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(
             Cpf::digitos((string) $request->input('cpf')).'|'.$request->ip()

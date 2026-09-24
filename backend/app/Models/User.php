@@ -51,11 +51,11 @@ class User extends Authenticatable
         return $this->superadmin && Acesso::naPrefeituraAdministradora();
     }
 
-    /** @return list<string> permissões na prefeitura atual (superadmin: todas, inclusive Empresas) */
+    /** @return list<string> permissões na prefeitura atual (superadmin: todas, inclusive as exclusivas dele) */
     public function permissoesNaPrefeitura(): array
     {
         if ($this->ehSuperadmin()) {
-            return [...Acesso::permissoes(), Acesso::EMPRESAS];
+            return [...Acesso::permissoes(), ...Acesso::exclusivasDoSuperadmin()];
         }
 
         return $this->getAllPermissions()->pluck('name')->sort()->values()->all();

@@ -11,14 +11,14 @@ import { telas } from '@/lib/navegacao'
 import { prefeituraNaoEncontrada, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 import Empresas from '@/pages/administracao/Empresas'
 import Grupos from '@/pages/administracao/Grupos'
-import Bancos from '@/pages/tabelas-comuns/Bancos'
-import Cidades from '@/pages/tabelas-comuns/Cidades'
-import Cnae from '@/pages/tabelas-comuns/Cnae'
-import ListaDeServicos from '@/pages/tabelas-comuns/ListaDeServicos'
-import NumeracaoDeNotas from '@/pages/tabelas-comuns/NumeracaoDeNotas'
-import Segmentos from '@/pages/tabelas-comuns/Segmentos'
-import Selic from '@/pages/tabelas-comuns/Selic'
-import TiposDeDam from '@/pages/tabelas-comuns/TiposDeDam'
+import Bancos from '@/pages/administracao/tabelas-comuns/Bancos'
+import Cidades from '@/pages/administracao/tabelas-comuns/Cidades'
+import Cnae from '@/pages/administracao/tabelas-comuns/Cnae'
+import ListaDeServicos from '@/pages/administracao/tabelas-comuns/ListaDeServicos'
+import NumeracaoDeNotas from '@/pages/administracao/tabelas-comuns/NumeracaoDeNotas'
+import Segmentos from '@/pages/administracao/tabelas-comuns/Segmentos'
+import Selic from '@/pages/administracao/tabelas-comuns/Selic'
+import TiposDeDam from '@/pages/administracao/tabelas-comuns/TiposDeDam'
 import Usuarios from '@/pages/administracao/Usuarios'
 import EmConstrucao from '@/pages/EmConstrucao'
 import ReceitasParametros from '@/pages/parametros/Receitas'
@@ -32,14 +32,14 @@ import RedefinirSenha from '@/pages/RedefinirSenha'
 const paginas: Record<string, ComponentType> = {
   '/administracao/empresas': Empresas,
   '/administracao/grupos': Grupos,
-  '/tabelas-comuns/bancos': Bancos,
-  '/tabelas-comuns/cidades': Cidades,
-  '/tabelas-comuns/cnae': Cnae,
-  '/tabelas-comuns/lista-de-servicos': ListaDeServicos,
-  '/tabelas-comuns/numeracao-de-notas': NumeracaoDeNotas,
-  '/tabelas-comuns/segmentos': Segmentos,
-  '/tabelas-comuns/selic': Selic,
-  '/tabelas-comuns/tipos-de-dam': TiposDeDam,
+  '/administracao/tabelas-comuns/bancos': Bancos,
+  '/administracao/tabelas-comuns/cidades': Cidades,
+  '/administracao/tabelas-comuns/cnae': Cnae,
+  '/administracao/tabelas-comuns/lista-de-servicos': ListaDeServicos,
+  '/administracao/tabelas-comuns/numeracao-de-notas': NumeracaoDeNotas,
+  '/administracao/tabelas-comuns/segmentos': Segmentos,
+  '/administracao/tabelas-comuns/selic': Selic,
+  '/administracao/tabelas-comuns/tipos-de-dam': TiposDeDam,
   '/administracao/usuarios': Usuarios,
   '/parametros/receitas': ReceitasParametros,
 }

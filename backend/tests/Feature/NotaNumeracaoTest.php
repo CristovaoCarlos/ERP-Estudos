@@ -30,14 +30,13 @@ class NotaNumeracaoTest extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -47,21 +46,13 @@ class NotaNumeracaoTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $url)
+    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->getJson("http://lemarq.localhost{$url}");
+        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
         return $resposta;
-    }
-
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $token = $this->entrar(['tabelas-comuns.selic']);
-
-        $this->emLemarq($token, '/api/tabelas-comuns/numeracao-de-notas')->assertForbidden();
     }
 
     public function test_lista_ordenada_pelo_codigo(): void
@@ -72,11 +63,39 @@ class NotaNumeracaoTest extends TestCase
             ['cod_numeracao' => 'A', 'descricao' => 'AUTOMÁTICO'],
             ['cod_numeracao' => 'D', 'descricao' => 'POR DATA'],
         ]);
-        $token = $this->entrar(['tabelas-comuns.numeracao-de-notas']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, '/api/tabelas-comuns/numeracao-de-notas')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/numeracao-de-notas')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', ['A', 'D', 'N'])
             ->assertJsonPath('data.0', ['codigo' => 'A', 'descricao' => 'AUTOMÁTICO']);
+    }
+
+    public function test_inclui_numeracao(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'S', 'descricao' => 'POR SÉRIE'])
+            ->assertCreated()
+            ->assertJsonPath('codigo', 'S');
+
+        $this->assertSame('POR SÉRIE', NotaNumeracao::find('S')->descricao);
+    }
+
+    public function test_valida_a_inclusao_de_numeracao(): void
+    {
+        $this->criarTenant();
+        NotaNumeracao::insert([['cod_numeracao' => 'A', 'descricao' => 'AUTOMÁTICO']]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'A', 'descricao' => str_repeat('X', 21)])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'codigo' => 'Já existe uma numeração com este código.',
+                'descricao' => 'Use no máximo 20 caracteres.',
+            ]);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'a', 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'O código é uma letra maiúscula.']);
     }
 }
