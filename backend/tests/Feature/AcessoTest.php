@@ -83,7 +83,8 @@ class AcessoTest extends TestCase
             $this->assertNotContains('parametros.empresa', $parametros);
             $this->assertTrue($parametros->every(fn (string $p) => str_starts_with($p, 'parametros.')));
             $this->assertContains('tabelas.tomadores.tomador', Role::findByName('Tabelas')->permissions->pluck('name'));
-            $this->assertNotContains('administracao.tabelas-internas.cnae', Role::findByName('Tabelas')->permissions->pluck('name'));
+            $this->assertNotContains('tabelas-comuns.cnae', Role::findByName('Tabelas')->permissions->pluck('name'));
+            $this->assertContains('tabelas-comuns.cnae', Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name'));
             $this->assertContains('lancamentos.dam.consultas', Role::findByName('Lançamentos')->permissions->pluck('name'));
         });
     }

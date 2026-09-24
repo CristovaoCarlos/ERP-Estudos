@@ -234,7 +234,14 @@ describe('sistema', () => {
   it('mostra os módulos no menu lateral', async () => {
     entrarLogado()
 
-    for (const modulo of ['Parâmetros', 'Tabelas', 'Lançamentos', 'Relatórios', 'Administração']) {
+    for (const modulo of [
+      'Parâmetros da Empresa',
+      'Tabelas',
+      'Lançamentos',
+      'Relatórios',
+      'Tabelas Comuns',
+      'Administração',
+    ]) {
       expect(await screen.findByRole('button', { name: modulo })).toBeInTheDocument()
     }
     for (const removido of ['Cadastros', 'Tributos', 'Arrecadação', 'Dívida ativa']) {
@@ -258,7 +265,7 @@ describe('sistema', () => {
   it('lista as telas de Parâmetros no submenu', async () => {
     entrarLogado()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Parâmetros' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Parâmetros da Empresa' }))
 
     expect(await screen.findByRole('link', { name: 'Receitas' })).toHaveAttribute(
       'href',
@@ -288,26 +295,25 @@ describe('sistema', () => {
     expect(trilha).toHaveTextContent('Tomador estrangeiro')
   })
 
-  it('abre as Tabelas internas pelo menu Administração', async () => {
+  it('Tabelas Comuns é um módulo do menu principal', async () => {
     entrarLogado()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
-    await screen.findByRole('link', { name: 'Receitas Tributárias' })
-    expect(sidebar().queryByRole('button', { name: 'Tabelas internas' })).not.toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: 'Administração' }))
+    await screen.findByRole('link', { name: 'Usuários' })
+    expect(sidebar().queryByRole('button', { name: 'Tabelas Comuns' })).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Administração' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas internas' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'CNAE' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Tabelas Comuns' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Tipos de DAM' }))
 
-    expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Tipos de DAM' })).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).toHaveTextContent('Administração')
-    expect(trilha).toHaveTextContent('Tabelas internas')
-    expect(trilha).toHaveTextContent('CNAE')
-    expect(within(trilha).getByRole('link', { name: 'Tabelas internas' })).toHaveAttribute(
+    expect(trilha).not.toHaveTextContent('Administração')
+    expect(trilha).toHaveTextContent('Tabelas Comuns')
+    expect(trilha).toHaveTextContent('Tipos de DAM')
+    expect(within(trilha).getByRole('link', { name: 'Tabelas Comuns' })).toHaveAttribute(
       'href',
-      // O submenu leva à primeira tela dele.
-      '/administracao/tabelas-internas/cidades',
+      // O módulo leva à primeira tela dele.
+      '/tabelas-comuns/cidades',
     )
   })
 
@@ -394,11 +400,11 @@ describe('grupos de acesso', () => {
   it('o menu mostra só os módulos dos grupos do usuário', async () => {
     entrarComo(usuarioDeParametros)
 
-    expect(await screen.findByRole('button', { name: 'Parâmetros' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Parâmetros da Empresa' })).toBeInTheDocument()
     for (const modulo of ['Tabelas', 'Lançamentos', 'Relatórios', 'Administração']) {
       expect(sidebar().queryByRole('button', { name: modulo })).not.toBeInTheDocument()
     }
-    expect(screen.getByRole('link', { name: /^Parâmetros/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Parâmetros da Empresa/ })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /^Tabelas/ })).not.toBeInTheDocument()
   })
 
@@ -811,7 +817,7 @@ describe('grupos de acesso', () => {
     const dialogo = await screen.findByRole('dialog')
     await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Fiscalização')
     // "Alvará" e "Habite-se" existem em vários módulos: escolhe as de Parâmetros.
-    const parametros = within(within(dialogo).getByRole('group', { name: 'Parâmetros' }))
+    const parametros = within(within(dialogo).getByRole('group', { name: 'Parâmetros da Empresa' }))
     await userEvent.click(parametros.getByRole('checkbox', { name: 'Alvará' }))
     await userEvent.click(parametros.getByRole('checkbox', { name: 'Habite-se' }))
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
@@ -837,13 +843,7 @@ describe('grupos de acesso', () => {
 
     expect(post).toHaveBeenCalledWith('/grupos', {
       nome: 'Só administração',
-      telas: [
-        'administracao.usuarios',
-        'administracao.grupos',
-        ...telas
-          .filter((tela) => tela.url.startsWith('/administracao/tabelas-internas/'))
-          .map((tela) => permissaoDaTela(tela.url)),
-      ],
+      telas: ['administracao.usuarios', 'administracao.grupos'],
     })
   })
 
@@ -969,7 +969,7 @@ describe('parâmetros › receitas', () => {
   })
 })
 
-describe('administração › tabelas internas › cidades', () => {
+describe('tabelas comuns › cidades', () => {
   const cidades = [
     { id: 2, codigo_ibge: '1100015', nome: "Alta Floresta D'Oeste", uf: 'RO' },
     { id: 3, codigo_ibge: '3509502', nome: 'Campinas', uf: 'SP' },
@@ -981,9 +981,9 @@ describe('administração › tabelas internas › cidades', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/administracao/tabelas-internas/cidades': { data: cidades },
+      '/tabelas-comuns/cidades': { data: cidades },
     })
-    renderizar(<App />, '/administracao/tabelas-internas/cidades')
+    renderizar(<App />, '/tabelas-comuns/cidades')
   }
 
   it('lista as cidades com UF e código do IBGE', async () => {
@@ -1019,7 +1019,7 @@ describe('administração › tabelas internas › cidades', () => {
   })
 })
 
-describe('administração › tabelas internas › bancos', () => {
+describe('tabelas comuns › bancos', () => {
   const bancos = [
     { id: 1, codigo: '0001', nome: 'Banco do Brasil S.A.' },
     { id: 2, codigo: '0341', nome: 'Itaú Unibanco S.A.' },
@@ -1030,9 +1030,9 @@ describe('administração › tabelas internas › bancos', () => {
     mockGet({
       '/tenant': { id: 'lemarq', nome: 'Lemarq' },
       '/me': usuario,
-      '/administracao/tabelas-internas/bancos': { data: bancos },
+      '/tabelas-comuns/bancos': { data: bancos },
     })
-    renderizar(<App />, '/administracao/tabelas-internas/bancos')
+    renderizar(<App />, '/tabelas-comuns/bancos')
   }
 
   it('lista os bancos com o código de compensação', async () => {
@@ -1051,6 +1051,322 @@ describe('administração › tabelas internas › bancos', () => {
 
     expect(screen.getByRole('cell', { name: 'Itaú Unibanco S.A.' })).toBeInTheDocument()
     expect(screen.queryByRole('cell', { name: 'Banco do Brasil S.A.' })).not.toBeInTheDocument()
+  })
+})
+
+describe('tabelas comuns › cnae', () => {
+  const atividade = {
+    divisao: null,
+    grupo: null,
+    classe: null,
+    subclasse: null,
+    versao: '2.3',
+    ativo: true,
+  }
+  const cnae = [
+    { ...atividade, id: 1, nivel: 'secao', codigo: 'P', secao: 'P', denominacao: 'EDUCAÇÃO' },
+    {
+      ...atividade,
+      id: 2,
+      nivel: 'subclasse',
+      codigo: '8593-7/00',
+      secao: 'P',
+      divisao: '85',
+      grupo: '85.9',
+      classe: '85.93-7',
+      subclasse: '8593-7/00',
+      denominacao: 'Ensino de idiomas',
+    },
+    {
+      ...atividade,
+      id: 3,
+      nivel: 'secao',
+      codigo: 'A',
+      secao: 'A',
+      denominacao: 'AGRICULTURA',
+      versao: '2.2',
+      ativo: false,
+    },
+  ]
+
+  function abrirCnae() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/cnae': { data: cnae },
+    })
+    renderizar(<App />, '/tabelas-comuns/cnae')
+  }
+
+  it('lista as atividades com nível, versão e situação', async () => {
+    abrirCnae()
+
+    const linha = (await screen.findByRole('cell', { name: 'Ensino de idiomas' })).closest('tr')!
+    expect(linha).toHaveTextContent('8593-7/00')
+    expect(linha).toHaveTextContent('Subclasse')
+    expect(linha).toHaveTextContent('2.3')
+    expect(screen.getByRole('cell', { name: 'AGRICULTURA' }).closest('tr')).toHaveTextContent(
+      'Inativa',
+    )
+  })
+
+  it('busca pelo código sem pontuação', async () => {
+    abrirCnae()
+    await screen.findByRole('cell', { name: 'Ensino de idiomas' })
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '8593700')
+
+    expect(screen.getByRole('cell', { name: 'Ensino de idiomas' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'EDUCAÇÃO' })).not.toBeInTheDocument()
+  })
+
+  it('filtra por versão e por nível', async () => {
+    abrirCnae()
+    await screen.findByRole('cell', { name: 'Ensino de idiomas' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '2.3' }))
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Seção' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: 'EDUCAÇÃO' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Ensino de idiomas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'AGRICULTURA' })).not.toBeInTheDocument()
+  })
+})
+
+describe('tabelas comuns › lista de serviços', () => {
+  const itens = [
+    { codigo: '01', tipo: 'item', descricao: 'Serviços de informática e congêneres.' },
+    { codigo: '01.01', tipo: 'subitem', descricao: 'Análise e desenvolvimento de sistemas.' },
+    { codigo: '01.02', tipo: 'subitem', descricao: 'Programação.' },
+  ]
+
+  function abrirLista() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/lista-de-servicos': { data: itens },
+    })
+    renderizar(<App />, '/tabelas-comuns/lista-de-servicos')
+  }
+
+  it('lista os itens na ordem do código', async () => {
+    abrirLista()
+
+    await screen.findByRole('cell', { name: 'Programação.' })
+    const codigos = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((linha) => within(linha).getAllByRole('cell')[0].textContent)
+    expect(codigos).toEqual(['01', '01.01', '01.02'])
+  })
+
+  it('busca pelo código sem o ponto', async () => {
+    abrirLista()
+    await screen.findByRole('cell', { name: 'Programação.' })
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '0102')
+
+    expect(screen.getByRole('cell', { name: 'Programação.' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('cell', { name: 'Análise e desenvolvimento de sistemas.' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('altera a descrição com o código só para leitura', async () => {
+    abrirLista()
+    const put = vi
+      .spyOn(api, 'put')
+      .mockResolvedValue({ data: { ...itens[2], descricao: 'Programação de computadores.' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar 01.02' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByLabelText('Código')).toHaveValue('01.02')
+    expect(within(dialogo).getByLabelText('Código')).toBeDisabled()
+
+    const descricao = within(dialogo).getByLabelText('Descrição')
+    await userEvent.clear(descricao)
+    await userEvent.type(descricao, 'Programação de computadores.')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(put).toHaveBeenCalledWith('/tabelas-comuns/lista-de-servicos/01.02', {
+      descricao: 'Programação de computadores.',
+    })
+  })
+
+  it('não salva sem descrição', async () => {
+    abrirLista()
+    const put = vi.spyOn(api, 'put')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar 01' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.clear(within(dialogo).getByLabelText('Descrição'))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(await within(dialogo).findByText('Informe a descrição.')).toBeInTheDocument()
+    expect(put).not.toHaveBeenCalled()
+  })
+})
+
+describe('tabelas comuns › selic', () => {
+  const taxas = [
+    { id: 3, ano: 2026, mes: 2, valor: null },
+    { id: 2, ano: 2026, mes: 1, valor: '1.16' },
+    { id: 1, ano: 2025, mes: 12, valor: '1.12' },
+  ]
+
+  function abrirSelic(dados = taxas) {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/selic': { data: dados },
+    })
+    renderizar(<App />, '/tabelas-comuns/selic')
+  }
+
+  it('lista as taxas com competência, mês e percentual', async () => {
+    abrirSelic()
+
+    const linha = (await screen.findByRole('cell', { name: '01/2026' })).closest('tr')!
+    expect(linha).toHaveTextContent('Janeiro de 2026')
+    expect(linha).toHaveTextContent('1,16%')
+    expect(screen.getByRole('cell', { name: '02/2026' }).closest('tr')).toHaveTextContent('—')
+  })
+
+  it('filtra por ano pelo menu Filtros', async () => {
+    abrirSelic()
+    await screen.findByRole('cell', { name: '01/2026' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '2025' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: '12/2025' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: '01/2026' })).not.toBeInTheDocument()
+  })
+
+  it('avisa quando a tabela está vazia', async () => {
+    abrirSelic([])
+
+    expect(await screen.findByText('Nenhuma taxa cadastrada')).toBeInTheDocument()
+  })
+})
+
+describe('tabelas comuns › segmentos', () => {
+  const segmentos = [
+    { codigo: '1', descricao: 'PREFEITURA' },
+    { codigo: '2', descricao: 'SANEAMENTO' },
+    { codigo: '9', descricao: 'USO INTERNO DO BANCO' },
+  ]
+
+  function abrirSegmentos() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/segmentos': { data: segmentos },
+    })
+    renderizar(<App />, '/tabelas-comuns/segmentos')
+  }
+
+  it('lista os segmentos na ordem do código', async () => {
+    abrirSegmentos()
+
+    await screen.findByRole('cell', { name: 'PREFEITURA' })
+    const codigos = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((linha) => within(linha).getAllByRole('cell')[0].textContent)
+    expect(codigos).toEqual(['1', '2', '9'])
+  })
+
+  it('altera a descrição com o código só para leitura', async () => {
+    abrirSegmentos()
+    const put = vi
+      .spyOn(api, 'put')
+      .mockResolvedValue({ data: { codigo: '2', descricao: 'SANEAMENTO BÁSICO' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar SANEAMENTO' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByLabelText('Código')).toHaveValue('2')
+    expect(within(dialogo).getByLabelText('Código')).toBeDisabled()
+
+    const descricao = within(dialogo).getByLabelText('Descrição')
+    await userEvent.clear(descricao)
+    await userEvent.type(descricao, 'SANEAMENTO BÁSICO')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(put).toHaveBeenCalledWith('/tabelas-comuns/segmentos/2', {
+      descricao: 'SANEAMENTO BÁSICO',
+    })
+  })
+
+  it('não salva sem descrição', async () => {
+    abrirSegmentos()
+    const put = vi.spyOn(api, 'put')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar PREFEITURA' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.clear(within(dialogo).getByLabelText('Descrição'))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(await within(dialogo).findByText('Informe a descrição.')).toBeInTheDocument()
+    expect(put).not.toHaveBeenCalled()
+  })
+})
+
+describe('tabelas comuns › numeração de notas', () => {
+  it('lista os tipos de numeração na ordem do código', async () => {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/numeracao-de-notas': {
+        data: [
+          { codigo: 'A', descricao: 'AUTOMÁTICO' },
+          { codigo: 'D', descricao: 'POR DATA' },
+          { codigo: 'N', descricao: 'NORMAL' },
+        ],
+      },
+    })
+    renderizar(<App />, '/tabelas-comuns/numeracao-de-notas')
+
+    expect(await screen.findByRole('cell', { name: 'POR DATA' })).toBeInTheDocument()
+    const codigos = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((linha) => within(linha).getAllByRole('cell')[0].textContent)
+    expect(codigos).toEqual(['A', 'D', 'N'])
+    expect(screen.getByText('3 registros')).toBeInTheDocument()
+  })
+})
+
+describe('tabelas comuns › tipos de dam', () => {
+  it('lista os tipos de DAM na ordem do código', async () => {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/tabelas-comuns/tipos-de-dam': {
+        data: [
+          { codigo: 1, descricao: 'NOTA FISCAL' },
+          { codigo: 2, descricao: 'ALVARÁ' },
+          { codigo: 3, descricao: 'IPTU' },
+        ],
+      },
+    })
+    renderizar(<App />, '/tabelas-comuns/tipos-de-dam')
+
+    expect(await screen.findByRole('cell', { name: 'ALVARÁ' })).toBeInTheDocument()
+    const codigos = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((linha) => within(linha).getAllByRole('cell')[0].textContent)
+    expect(codigos).toEqual(['1', '2', '3'])
   })
 })
 

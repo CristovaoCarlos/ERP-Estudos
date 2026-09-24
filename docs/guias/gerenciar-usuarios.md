@@ -31,7 +31,7 @@ Sem grupo, o usuário entra na prefeitura mas só vê o Início. Toda prefeitura
 | --- | --- |
 | `Administrador` | **Todas**. É do sistema: acompanha as telas novas e não pode ser alterado nem excluído. |
 | `Parâmetros` | Parâmetros (receitas, nota fiscal, alvará, ITBI, IPTU, …) |
-| `Tabelas` | Tabelas, inclusive Tomadores de Serviço (as Tabelas internas ficam em Administração) |
+| `Tabelas` | Tabelas, inclusive Tomadores de Serviço (as Tabelas Comuns são um módulo à parte, só no grupo `Administrador`) |
 | `Lançamentos` | Lançamentos, inclusive Imóveis e DAM |
 
 Em **Administração › Grupos de acesso** (permissão `administracao.grupos`) dá para criar outros grupos e mudar os que existem, marcando tela a tela — inclusive misturando módulos, como um grupo "Fiscalização" com Alvará em Parâmetros, Lançamentos e Relatórios. Um grupo em uso não pode ser excluído: tire-o dos usuários antes. Os grupos padrão excluídos voltam no próximo `acesso:sincronizar`; as alterações feitas na tela não são desfeitas pelo comando.

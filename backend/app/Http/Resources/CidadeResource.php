@@ -6,7 +6,7 @@ use App\Models\Cidade;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Cidade das tabelas internas (banco central). */
+/** Cidade das tabelas comuns (banco central). */
 
 /** @mixin Cidade */
 class CidadeResource extends JsonResource

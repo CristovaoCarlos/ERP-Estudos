@@ -5,10 +5,16 @@ declare(strict_types=1);
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\CidadeController;
+use App\Http\Controllers\CnaeController;
+use App\Http\Controllers\DamTipoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\Lcp116Controller;
+use App\Http\Controllers\NotaNumeracaoController;
 use App\Http\Controllers\ParametroReceitaController;
+use App\Http\Controllers\SegmentoController;
+use App\Http\Controllers\SelicController;
 use App\Http\Controllers\SenhaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
@@ -65,11 +71,27 @@ Route::middleware([
             Route::get('/parametros/receitas/opcoes', [ParametroReceitaController::class, 'opcoes']);
         });
 
-        // Administração › Tabelas internas (banco central, só consulta).
-        Route::get('/administracao/tabelas-internas/cidades', [CidadeController::class, 'index'])
-            ->middleware('can:administracao.tabelas-internas.cidades');
-        Route::get('/administracao/tabelas-internas/bancos', [BancoController::class, 'index'])
-            ->middleware('can:administracao.tabelas-internas.bancos');
+        // Tabelas Comuns (banco central, iguais para todas as prefeituras).
+        Route::get('/tabelas-comuns/cidades', [CidadeController::class, 'index'])
+            ->middleware('can:tabelas-comuns.cidades');
+        Route::get('/tabelas-comuns/bancos', [BancoController::class, 'index'])
+            ->middleware('can:tabelas-comuns.bancos');
+        Route::get('/tabelas-comuns/cnae', [CnaeController::class, 'index'])
+            ->middleware('can:tabelas-comuns.cnae');
+        Route::get('/tabelas-comuns/selic', [SelicController::class, 'index'])
+            ->middleware('can:tabelas-comuns.selic');
+        Route::get('/tabelas-comuns/numeracao-de-notas', [NotaNumeracaoController::class, 'index'])
+            ->middleware('can:tabelas-comuns.numeracao-de-notas');
+        Route::get('/tabelas-comuns/tipos-de-dam', [DamTipoController::class, 'index'])
+            ->middleware('can:tabelas-comuns.tipos-de-dam');
+        Route::middleware('can:tabelas-comuns.segmentos')->group(function () {
+            Route::get('/tabelas-comuns/segmentos', [SegmentoController::class, 'index']);
+            Route::put('/tabelas-comuns/segmentos/{segmento}', [SegmentoController::class, 'update']);
+        });
+        Route::middleware('can:tabelas-comuns.lista-de-servicos')->group(function () {
+            Route::get('/tabelas-comuns/lista-de-servicos', [Lcp116Controller::class, 'index']);
+            Route::put('/tabelas-comuns/lista-de-servicos/{item}', [Lcp116Controller::class, 'update']);
+        });
 
         // Só o superadmin, na prefeitura da Lemarq.
         Route::middleware('can:gerenciar-empresas')->group(function () {

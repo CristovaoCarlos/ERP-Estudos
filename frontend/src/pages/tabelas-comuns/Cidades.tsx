@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { Listagem, type Coluna } from '@/components/listagem'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
-import { useCidades, type Cidade } from '@/lib/administracao-tabelas-internas-cidades'
+import { useCidades, type Cidade } from '@/lib/tabelas-comuns-cidades'
 
 const colunas: Coluna<Cidade>[] = [
   {
@@ -51,7 +51,7 @@ export default function Cidades() {
       </div>
 
       <Listagem
-        chave="administracao-tabelas-internas-cidades"
+        chave="tabelas-comuns-cidades"
         itens={filtradas}
         carregando={cidades.isPending}
         erro={cidades.isError}

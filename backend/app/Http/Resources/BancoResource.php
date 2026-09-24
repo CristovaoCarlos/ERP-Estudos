@@ -6,7 +6,7 @@ use App\Models\Banco;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Banco das tabelas internas (banco central). */
+/** Banco das tabelas comuns (banco central). */
 
 /** @mixin Banco */
 class BancoResource extends JsonResource
