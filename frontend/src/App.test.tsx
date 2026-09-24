@@ -297,15 +297,16 @@ describe('sistema', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Administração' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Tabelas internas' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'Cidades' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'CNAE' }))
 
     expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
     expect(trilha).toHaveTextContent('Administração')
     expect(trilha).toHaveTextContent('Tabelas internas')
-    expect(trilha).toHaveTextContent('Cidades')
+    expect(trilha).toHaveTextContent('CNAE')
     expect(within(trilha).getByRole('link', { name: 'Tabelas internas' })).toHaveAttribute(
       'href',
+      // O submenu leva à primeira tela dele.
       '/administracao/tabelas-internas/cidades',
     )
   })
@@ -965,6 +966,91 @@ describe('parâmetros › receitas', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
     expect(await screen.findByText('Receita não encontrada.')).toBeInTheDocument()
+  })
+})
+
+describe('administração › tabelas internas › cidades', () => {
+  const cidades = [
+    { id: 2, codigo_ibge: '1100015', nome: "Alta Floresta D'Oeste", uf: 'RO' },
+    { id: 3, codigo_ibge: '3509502', nome: 'Campinas', uf: 'SP' },
+    { id: 1, codigo_ibge: '3550308', nome: 'São Paulo', uf: 'SP' },
+  ]
+
+  function abrirCidades() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/administracao/tabelas-internas/cidades': { data: cidades },
+    })
+    renderizar(<App />, '/administracao/tabelas-internas/cidades')
+  }
+
+  it('lista as cidades com UF e código do IBGE', async () => {
+    abrirCidades()
+
+    const linha = (await screen.findByRole('cell', { name: 'Campinas' })).closest('tr')!
+    expect(linha).toHaveTextContent('SP')
+    expect(linha).toHaveTextContent('3509502')
+    expect(screen.getByText('3 registros')).toBeInTheDocument()
+  })
+
+  it('busca pelo código do IBGE', async () => {
+    abrirCidades()
+    await screen.findByRole('cell', { name: 'Campinas' })
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '3550308')
+
+    expect(screen.getByRole('cell', { name: 'São Paulo' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Campinas' })).not.toBeInTheDocument()
+  })
+
+  it('filtra por UF pelo menu Filtros', async () => {
+    abrirCidades()
+    await screen.findByRole('cell', { name: 'Campinas' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'RO' }))
+    // Com o menu aberto, o Radix esconde o resto da página: fecha antes de conferir.
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: "Alta Floresta D'Oeste" })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Campinas' })).not.toBeInTheDocument()
+  })
+})
+
+describe('administração › tabelas internas › bancos', () => {
+  const bancos = [
+    { id: 1, codigo: '0001', nome: 'Banco do Brasil S.A.' },
+    { id: 2, codigo: '0341', nome: 'Itaú Unibanco S.A.' },
+  ]
+
+  function abrirBancos() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/administracao/tabelas-internas/bancos': { data: bancos },
+    })
+    renderizar(<App />, '/administracao/tabelas-internas/bancos')
+  }
+
+  it('lista os bancos com o código de compensação', async () => {
+    abrirBancos()
+
+    const linha = (await screen.findByRole('cell', { name: 'Banco do Brasil S.A.' })).closest('tr')!
+    expect(linha).toHaveTextContent('0001')
+    expect(screen.getByText('2 registros')).toBeInTheDocument()
+  })
+
+  it('busca pelo código', async () => {
+    abrirBancos()
+    await screen.findByRole('cell', { name: 'Banco do Brasil S.A.' })
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '0341')
+
+    expect(screen.getByRole('cell', { name: 'Itaú Unibanco S.A.' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Banco do Brasil S.A.' })).not.toBeInTheDocument()
   })
 })
 

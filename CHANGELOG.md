@@ -8,6 +8,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Tela **Administração › Tabelas internas › Bancos**: consulta dos bancos do banco central (`tc_banco`) com o código de compensação e busca rápida por código ou nome. Rota `GET /api/administracao/tabelas-internas/bancos`, com a permissão `administracao.tabelas-internas.bancos`.
+- Tela **Administração › Tabelas internas › Cidades**: consulta das cidades do banco central (`tc_cidade`) com UF e código do IBGE, busca rápida por nome, UF ou código e filtro por UF. Rota `GET /api/administracao/tabelas-internas/cidades`, com a permissão `administracao.tabelas-internas.cidades`.
 - Tela **Parâmetros › Receitas**: formulário único em que a prefeitura define a receita (`tb_receita`) que cada tributo usa nos lançamentos (ISS, Taxa, TLL, IRPF, IRPJ, INSS, ITBI, Habite-se, IPTU, TCL, TCC, TIP e TLP). Rotas `GET/PUT /api/parametros/receitas` e `GET /api/parametros/receitas/opcoes`, com a permissão `parametros.receitas`.
 - Padrão para telas novas sobre tabelas da prefeitura, em formulário único ou lista com cadastro ([guia](docs/guias/criar-tela.md)), e skill `nova-tela` do Claude Code.
 

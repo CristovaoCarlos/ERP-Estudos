@@ -11,6 +11,8 @@ import { telas } from '@/lib/navegacao'
 import { prefeituraNaoEncontrada, subdominioDaPrefeitura, usePrefeitura } from '@/lib/prefeitura'
 import Empresas from '@/pages/administracao/Empresas'
 import Grupos from '@/pages/administracao/Grupos'
+import Bancos from '@/pages/administracao/tabelas-internas/Bancos'
+import Cidades from '@/pages/administracao/tabelas-internas/Cidades'
 import Usuarios from '@/pages/administracao/Usuarios'
 import EmConstrucao from '@/pages/EmConstrucao'
 import ReceitasParametros from '@/pages/parametros/Receitas'
@@ -24,6 +26,8 @@ import RedefinirSenha from '@/pages/RedefinirSenha'
 const paginas: Record<string, ComponentType> = {
   '/administracao/empresas': Empresas,
   '/administracao/grupos': Grupos,
+  '/administracao/tabelas-internas/bancos': Bancos,
+  '/administracao/tabelas-internas/cidades': Cidades,
   '/administracao/usuarios': Usuarios,
   '/parametros/receitas': ReceitasParametros,
 }

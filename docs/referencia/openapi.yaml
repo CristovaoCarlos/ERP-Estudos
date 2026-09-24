@@ -37,6 +37,8 @@ tags:
     description: Grupos da prefeitura e as telas de cada um
   - name: Parâmetros
     description: Parâmetros da prefeitura (permissão da tela, ex. `parametros.receitas`)
+  - name: Tabelas internas
+    description: Tabelas de apoio do banco central, iguais para todas as prefeituras
   - name: Empresas
     description: Prefeituras clientes. Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`)
 paths:
@@ -845,6 +847,56 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
+  /api/administracao/tabelas-internas/cidades:
+    get:
+      tags: [Tabelas internas]
+      summary: Listar as cidades
+      description: Todas as cidades de `tc_cidade` (banco central), por UF e nome. São cerca de 5.600 e vêm de uma vez, sem paginação.
+      operationId: listarCidades
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cidade'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  /api/administracao/tabelas-internas/bancos:
+    get:
+      tags: [Tabelas internas]
+      summary: Listar os bancos
+      description: Todos os bancos de `tc_banco` (banco central), por nome.
+      operationId: listarBancos
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Banco'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
   /api/empresas:
     get:
       tags: [Empresas]
@@ -1122,6 +1174,35 @@ components:
       properties:
         receitas:
           $ref: '#/components/schemas/ReceitasDosTributos'
+    Banco:
+      type: object
+      required: [id, codigo, nome]
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+          description: Código de compensação (4 dígitos, com os zeros à esquerda).
+          examples: ['0001']
+        nome:
+          type: string
+          examples: [Banco do Brasil S.A.]
+    Cidade:
+      type: object
+      required: [id, codigo_ibge, nome, uf]
+      properties:
+        id:
+          type: integer
+        codigo_ibge:
+          type: string
+          description: Código do município no IBGE (7 dígitos).
+          examples: ['3550308']
+        nome:
+          type: string
+          examples: [São Paulo]
+        uf:
+          type: string
+          examples: [SP]
     ErroDeValidacao:
       type: object
       required: [message, errors]
