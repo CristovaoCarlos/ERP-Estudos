@@ -27,9 +27,7 @@ export default function NumeracaoDeNotas() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Numeração de Notas</h1>
-        <p className="text-muted-foreground">
-          Tipos de numeração da nota fiscal.
-        </p>
+        <p className="text-muted-foreground">Tipos de numeração da nota fiscal.</p>
       </div>
 
       <Listagem

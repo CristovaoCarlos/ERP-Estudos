@@ -27,9 +27,7 @@ export default function TiposDeDam() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Tipos de DAM</h1>
-        <p className="text-muted-foreground">
-          Tipos de documento de arrecadação.
-        </p>
+        <p className="text-muted-foreground">Tipos de documento de arrecadação.</p>
       </div>
 
       <Listagem

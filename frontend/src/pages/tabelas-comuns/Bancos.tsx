@@ -27,9 +27,7 @@ export default function Bancos() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Bancos</h1>
-        <p className="text-muted-foreground">
-          Bancos com o código de compensação.
-        </p>
+        <p className="text-muted-foreground">Bancos com o código de compensação.</p>
       </div>
 
       <Listagem

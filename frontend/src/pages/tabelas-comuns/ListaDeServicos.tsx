@@ -172,9 +172,7 @@ export default function ListaDeServicos() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Lista de Serviços - Lei Compl. 116/2003
         </h1>
-        <p className="text-muted-foreground">
-          Itens e subitens da lista de serviços do ISS.
-        </p>
+        <p className="text-muted-foreground">Itens e subitens da lista de serviços do ISS.</p>
       </div>
 
       <Listagem
