@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ListChecks, Pencil } from 'lucide-react'
+import { ListChecks, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { DialogoDeCadastro } from '@/components/dialogo-de-cadastro'
 import { Listagem, type Coluna } from '@/components/listagem'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -17,16 +17,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { errosDosCampos } from '@/lib/empresas'
 import {
   useAlterarItemLcp116,
+  useCadastrarItemLcp116,
   useListaDeServicos,
   type ItemLcp116,
-} from '@/lib/tabelas-comuns-lista-de-servicos'
+} from '@/lib/administracao-tabelas-comuns-lista-de-servicos'
+import { errosDosCampos } from '@/lib/empresas'
+import { mostrarErrosDoServidor } from '@/lib/formularios'
 
 const esquema = z.object({
   descricao: z
@@ -109,7 +112,89 @@ function Formulario({ item, aoFechar }: { item: ItemLcp116; aoFechar: () => void
   )
 }
 
+const esquemaDoNovo = z.object({
+  codigo: z
+    .string()
+    .trim()
+    .regex(/^\d{2}(\.\d{2})?$/, 'Use 01 para item ou 01.01 para subitem.'),
+  descricao: z
+    .string()
+    .trim()
+    .min(1, 'Informe a descrição.')
+    .max(1000, 'Use no máximo 1.000 caracteres.'),
+})
+
+type CamposDoNovo = z.infer<typeof esquemaDoNovo>
+
+function NovoItem({ aoFechar }: { aoFechar: () => void }) {
+  const cadastrar = useCadastrarItemLcp116()
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<CamposDoNovo>({
+    resolver: zodResolver(esquemaDoNovo),
+    defaultValues: { codigo: '', descricao: '' },
+  })
+
+  const salvar = handleSubmit((dados) =>
+    cadastrar.mutate(dados, {
+      onSuccess: () => {
+        toast.success(`Item ${dados.codigo} cadastrado.`)
+        aoFechar()
+      },
+      onError: (erro) =>
+        mostrarErrosDoServidor(
+          erro,
+          setError,
+          ['codigo', 'descricao'],
+          'Não foi possível cadastrar o item.',
+        ),
+    }),
+  )
+
+  return (
+    <DialogoDeCadastro
+      id="form-novo-item"
+      titulo="Novo item ou subitem"
+      descricao="A lista de serviços é a mesma para todas as prefeituras: o item cadastrado vale para todas."
+      salvando={cadastrar.isPending}
+      aoEnviar={salvar}
+      aoFechar={aoFechar}
+      largo
+    >
+      <Field data-invalid={errors.codigo ? true : undefined}>
+        <FieldLabel htmlFor="novo-codigo">Código</FieldLabel>
+        <Input
+          id="novo-codigo"
+          maxLength={5}
+          placeholder="01.01"
+          className="w-32 font-mono"
+          aria-invalid={errors.codigo ? true : undefined}
+          {...register('codigo')}
+        />
+        <FieldDescription>
+          Dois dígitos para item (01) ou item e subitem (01.01). O subitem exige o item cadastrado.
+        </FieldDescription>
+        <FieldError>{errors.codigo?.message}</FieldError>
+      </Field>
+      <Field data-invalid={errors.descricao ? true : undefined}>
+        <FieldLabel htmlFor="nova-descricao">Descrição</FieldLabel>
+        <Textarea
+          id="nova-descricao"
+          rows={6}
+          aria-invalid={errors.descricao ? true : undefined}
+          {...register('descricao')}
+        />
+        <FieldError>{errors.descricao?.message}</FieldError>
+      </Field>
+    </DialogoDeCadastro>
+  )
+}
+
 export default function ListaDeServicos() {
+  const [cadastrando, setCadastrando] = useState(false)
   const itens = useListaDeServicos()
   const [emEdicao, setEmEdicao] = useState<ItemLcp116 | null>(null)
   const [tipos, setTipos] = useState<ItemLcp116['tipo'][]>([])
@@ -168,15 +253,21 @@ export default function ListaDeServicos() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Lista de Serviços - Lei Compl. 116/2003
-        </h1>
-        <p className="text-muted-foreground">Itens e subitens da lista de serviços do ISS.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Lista de Serviços - Lei Compl. 116/2003
+          </h1>
+          <p className="text-muted-foreground">Itens e subitens da lista de serviços do ISS.</p>
+        </div>
+        <Button onClick={() => setCadastrando(true)}>
+          <Plus data-icon="inline-start" />
+          Novo item
+        </Button>
       </div>
 
       <Listagem
-        chave="tabelas-comuns-lista-de-servicos"
+        chave="administracao-tabelas-comuns-lista-de-servicos"
         itens={filtrados}
         carregando={itens.isPending}
         erro={itens.isError}
@@ -207,6 +298,8 @@ export default function ListaDeServicos() {
       />
 
       {emEdicao && <Formulario item={emEdicao} aoFechar={() => setEmEdicao(null)} />}
+
+      {cadastrando && <NovoItem aoFechar={() => setCadastrando(false)} />}
     </div>
   )
 }

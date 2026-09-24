@@ -83,8 +83,9 @@ class AcessoTest extends TestCase
             $this->assertNotContains('parametros.empresa', $parametros);
             $this->assertTrue($parametros->every(fn (string $p) => str_starts_with($p, 'parametros.')));
             $this->assertContains('tabelas.tomadores.tomador', Role::findByName('Tabelas')->permissions->pluck('name'));
-            $this->assertNotContains('tabelas-comuns.cnae', Role::findByName('Tabelas')->permissions->pluck('name'));
-            $this->assertContains('tabelas-comuns.cnae', Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name'));
+            $this->assertNotContains('administracao.tabelas-comuns.cnae', Role::findByName('Tabelas')->permissions->pluck('name'));
+            // Tabelas Comuns são só do superadmin: nem o Administrador da prefeitura as recebe.
+            $this->assertNotContains('administracao.tabelas-comuns.cnae', Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name'));
             $this->assertContains('lancamentos.dam.consultas', Role::findByName('Lançamentos')->permissions->pluck('name'));
         });
     }
@@ -137,8 +138,9 @@ class AcessoTest extends TestCase
         $permissoes = $this->me($user, 'lemarq')->assertJsonPath('superadmin', true)->json('permissoes');
 
         $this->assertContains(Acesso::EMPRESAS, $permissoes);
+        $this->assertContains('administracao.tabelas-comuns.cidades', $permissoes);
         $this->assertContains('administracao.usuarios', $permissoes);
-        $this->assertCount(count(Acesso::permissoes()) + 1, $permissoes);
+        $this->assertCount(count(Acesso::permissoes()) + count(Acesso::exclusivasDoSuperadmin()), $permissoes);
     }
 
     public function test_superadmin_fora_da_lemarq_nao_tem_poderes(): void

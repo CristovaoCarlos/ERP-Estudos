@@ -17,6 +17,17 @@ class Acesso
 
     public const GUARD = 'web';
 
+    /**
+     * Telas que só o superadmin acessa: Empresas e Tabelas Comuns (`config/acesso.php`, chave
+     * `superadmin`). Ficam fora do catálogo, então nenhum grupo as recebe.
+     *
+     * @return list<string>
+     */
+    public static function exclusivasDoSuperadmin(): array
+    {
+        return [self::EMPRESAS, ...config('acesso.superadmin', [])];
+    }
+
     /** @return list<string> todas as permissões do catálogo */
     public static function permissoes(): array
     {

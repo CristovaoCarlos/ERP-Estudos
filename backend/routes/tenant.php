@@ -71,26 +71,27 @@ Route::middleware([
             Route::get('/parametros/receitas/opcoes', [ParametroReceitaController::class, 'opcoes']);
         });
 
-        // Tabelas Comuns (banco central, iguais para todas as prefeituras).
-        Route::get('/tabelas-comuns/cidades', [CidadeController::class, 'index'])
-            ->middleware('can:tabelas-comuns.cidades');
-        Route::get('/tabelas-comuns/bancos', [BancoController::class, 'index'])
-            ->middleware('can:tabelas-comuns.bancos');
-        Route::get('/tabelas-comuns/cnae', [CnaeController::class, 'index'])
-            ->middleware('can:tabelas-comuns.cnae');
-        Route::get('/tabelas-comuns/selic', [SelicController::class, 'index'])
-            ->middleware('can:tabelas-comuns.selic');
-        Route::get('/tabelas-comuns/numeracao-de-notas', [NotaNumeracaoController::class, 'index'])
-            ->middleware('can:tabelas-comuns.numeracao-de-notas');
-        Route::get('/tabelas-comuns/tipos-de-dam', [DamTipoController::class, 'index'])
-            ->middleware('can:tabelas-comuns.tipos-de-dam');
-        Route::middleware('can:tabelas-comuns.segmentos')->group(function () {
-            Route::get('/tabelas-comuns/segmentos', [SegmentoController::class, 'index']);
-            Route::put('/tabelas-comuns/segmentos/{segmento}', [SegmentoController::class, 'update']);
-        });
-        Route::middleware('can:tabelas-comuns.lista-de-servicos')->group(function () {
-            Route::get('/tabelas-comuns/lista-de-servicos', [Lcp116Controller::class, 'index']);
-            Route::put('/tabelas-comuns/lista-de-servicos/{item}', [Lcp116Controller::class, 'update']);
+        // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
+        // superadmin, na prefeitura da Lemarq.
+        Route::middleware('can:gerenciar-tabelas-comuns')->prefix('administracao/tabelas-comuns')->group(function () {
+            Route::get('/cidades', [CidadeController::class, 'index']);
+            Route::post('/cidades', [CidadeController::class, 'store']);
+            Route::get('/bancos', [BancoController::class, 'index']);
+            Route::post('/bancos', [BancoController::class, 'store']);
+            Route::get('/cnae', [CnaeController::class, 'index']);
+            Route::post('/cnae', [CnaeController::class, 'store']);
+            Route::get('/lista-de-servicos', [Lcp116Controller::class, 'index']);
+            Route::post('/lista-de-servicos', [Lcp116Controller::class, 'store']);
+            Route::put('/lista-de-servicos/{item}', [Lcp116Controller::class, 'update']);
+            Route::get('/selic', [SelicController::class, 'index']);
+            Route::post('/selic', [SelicController::class, 'store']);
+            Route::get('/segmentos', [SegmentoController::class, 'index']);
+            Route::post('/segmentos', [SegmentoController::class, 'store']);
+            Route::put('/segmentos/{segmento}', [SegmentoController::class, 'update']);
+            Route::get('/numeracao-de-notas', [NotaNumeracaoController::class, 'index']);
+            Route::post('/numeracao-de-notas', [NotaNumeracaoController::class, 'store']);
+            Route::get('/tipos-de-dam', [DamTipoController::class, 'index']);
+            Route::post('/tipos-de-dam', [DamTipoController::class, 'store']);
         });
 
         // Só o superadmin, na prefeitura da Lemarq.

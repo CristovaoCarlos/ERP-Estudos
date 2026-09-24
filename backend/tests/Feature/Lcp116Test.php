@@ -30,14 +30,13 @@ class Lcp116Test extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -65,24 +64,13 @@ class Lcp116Test extends TestCase
         ]);
     }
 
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $this->criarItens();
-        $token = $this->entrar(['tabelas-comuns.cnae']);
-
-        $this->emLemarq($token, 'get', '/api/tabelas-comuns/lista-de-servicos')->assertForbidden();
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/lista-de-servicos/01.01', ['descricao' => 'X'])
-            ->assertForbidden();
-    }
-
     public function test_lista_ordenada_pelo_codigo_com_o_tipo(): void
     {
         $this->criarTenant();
         $this->criarItens();
-        $token = $this->entrar(['tabelas-comuns.lista-de-servicos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/tabelas-comuns/lista-de-servicos')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/lista-de-servicos')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', ['01', '01.01', '01.02'])
             ->assertJsonPath('data.0.tipo', 'item')
@@ -93,9 +81,9 @@ class Lcp116Test extends TestCase
     {
         $this->criarTenant();
         $this->criarItens();
-        $token = $this->entrar(['tabelas-comuns.lista-de-servicos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/lista-de-servicos/01.02', [
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.02', [
             'descricao' => '  Programação de computadores.  ',
             'codigo' => '99',
         ])
@@ -111,12 +99,42 @@ class Lcp116Test extends TestCase
     {
         $this->criarTenant();
         $this->criarItens();
-        $token = $this->entrar(['tabelas-comuns.lista-de-servicos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/lista-de-servicos/01.01', ['descricao' => ''])
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.01', ['descricao' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['descricao' => 'Informe a descrição.']);
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/lista-de-servicos/77.77', ['descricao' => 'X'])
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/77.77', ['descricao' => 'X'])
             ->assertNotFound();
+    }
+
+    public function test_inclui_item_e_subitem(): void
+    {
+        $this->criarTenant();
+        $this->criarItens();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02', 'descricao' => 'Pesquisas.'])
+            ->assertCreated()
+            ->assertJsonPath('tipo', 'item');
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02.01', 'descricao' => 'Pesquisa e desenvolvimento.'])
+            ->assertCreated()
+            ->assertJsonPath('tipo', 'subitem');
+
+        $this->assertSame('Pesquisa e desenvolvimento.', Lcp116::find('02.01')->descricao);
+    }
+
+    public function test_valida_a_inclusao_de_item(): void
+    {
+        $this->criarTenant();
+        $this->criarItens();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '01.01', 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'Já existe um item com este código.']);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '1.1', 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'Use 01 para item ou 01.01 para subitem.']);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '05.01', 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'Cadastre antes o item 05.']);
     }
 }

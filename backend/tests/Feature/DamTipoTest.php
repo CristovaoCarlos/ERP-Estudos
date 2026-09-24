@@ -30,14 +30,13 @@ class DamTipoTest extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -47,21 +46,13 @@ class DamTipoTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $url)
+    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->getJson("http://lemarq.localhost{$url}");
+        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
         return $resposta;
-    }
-
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $token = $this->entrar(['tabelas-comuns.selic']);
-
-        $this->emLemarq($token, '/api/tabelas-comuns/tipos-de-dam')->assertForbidden();
     }
 
     public function test_lista_ordenada_pelo_codigo(): void
@@ -72,11 +63,39 @@ class DamTipoTest extends TestCase
             ['cod_dam_tipo' => 1, 'descricao' => 'NOTA FISCAL'],
             ['cod_dam_tipo' => 2, 'descricao' => 'ALVARÁ'],
         ]);
-        $token = $this->entrar(['tabelas-comuns.tipos-de-dam']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, '/api/tabelas-comuns/tipos-de-dam')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/tipos-de-dam')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', [1, 2, 3])
             ->assertJsonPath('data.0', ['codigo' => 1, 'descricao' => 'NOTA FISCAL']);
+    }
+
+    public function test_inclui_tipo_de_dam(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 8, 'descricao' => 'MULTAS'])
+            ->assertCreated()
+            ->assertJsonPath('codigo', 8);
+
+        $this->assertSame('MULTAS', DamTipo::find(8)->descricao);
+    }
+
+    public function test_valida_a_inclusao_de_tipo_de_dam(): void
+    {
+        $this->criarTenant();
+        DamTipo::insert([['cod_dam_tipo' => 1, 'descricao' => 'NOTA FISCAL']]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 1, 'descricao' => ''])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'codigo' => 'Já existe um tipo de DAM com este código.',
+                'descricao' => 'Informe a descrição.',
+            ]);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 0, 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'Use um código de 1 a 9999.']);
     }
 }

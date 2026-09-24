@@ -30,14 +30,13 @@ class SegmentoTest extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -65,23 +64,13 @@ class SegmentoTest extends TestCase
         ]);
     }
 
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $this->criarSegmentos();
-        $token = $this->entrar(['tabelas-comuns.selic']);
-
-        $this->emLemarq($token, 'get', '/api/tabelas-comuns/segmentos')->assertForbidden();
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/segmentos/1', ['descricao' => 'X'])->assertForbidden();
-    }
-
     public function test_lista_ordenada_pelo_codigo(): void
     {
         $this->criarTenant();
         $this->criarSegmentos();
-        $token = $this->entrar(['tabelas-comuns.segmentos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/tabelas-comuns/segmentos')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/segmentos')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', ['1', '2', '9'])
             ->assertJsonPath('data.0.descricao', 'PREFEITURA');
@@ -91,9 +80,9 @@ class SegmentoTest extends TestCase
     {
         $this->criarTenant();
         $this->criarSegmentos();
-        $token = $this->entrar(['tabelas-comuns.segmentos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/segmentos/2', [
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/segmentos/2', [
             'descricao' => ' SANEAMENTO BÁSICO ',
             'codigo' => '8',
         ])
@@ -109,15 +98,44 @@ class SegmentoTest extends TestCase
     {
         $this->criarTenant();
         $this->criarSegmentos();
-        $token = $this->entrar(['tabelas-comuns.segmentos']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/segmentos/1', ['descricao' => ''])
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/segmentos/1', ['descricao' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['descricao' => 'Informe a descrição.']);
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/segmentos/1', ['descricao' => str_repeat('A', 51)])
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/segmentos/1', ['descricao' => str_repeat('A', 51)])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['descricao' => 'Use no máximo 50 caracteres.']);
-        $this->emLemarq($token, 'put', '/api/tabelas-comuns/segmentos/7', ['descricao' => 'X'])
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/segmentos/7', ['descricao' => 'X'])
             ->assertNotFound();
+    }
+
+    public function test_inclui_segmento(): void
+    {
+        $this->criarTenant();
+        $this->criarSegmentos();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/segmentos', ['codigo' => '4', 'descricao' => 'TELECOMUNICACOES'])
+            ->assertCreated()
+            ->assertJsonPath('codigo', '4');
+
+        $this->assertSame('TELECOMUNICACOES', Segmento::find('4')->descricao);
+    }
+
+    public function test_valida_a_inclusao_de_segmento(): void
+    {
+        $this->criarTenant();
+        $this->criarSegmentos();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/segmentos', ['codigo' => '1', 'descricao' => ''])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'codigo' => 'Já existe um segmento com este código.',
+                'descricao' => 'Informe a descrição.',
+            ]);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/segmentos', ['codigo' => 'A', 'descricao' => 'X'])
+            ->assertJsonValidationErrors(['codigo' => 'O código é um dígito, de 0 a 9.']);
     }
 }

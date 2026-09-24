@@ -70,22 +70,6 @@ export type Modulo = Pagina
 export const menu: Modulo[] = [
   { titulo: 'Início', url: '/', icone: House },
   {
-    titulo: 'Parâmetros da Empresa',
-    url: '/parametros',
-    icone: SlidersHorizontal,
-    paginas: [
-      { titulo: 'Receitas', url: '/parametros/receitas', icone: HandCoins },
-      { titulo: 'Nota Fiscal', url: '/parametros/nota-fiscal', icone: ReceiptText },
-      { titulo: 'Alvará', url: '/parametros/alvara', icone: BadgeCheck },
-      { titulo: 'ITBI', url: '/parametros/itbi', icone: ArrowLeftRight },
-      { titulo: 'IPTU', url: '/parametros/iptu', icone: House },
-      { titulo: 'Habite-se', url: '/parametros/habite-se', icone: KeyRound },
-      { titulo: 'Certidão Negativa', url: '/parametros/certidao-negativa', icone: FileCheck },
-      { titulo: 'Juros e Multa', url: '/parametros/juros-e-multa', icone: Percent },
-      { titulo: 'Base Legal', url: '/parametros/base-legal', icone: Scale },
-    ],
-  },
-  {
     titulo: 'Tabelas',
     url: '/tabelas',
     icone: Table2,
@@ -248,26 +232,19 @@ export const menu: Modulo[] = [
     ],
   },
   {
-    titulo: 'Tabelas Comuns',
-    url: '/tabelas-comuns',
-    icone: Database,
+    titulo: 'Parâmetros da Empresa',
+    url: '/parametros',
+    icone: SlidersHorizontal,
     paginas: [
-      { titulo: 'Cidades', url: '/tabelas-comuns/cidades', icone: MapPinned },
-      { titulo: 'Bancos', url: '/tabelas-comuns/bancos', icone: Landmark },
-      { titulo: 'CNAE', url: '/tabelas-comuns/cnae', icone: ListTree },
-      {
-        titulo: 'Lista de Serviços - Lei Compl. 116/2003',
-        url: '/tabelas-comuns/lista-de-servicos',
-        icone: ListChecks,
-      },
-      { titulo: 'SELIC', url: '/tabelas-comuns/selic', icone: TrendingUp },
-      { titulo: 'Segmentos', url: '/tabelas-comuns/segmentos', icone: Shapes },
-      {
-        titulo: 'Numeração de Notas',
-        url: '/tabelas-comuns/numeracao-de-notas',
-        icone: Hash,
-      },
-      { titulo: 'Tipos de DAM', url: '/tabelas-comuns/tipos-de-dam', icone: FileType },
+      { titulo: 'Receitas', url: '/parametros/receitas', icone: HandCoins },
+      { titulo: 'Nota Fiscal', url: '/parametros/nota-fiscal', icone: ReceiptText },
+      { titulo: 'Alvará', url: '/parametros/alvara', icone: BadgeCheck },
+      { titulo: 'ITBI', url: '/parametros/itbi', icone: ArrowLeftRight },
+      { titulo: 'IPTU', url: '/parametros/iptu', icone: House },
+      { titulo: 'Habite-se', url: '/parametros/habite-se', icone: KeyRound },
+      { titulo: 'Certidão Negativa', url: '/parametros/certidao-negativa', icone: FileCheck },
+      { titulo: 'Juros e Multa', url: '/parametros/juros-e-multa', icone: Percent },
+      { titulo: 'Base Legal', url: '/parametros/base-legal', icone: Scale },
     ],
   },
   {
@@ -278,6 +255,33 @@ export const menu: Modulo[] = [
       { titulo: 'Usuários', url: '/administracao/usuarios', icone: UserCog },
       { titulo: 'Grupos de acesso', url: '/administracao/grupos', icone: LockKeyhole },
       { titulo: 'Empresas', url: '/administracao/empresas', icone: Landmark },
+      {
+        titulo: 'Tabelas Comuns',
+        url: '/administracao/tabelas-comuns',
+        icone: Database,
+        paginas: [
+          { titulo: 'Cidades', url: '/administracao/tabelas-comuns/cidades', icone: MapPinned },
+          { titulo: 'Bancos', url: '/administracao/tabelas-comuns/bancos', icone: Landmark },
+          { titulo: 'CNAE', url: '/administracao/tabelas-comuns/cnae', icone: ListTree },
+          {
+            titulo: 'Lista de Serviços - Lei Compl. 116/2003',
+            url: '/administracao/tabelas-comuns/lista-de-servicos',
+            icone: ListChecks,
+          },
+          { titulo: 'SELIC', url: '/administracao/tabelas-comuns/selic', icone: TrendingUp },
+          { titulo: 'Segmentos', url: '/administracao/tabelas-comuns/segmentos', icone: Shapes },
+          {
+            titulo: 'Numeração de Notas',
+            url: '/administracao/tabelas-comuns/numeracao-de-notas',
+            icone: Hash,
+          },
+          {
+            titulo: 'Tipos de DAM',
+            url: '/administracao/tabelas-comuns/tipos-de-dam',
+            icone: FileType,
+          },
+        ],
+      },
     ],
   },
 ]
@@ -313,17 +317,26 @@ function folhas(pagina: Pagina): Pagina[] {
 export const telas: Pagina[] = menu.flatMap(folhas)
 
 /**
- * Telas de cada módulo, para montar grupos de acesso. Início (sem permissão) e Empresas
- * (exclusiva do superadmin) ficam de fora.
+ * Telas só do superadmin: Empresas e Tabelas Comuns (gravam no banco central, que vale para todas
+ * as prefeituras). Nenhum grupo as recebe. Tem que bater com `superadmin` em `config/acesso.php`.
+ */
+export function exclusivaDoSuperadmin(url: string): boolean {
+  const permissao = permissaoDaTela(url)
+  return (
+    permissao === 'administracao.empresas' || permissao.startsWith('administracao.tabelas-comuns.')
+  )
+}
+
+/**
+ * Telas de cada módulo, para montar grupos de acesso. Início (sem permissão) e as telas exclusivas
+ * do superadmin ficam de fora.
  */
 export function telasPorModulo(): { modulo: Pagina; telas: Pagina[] }[] {
   return menu
     .filter((modulo) => modulo.paginas)
     .map((modulo) => ({
       modulo,
-      telas: folhas(modulo).filter(
-        (tela) => permissaoDaTela(tela.url) !== 'administracao.empresas',
-      ),
+      telas: folhas(modulo).filter((tela) => !exclusivaDoSuperadmin(tela.url)),
     }))
     .filter(({ telas }) => telas.length > 0)
 }
@@ -333,7 +346,7 @@ export function primeiraTela(pagina: Pagina): Pagina {
   return folhas(pagina)[0]
 }
 
-/** Caminho do módulo até a tela aberta (ex.: Tabelas Comuns › Cidades). */
+/** Caminho do módulo até a tela aberta (ex.: Administração › Tabelas Comuns › Cidades). */
 export function localizar(pathname: string, itens: Pagina[] = menu): Pagina[] {
   for (const item of itens) {
     if (item.url === pathname) return [item]

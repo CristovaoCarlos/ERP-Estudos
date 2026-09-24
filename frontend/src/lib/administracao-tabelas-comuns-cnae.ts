@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from '@/lib/api'
 
@@ -29,11 +29,35 @@ export type Cnae = {
   ativo: boolean
 }
 
+const CHAVE = ['administracao', 'tabelas-comuns', 'cnae']
+
 export function useCnae() {
   return useQuery({
-    queryKey: ['tabelas-comuns', 'cnae'],
-    queryFn: async () => (await api.get<{ data: Cnae[] }>('/tabelas-comuns/cnae')).data.data,
+    queryKey: CHAVE,
+    queryFn: async () =>
+      (await api.get<{ data: Cnae[] }>('/administracao/tabelas-comuns/cnae')).data.data,
     // Tabela de apoio que quase não muda: não precisa buscar de novo a cada visita.
     staleTime: Infinity,
+  })
+}
+
+export type DadosDaCnae = {
+  secao: string
+  divisao: string | null
+  grupo: string | null
+  classe: string | null
+  subclasse: string | null
+  denominacao: string
+  versao: string | null
+  ativo: boolean
+}
+
+/** Inclui um registro. Só o superadmin chega aqui: a tabela vale para todas as prefeituras. */
+export function useCadastrarCnae() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (dados: DadosDaCnae) =>
+      (await api.post<Cnae>('/administracao/tabelas-comuns/cnae', dados)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE }),
   })
 }

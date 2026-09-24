@@ -30,14 +30,13 @@ class CnaeTest extends TestCase
         return $tenant;
     }
 
-    /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    private function entrar(): string
     {
-        $user = User::factory()->create(['password' => 'senha']);
-        $user->tenants()->attach($tenant);
-        Tenant::find($tenant)->run(fn () => $user->givePermissionTo($permissoes));
+        $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
+        $user->tenants()->attach('lemarq');
 
-        $token = $this->postJson("http://{$tenant}.localhost/api/login", [
+        $token = $this->postJson('http://lemarq.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -47,21 +46,13 @@ class CnaeTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $url)
+    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->getJson("http://lemarq.localhost{$url}");
+        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
         return $resposta;
-    }
-
-    public function test_exige_a_permissao_da_tela(): void
-    {
-        $this->criarTenant();
-        $token = $this->entrar(['tabelas-comuns.cidades']);
-
-        $this->emLemarq($token, '/api/tabelas-comuns/cnae')->assertForbidden();
     }
 
     public function test_lista_na_ordem_da_hierarquia_com_nivel_e_codigo(): void
@@ -74,9 +65,9 @@ class CnaeTest extends TestCase
             $linha(['sessao' => 'P', 'divisao' => '85', 'grupo' => null, 'classe' => null, 'subclasse' => null, 'denominacao' => 'EDUCAÇÃO']),
             $linha(['sessao' => 'A', 'denominacao' => 'AGRICULTURA', 'versao' => '2.2', 'ativo' => false]),
         ]);
-        $token = $this->entrar(['tabelas-comuns.cnae']);
+        $token = $this->entrar();
 
-        $this->emLemarq($token, '/api/tabelas-comuns/cnae')
+        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/cnae')
             ->assertOk()
             ->assertJsonCount(4, 'data')
             ->assertJsonPath('data.0.nivel', 'secao')
@@ -88,5 +79,47 @@ class CnaeTest extends TestCase
             ->assertJsonPath('data.2.classe', '85.93-7')
             ->assertJsonPath('data.3.versao', '2.2')
             ->assertJsonPath('data.3.ativo', false);
+    }
+
+    public function test_inclui_subclasse(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+            'secao' => 'P',
+            'divisao' => '85',
+            'grupo' => '85.9',
+            'classe' => '85.93-7',
+            'subclasse' => '8593-7/00',
+            'denominacao' => 'Ensino de idiomas',
+            'versao' => '2.3',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('nivel', 'subclasse')
+            ->assertJsonPath('codigo', '8593-7/00')
+            ->assertJsonPath('ativo', true);
+
+        $this->assertSame('P', Cnae::first()->sessao);
+    }
+
+    public function test_valida_formato_e_hierarquia(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', ['secao' => 'Z', 'grupo' => '85.9', 'denominacao' => ''])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'secao' => 'A seção é uma letra de A a U.',
+                'divisao' => 'Informe este nível: o nível abaixo dele foi preenchido.',
+                'denominacao' => 'Informe a denominação.',
+            ]);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+            'secao' => 'P', 'divisao' => '85', 'grupo' => '86.1', 'denominacao' => 'X',
+        ])->assertJsonValidationErrors(['grupo' => 'O código precisa começar pelo código do nível de cima.']);
+        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+            'secao' => 'P', 'divisao' => '85', 'grupo' => '85.9', 'classe' => '8593-7', 'denominacao' => 'X',
+        ])->assertJsonValidationErrors(['classe' => 'A classe segue o formato 85.93-7.']);
     }
 }

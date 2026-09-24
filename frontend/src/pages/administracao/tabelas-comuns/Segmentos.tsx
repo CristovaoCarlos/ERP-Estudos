@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Pencil, Shapes } from 'lucide-react'
+import { Pencil, Plus, Shapes } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { DialogoDeCadastro } from '@/components/dialogo-de-cadastro'
 import { Listagem, type Coluna } from '@/components/listagem'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,8 +19,14 @@ import {
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
+import {
+  useAlterarSegmento,
+  useCadastrarSegmento,
+  useSegmentos,
+  type Segmento,
+} from '@/lib/administracao-tabelas-comuns-segmentos'
 import { errosDosCampos } from '@/lib/empresas'
-import { useAlterarSegmento, useSegmentos, type Segmento } from '@/lib/tabelas-comuns-segmentos'
+import { mostrarErrosDoServidor } from '@/lib/formularios'
 
 const esquema = z.object({
   descricao: z
@@ -108,7 +115,84 @@ function Formulario({ segmento, aoFechar }: { segmento: Segmento; aoFechar: () =
   )
 }
 
+const esquemaDoNovo = z.object({
+  codigo: z.string().trim().regex(/^\d$/, 'O código é um dígito, de 0 a 9.'),
+  descricao: z
+    .string()
+    .trim()
+    .min(1, 'Informe a descrição.')
+    .max(50, 'Use no máximo 50 caracteres.'),
+})
+
+type CamposDoNovo = z.infer<typeof esquemaDoNovo>
+
+function NovoSegmento({ aoFechar }: { aoFechar: () => void }) {
+  const cadastrar = useCadastrarSegmento()
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<CamposDoNovo>({
+    resolver: zodResolver(esquemaDoNovo),
+    defaultValues: { codigo: '', descricao: '' },
+  })
+
+  const salvar = handleSubmit((dados) =>
+    cadastrar.mutate(dados, {
+      onSuccess: () => {
+        toast.success('Segmento cadastrado.')
+        aoFechar()
+      },
+      onError: (erro) =>
+        mostrarErrosDoServidor(
+          erro,
+          setError,
+          ['codigo', 'descricao'],
+          'Não foi possível cadastrar o segmento.',
+        ),
+    }),
+  )
+
+  return (
+    <DialogoDeCadastro
+      id="form-novo-segmento"
+      titulo="Novo segmento"
+      descricao="Os segmentos são os mesmos para todas as prefeituras: o novo segmento vale para todas."
+      salvando={cadastrar.isPending}
+      aoEnviar={salvar}
+      aoFechar={aoFechar}
+    >
+      <Field data-invalid={errors.codigo ? true : undefined}>
+        <FieldLabel htmlFor="novo-codigo">Código</FieldLabel>
+        <Input
+          id="novo-codigo"
+          inputMode="numeric"
+          maxLength={1}
+          placeholder="4"
+          className="w-20 font-mono"
+          aria-invalid={errors.codigo ? true : undefined}
+          {...register('codigo')}
+        />
+        <FieldError>{errors.codigo?.message}</FieldError>
+      </Field>
+      <Field data-invalid={errors.descricao ? true : undefined}>
+        <FieldLabel htmlFor="nova-descricao">Descrição</FieldLabel>
+        <Input
+          id="nova-descricao"
+          maxLength={50}
+          placeholder="TELECOMUNICACOES"
+          aria-invalid={errors.descricao ? true : undefined}
+          {...register('descricao')}
+        />
+        <FieldError>{errors.descricao?.message}</FieldError>
+      </Field>
+    </DialogoDeCadastro>
+  )
+}
+
 export default function Segmentos() {
+  const [cadastrando, setCadastrando] = useState(false)
   const segmentos = useSegmentos()
   const [emEdicao, setEmEdicao] = useState<Segmento | null>(null)
 
@@ -147,15 +231,21 @@ export default function Segmentos() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Segmentos</h1>
-        <p className="text-muted-foreground">
-          Segmentos de arrecadação da FEBRABAN, usados no código de barras dos convênios.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Segmentos</h1>
+          <p className="text-muted-foreground">
+            Segmentos de arrecadação da FEBRABAN, usados no código de barras dos convênios.
+          </p>
+        </div>
+        <Button onClick={() => setCadastrando(true)}>
+          <Plus data-icon="inline-start" />
+          Novo segmento
+        </Button>
       </div>
 
       <Listagem
-        chave="tabelas-comuns-segmentos"
+        chave="administracao-tabelas-comuns-segmentos"
         itens={segmentos.data}
         carregando={segmentos.isPending}
         erro={segmentos.isError}
@@ -170,6 +260,8 @@ export default function Segmentos() {
       />
 
       {emEdicao && <Formulario segmento={emEdicao} aoFechar={() => setEmEdicao(null)} />}
+
+      {cadastrando && <NovoSegmento aoFechar={() => setCadastrando(false)} />}
     </div>
   )
 }

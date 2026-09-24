@@ -30,17 +30,6 @@ return [
 
     /* Permissões por módulo do menu. */
     'permissoes' => [
-        'parametros' => [
-            'parametros.receitas',
-            'parametros.nota-fiscal',
-            'parametros.alvara',
-            'parametros.itbi',
-            'parametros.iptu',
-            'parametros.habite-se',
-            'parametros.certidao-negativa',
-            'parametros.juros-e-multa',
-            'parametros.base-legal',
-        ],
         'tabelas' => [
             'tabelas.receitas-tributarias',
             'tabelas.convenios',
@@ -98,20 +87,37 @@ return [
             'relatorios.contribuintes.cadastro-economico',
             'relatorios.contribuintes.inscricao-municipal',
         ],
-        'tabelas-comuns' => [
-            'tabelas-comuns.cidades',
-            'tabelas-comuns.bancos',
-            'tabelas-comuns.cnae',
-            'tabelas-comuns.lista-de-servicos',
-            'tabelas-comuns.selic',
-            'tabelas-comuns.segmentos',
-            'tabelas-comuns.numeracao-de-notas',
-            'tabelas-comuns.tipos-de-dam',
+        'parametros' => [
+            'parametros.receitas',
+            'parametros.nota-fiscal',
+            'parametros.alvara',
+            'parametros.itbi',
+            'parametros.iptu',
+            'parametros.habite-se',
+            'parametros.certidao-negativa',
+            'parametros.juros-e-multa',
+            'parametros.base-legal',
         ],
         'administracao' => [
             'administracao.usuarios',
             'administracao.grupos',
         ],
+    ],
+
+    /*
+     * Telas exclusivas do superadmin (na prefeitura TENANT_ADMINISTRADOR), além de Empresas.
+     * Ficam fora do catálogo acima: nenhum grupo as recebe, nem o Administrador das prefeituras.
+     * Tabelas Comuns gravam no banco central, e o que se muda nelas vale para todas as prefeituras.
+     */
+    'superadmin' => [
+        'administracao.tabelas-comuns.cidades',
+        'administracao.tabelas-comuns.bancos',
+        'administracao.tabelas-comuns.cnae',
+        'administracao.tabelas-comuns.lista-de-servicos',
+        'administracao.tabelas-comuns.selic',
+        'administracao.tabelas-comuns.segmentos',
+        'administracao.tabelas-comuns.numeracao-de-notas',
+        'administracao.tabelas-comuns.tipos-de-dam',
     ],
 
 ];

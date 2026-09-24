@@ -11,7 +11,7 @@ O padrão completo está em `docs/guias/criar-tela.md`. **Leia o guia inteiro an
 
 1. Leia a migration da tabela (`backend/database/migrations/tenant/*create_<tabela>_table.php`) e as tabelas que ela referencia (chaves estrangeiras viram campos de seleção e a rota `opcoes`). Confira também as migrations posteriores que alteram a tabela (ex.: `2026_09_24_120000_remove_id_empresa_do_legado.php`).
 2. Escolha o tipo: **formulário único** se a tabela tem um registro por prefeitura (parâmetros), **lista com cadastro** se tem vários. Na dúvida, pergunte ao usuário.
-3. Tabela do banco central (`tc_*`, `ti_*`, migrations em `backend/database/migrations/`)? Siga a seção "Tabelas do banco central" do guia (`CentralConnection`, referência Cidades).
+3. Tabela do banco central (`tc_*`, `ti_*`, migrations em `backend/database/migrations/`)? A tela vai em Administração › Tabelas Comuns e é só do superadmin: siga a seção "Tabelas do banco central" do guia (`CentralConnection`, chave `superadmin` em `config/acesso.php`, gate `gerenciar-tabelas-comuns`, `TabelasComunsAcessoTest`; referência Cidades).
 4. `id_empresa` e `tb_empresa` não existem (ADR-0013): nunca crie campo, filtro ou coluna de empresa.
 5. Ache a tela em `frontend/src/lib/navegacao.ts`: a URL dela define permissão, rotas, nomes de arquivo e `queryKey` (tabela "Nomes" do guia).
 6. Leia os arquivos da referência do tipo escolhido.
