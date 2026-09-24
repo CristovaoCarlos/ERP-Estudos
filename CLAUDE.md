@@ -32,6 +32,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
 - No PostgreSQL, `DROP DATABASE` falha se houver conexão aberta no banco da prefeitura (ex.: psql/DBeaver): feche-as antes de excluir um tenant.
 - Fotos de usuário ficam no disco `fotos` (`storage/app/fotos`), fora dos discos com sufixo por prefeitura (`config/tenancy.php`), porque o usuário é o mesmo em todas. São servidas por `GET /api/fotos/{arquivo}`: a pasta `public` montada no nginx não enxerga o storage.
+- `id_empresa` e `tb_empresa` do legado foram removidos (ADR-0013): o banco já é da prefeitura. Não crie campo, filtro nem coluna de empresa.
 - Ids de tenant podem ter `_`, mas domínios usam `-` (hostnames não aceitam `_`).
 - O proxy do Vite usa `changeOrigin: false` para preservar o `Host`; não mude.
 
@@ -46,6 +47,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Nomes de domínio em português (`Relatorios`, `usuarios:criar`, `acessaTenant`); termos do framework em inglês.
 - Componentes de UI: shadcn/ui sobre `radix-ui` em `src/components/ui` (skill `shadcn` em `.claude/skills/`). O projeto usa **Radix**; não migre para Base UI sem pedido explícito.
 - `npx shadcn@latest add ...` (rode no contêiner node, com `HOME=/tmp`) gera imports `from "cn"` e instala o pacote `cn`. O projeto usa `cn` de `@/lib/utils`: depois de todo `add`, troque os imports e rode `npm uninstall cn`. Use `--overwrite` se o CLI perguntar sobre arquivo existente (sem TTY ele aborta).
+- **Tela nova sobre tabela da prefeitura** (formulário único de parâmetros ou lista com cadastro, com a API): siga `docs/guias/criar-tela.md` (skill `nova-tela`).
 - Toda tela de listagem usa `src/components/listagem.tsx`: busca rápida à esquerda, Filtros e Colunas à direita, tabela e rodapé com total e paginação. A tela só declara as colunas (`Coluna<T>`, com `busca` para entrar na busca rápida) e, se houver, o conteúdo do menu Filtros.
 - Layout do sistema: modelo `sidebar-07` (`src/components/AppLayout.tsx`). Módulos e telas ficam **só** em `src/lib/navegacao.ts`, que alimenta menu, rotas e breadcrumb. Tela nova: adicione ali e troque `EmConstrucao` pela página real em `App.tsx`.
 - Sem prefeitura no endereço (domínio central ou prefeitura inexistente) o frontend mostra a landing page (`src/pages/Landing.tsx`).
