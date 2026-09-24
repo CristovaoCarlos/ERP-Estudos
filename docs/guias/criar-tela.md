@@ -35,6 +35,18 @@ A URL da tela manda em todos os outros nomes. Para `/parametros/receitas`:
 | `queryKey` | segmentos da URL: `['parametros', 'receitas']` |
 | `chave` da `Listagem` | `<modulo>-<tela>`, lembra as colunas escolhidas |
 
+## Tabelas do banco central
+
+As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco central e valem para todas as prefeituras. As telas delas ficam em **Administração › Tabelas internas**. O que muda em relação ao resto do guia:
+
+- O model usa `CentralConnection` no lugar de `TenantConnection`; se a chave primária não for autoincremento, `$incrementing = false`.
+- A rota continua em `routes/tenant.php` (a tela é aberta pelo endereço da prefeitura), com a permissão da tela.
+- No teste, os dados vão direto pelo model, fora do `Tenant::run(...)`.
+- Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`.
+- Tabelas grandes (Cidades tem ~5.600 linhas) ainda cabem numa resposta só; a `Listagem` pagina e busca no navegador.
+
+Referência: **Administração › Tabelas internas › Cidades** (`Cidade`, `CidadeController`, `CidadeResource`, `CidadeTest`, `lib/administracao-tabelas-internas-cidades.ts`, `pages/administracao/tabelas-internas/Cidades.tsx`), só consulta, com filtro por UF no menu Filtros.
+
 ## Sem `id_empresa`
 
 O banco já é da prefeitura: `id_empresa` e `tb_empresa` não existem no STM ([ADR-0013](../adr/0013-remove-id-empresa.md)). Nenhuma tela tem campo Empresa, nenhuma consulta filtra por empresa. Tabela nova vinda do legado entra sem essa coluna.

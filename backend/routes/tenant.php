@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BancoController;
+use App\Http\Controllers\CidadeController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
@@ -62,6 +64,12 @@ Route::middleware([
             Route::put('/parametros/receitas', [ParametroReceitaController::class, 'update']);
             Route::get('/parametros/receitas/opcoes', [ParametroReceitaController::class, 'opcoes']);
         });
+
+        // Administração › Tabelas internas (banco central, só consulta).
+        Route::get('/administracao/tabelas-internas/cidades', [CidadeController::class, 'index'])
+            ->middleware('can:administracao.tabelas-internas.cidades');
+        Route::get('/administracao/tabelas-internas/bancos', [BancoController::class, 'index'])
+            ->middleware('can:administracao.tabelas-internas.bancos');
 
         // Só o superadmin, na prefeitura da Lemarq.
         Route::middleware('can:gerenciar-empresas')->group(function () {
