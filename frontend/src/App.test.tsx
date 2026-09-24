@@ -297,13 +297,13 @@ describe('sistema', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Administração' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Tabelas internas' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'CNAE' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'SELIC' }))
 
     expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
     expect(trilha).toHaveTextContent('Administração')
     expect(trilha).toHaveTextContent('Tabelas internas')
-    expect(trilha).toHaveTextContent('CNAE')
+    expect(trilha).toHaveTextContent('SELIC')
     expect(within(trilha).getByRole('link', { name: 'Tabelas internas' })).toHaveAttribute(
       'href',
       // O submenu leva à primeira tela dele.
@@ -1051,6 +1051,88 @@ describe('administração › tabelas internas › bancos', () => {
 
     expect(screen.getByRole('cell', { name: 'Itaú Unibanco S.A.' })).toBeInTheDocument()
     expect(screen.queryByRole('cell', { name: 'Banco do Brasil S.A.' })).not.toBeInTheDocument()
+  })
+})
+
+describe('administração › tabelas internas › cnae', () => {
+  const atividade = {
+    divisao: null,
+    grupo: null,
+    classe: null,
+    subclasse: null,
+    versao: '2.3',
+    ativo: true,
+  }
+  const cnae = [
+    { ...atividade, id: 1, nivel: 'secao', codigo: 'P', secao: 'P', denominacao: 'EDUCAÇÃO' },
+    {
+      ...atividade,
+      id: 2,
+      nivel: 'subclasse',
+      codigo: '8593-7/00',
+      secao: 'P',
+      divisao: '85',
+      grupo: '85.9',
+      classe: '85.93-7',
+      subclasse: '8593-7/00',
+      denominacao: 'Ensino de idiomas',
+    },
+    {
+      ...atividade,
+      id: 3,
+      nivel: 'secao',
+      codigo: 'A',
+      secao: 'A',
+      denominacao: 'AGRICULTURA',
+      versao: '2.2',
+      ativo: false,
+    },
+  ]
+
+  function abrirCnae() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/administracao/tabelas-internas/cnae': { data: cnae },
+    })
+    renderizar(<App />, '/administracao/tabelas-internas/cnae')
+  }
+
+  it('lista as atividades com nível, versão e situação', async () => {
+    abrirCnae()
+
+    const linha = (await screen.findByRole('cell', { name: 'Ensino de idiomas' })).closest('tr')!
+    expect(linha).toHaveTextContent('8593-7/00')
+    expect(linha).toHaveTextContent('Subclasse')
+    expect(linha).toHaveTextContent('2.3')
+    expect(screen.getByRole('cell', { name: 'AGRICULTURA' }).closest('tr')).toHaveTextContent(
+      'Inativa',
+    )
+  })
+
+  it('busca pelo código sem pontuação', async () => {
+    abrirCnae()
+    await screen.findByRole('cell', { name: 'Ensino de idiomas' })
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '8593700')
+
+    expect(screen.getByRole('cell', { name: 'Ensino de idiomas' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'EDUCAÇÃO' })).not.toBeInTheDocument()
+  })
+
+  it('filtra por versão e por nível', async () => {
+    abrirCnae()
+    await screen.findByRole('cell', { name: 'Ensino de idiomas' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: '2.3' }))
+    await userEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Seção' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: 'EDUCAÇÃO' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'Ensino de idiomas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'AGRICULTURA' })).not.toBeInTheDocument()
   })
 })
 

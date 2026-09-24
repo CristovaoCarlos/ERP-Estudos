@@ -13,6 +13,7 @@ import Empresas from '@/pages/administracao/Empresas'
 import Grupos from '@/pages/administracao/Grupos'
 import Bancos from '@/pages/administracao/tabelas-internas/Bancos'
 import Cidades from '@/pages/administracao/tabelas-internas/Cidades'
+import Cnae from '@/pages/administracao/tabelas-internas/Cnae'
 import Usuarios from '@/pages/administracao/Usuarios'
 import EmConstrucao from '@/pages/EmConstrucao'
 import ReceitasParametros from '@/pages/parametros/Receitas'
@@ -28,6 +29,7 @@ const paginas: Record<string, ComponentType> = {
   '/administracao/grupos': Grupos,
   '/administracao/tabelas-internas/bancos': Bancos,
   '/administracao/tabelas-internas/cidades': Cidades,
+  '/administracao/tabelas-internas/cnae': Cnae,
   '/administracao/usuarios': Usuarios,
   '/parametros/receitas': ReceitasParametros,
 }

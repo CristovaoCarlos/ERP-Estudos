@@ -8,6 +8,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Tela **Administração › Tabelas internas › CNAE**: consulta das atividades do banco central (`ti_cnae`), versões 2.2 e 2.3, na ordem da hierarquia e com recuo por nível. Busca rápida por código (com ou sem pontuação) ou denominação e filtros por versão, nível e situação. Rota `GET /api/administracao/tabelas-internas/cnae`, com a permissão `administracao.tabelas-internas.cnae`.
 - Tela **Administração › Tabelas internas › Bancos**: consulta dos bancos do banco central (`tc_banco`) com o código de compensação e busca rápida por código ou nome. Rota `GET /api/administracao/tabelas-internas/bancos`, com a permissão `administracao.tabelas-internas.bancos`.
 - Tela **Administração › Tabelas internas › Cidades**: consulta das cidades do banco central (`tc_cidade`) com UF e código do IBGE, busca rápida por nome, UF ou código e filtro por UF. Rota `GET /api/administracao/tabelas-internas/cidades`, com a permissão `administracao.tabelas-internas.cidades`.
 - Tela **Parâmetros › Receitas**: formulário único em que a prefeitura define a receita (`tb_receita`) que cada tributo usa nos lançamentos (ISS, Taxa, TLL, IRPF, IRPJ, INSS, ITBI, Habite-se, IPTU, TCL, TCC, TIP e TLP). Rotas `GET/PUT /api/parametros/receitas` e `GET /api/parametros/receitas/opcoes`, com a permissão `parametros.receitas`.

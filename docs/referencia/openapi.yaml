@@ -897,6 +897,34 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
+  /api/administracao/tabelas-internas/cnae:
+    get:
+      tags: [Tabelas internas]
+      summary: Listar as atividades da CNAE
+      description: |
+        Todas as linhas de `ti_cnae` (banco central), das versões 2.2 e 2.3: a mais nova primeiro e,
+        dentro dela, na ordem da hierarquia (seção › divisão › grupo › classe › subclasse).
+        São cerca de 4.800 e vêm de uma vez, sem paginação.
+      operationId: listarCnae
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cnae'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
   /api/empresas:
     get:
       tags: [Empresas]
@@ -1187,6 +1215,43 @@ components:
         nome:
           type: string
           examples: [Banco do Brasil S.A.]
+    Cnae:
+      type: object
+      required: [id, nivel, codigo, secao, divisao, grupo, classe, subclasse, denominacao, versao, ativo]
+      properties:
+        id:
+          type: integer
+        nivel:
+          type: string
+          enum: [secao, divisao, grupo, classe, subclasse]
+          description: Nível mais específico preenchido na linha.
+        codigo:
+          type: string
+          description: Código do nível da linha.
+          examples: ['8593-7/00', 'P']
+        secao:
+          type: string
+          examples: [P]
+        divisao:
+          type: [string, 'null']
+          examples: ['85']
+        grupo:
+          type: [string, 'null']
+          examples: ['85.9']
+        classe:
+          type: [string, 'null']
+          examples: [85.93-7]
+        subclasse:
+          type: [string, 'null']
+          examples: [8593-7/00]
+        denominacao:
+          type: string
+          examples: [Ensino de idiomas]
+        versao:
+          type: [string, 'null']
+          examples: ['2.3']
+        ativo:
+          type: boolean
     Cidade:
       type: object
       required: [id, codigo_ibge, nome, uf]

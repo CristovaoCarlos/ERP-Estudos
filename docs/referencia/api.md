@@ -41,6 +41,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `GET` | `/api/parametros/receitas/opcoes` | prefeitura | `parametros.receitas` | Receitas (`tb_receita`) para o formulário |
 | `GET` | `/api/administracao/tabelas-internas/cidades` | prefeitura | `administracao.tabelas-internas.cidades` | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
 | `GET` | `/api/administracao/tabelas-internas/bancos` | prefeitura | `administracao.tabelas-internas.bancos` | Bancos do banco central (`tc_banco`), com o código de compensação |
+| `GET` | `/api/administracao/tabelas-internas/cnae` | prefeitura | `administracao.tabelas-internas.cnae` | Atividades da CNAE do banco central (`ti_cnae`), versões 2.2 e 2.3, com nível e código |
 | `GET` | `/api/empresas` | prefeitura administradora | superadmin | Lista as empresas (prefeituras clientes) |
 | `POST` | `/api/empresas` | prefeitura administradora | superadmin | Cadastra uma empresa, cria o administrador dela (`admin_<subdomínio>`) e provisiona a prefeitura (em fila) |
 

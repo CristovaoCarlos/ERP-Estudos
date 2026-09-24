@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\CidadeController;
+use App\Http\Controllers\CnaeController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
@@ -70,6 +71,8 @@ Route::middleware([
             ->middleware('can:administracao.tabelas-internas.cidades');
         Route::get('/administracao/tabelas-internas/bancos', [BancoController::class, 'index'])
             ->middleware('can:administracao.tabelas-internas.bancos');
+        Route::get('/administracao/tabelas-internas/cnae', [CnaeController::class, 'index'])
+            ->middleware('can:administracao.tabelas-internas.cnae');
 
         // Só o superadmin, na prefeitura da Lemarq.
         Route::middleware('can:gerenciar-empresas')->group(function () {
