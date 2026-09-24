@@ -278,17 +278,35 @@ describe('sistema', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
     expect(await screen.findByRole('link', { name: 'Receitas Tributárias' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Tabelas internas' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'Cidades' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Tomadores de Serviço' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Tomador estrangeiro' }))
 
     expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
     expect(trilha).toHaveTextContent('Tabelas')
+    expect(trilha).toHaveTextContent('Tomadores de Serviço')
+    expect(trilha).toHaveTextContent('Tomador estrangeiro')
+  })
+
+  it('abre as Tabelas internas pelo menu Administração', async () => {
+    entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
+    await screen.findByRole('link', { name: 'Receitas Tributárias' })
+    expect(sidebar().queryByRole('button', { name: 'Tabelas internas' })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Administração' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas internas' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Cidades' }))
+
+    expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
+    const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
+    expect(trilha).toHaveTextContent('Administração')
     expect(trilha).toHaveTextContent('Tabelas internas')
     expect(trilha).toHaveTextContent('Cidades')
     expect(within(trilha).getByRole('link', { name: 'Tabelas internas' })).toHaveAttribute(
       'href',
-      '/tabelas/internas/cidades',
+      '/administracao/tabelas-internas/cidades',
     )
   })
 
@@ -818,7 +836,13 @@ describe('grupos de acesso', () => {
 
     expect(post).toHaveBeenCalledWith('/grupos', {
       nome: 'Só administração',
-      telas: ['administracao.usuarios', 'administracao.grupos'],
+      telas: [
+        'administracao.usuarios',
+        'administracao.grupos',
+        ...telas
+          .filter((tela) => tela.url.startsWith('/administracao/tabelas-internas/'))
+          .map((tela) => permissaoDaTela(tela.url)),
+      ],
     })
   })
 
@@ -868,6 +892,79 @@ describe('grupos de acesso', () => {
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
 
     expect(remover).toHaveBeenCalledWith('/grupos/1')
+  })
+})
+
+describe('parâmetros › receitas', () => {
+  const opcoes = {
+    receitas: [
+      { id: 10, descricao: 'Imposto sobre Serviços', sigla: 'ISS' },
+      { id: 11, descricao: 'IPTU', sigla: null },
+    ],
+  }
+  const semReceitas = Object.fromEntries(
+    [
+      'iss',
+      'taxa',
+      'tll',
+      'irpf',
+      'irpj',
+      'inss',
+      'itbi',
+      'habite',
+      'iptu',
+      'tcl',
+      'tcc',
+      'tip',
+      'tlp',
+    ].map((chave) => [chave, null]),
+  )
+
+  function abrirReceitas(receitas: Record<string, number | null> = semReceitas) {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/me': usuario,
+      '/parametros/receitas': { receitas },
+      '/parametros/receitas/opcoes': opcoes,
+    })
+    renderizar(<App />, '/parametros/receitas')
+  }
+
+  it('abre o formulário com as receitas gravadas', async () => {
+    abrirReceitas({ ...semReceitas, iss: 10 })
+
+    expect(await screen.findByRole('combobox', { name: 'ISS' })).toHaveTextContent(
+      'Imposto sobre Serviços (ISS)',
+    )
+    expect(screen.getByRole('combobox', { name: 'IPTU' })).toHaveTextContent('Sem receita')
+    expect(screen.getAllByRole('combobox')).toHaveLength(13)
+  })
+
+  it('salva mantendo as receitas escolhidas', async () => {
+    abrirReceitas({ ...semReceitas, iss: 10, iptu: 11 })
+    const put = vi
+      .spyOn(api, 'put')
+      .mockResolvedValue({ data: { receitas: { ...semReceitas, iss: 10, iptu: 11 } } })
+
+    await screen.findByRole('combobox', { name: 'ISS' })
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    expect(put).toHaveBeenCalledWith('/parametros/receitas', {
+      receitas: { ...semReceitas, iss: 10, iptu: 11 },
+    })
+  })
+
+  it('mostra no campo o erro devolvido pelo servidor', async () => {
+    abrirReceitas()
+    vi.spyOn(api, 'put').mockRejectedValue(
+      erroHttp(422, { message: 'erro', errors: { 'receitas.iss': ['Receita não encontrada.'] } }),
+    )
+
+    await screen.findByRole('combobox', { name: 'ISS' })
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    expect(await screen.findByText('Receita não encontrada.')).toBeInTheDocument()
   })
 })
 

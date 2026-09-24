@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\ParametroReceitaController;
 use App\Http\Controllers\SenhaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
@@ -54,6 +55,13 @@ Route::middleware([
         });
         // A lista serve às duas telas: a permissão é conferida no controller.
         Route::get('/grupos', [GrupoController::class, 'index']);
+
+        // Parâmetros › Receitas: um registro só por prefeitura.
+        Route::middleware('can:parametros.receitas')->group(function () {
+            Route::get('/parametros/receitas', [ParametroReceitaController::class, 'show']);
+            Route::put('/parametros/receitas', [ParametroReceitaController::class, 'update']);
+            Route::get('/parametros/receitas/opcoes', [ParametroReceitaController::class, 'opcoes']);
+        });
 
         // Só o superadmin, na prefeitura da Lemarq.
         Route::middleware('can:gerenciar-empresas')->group(function () {

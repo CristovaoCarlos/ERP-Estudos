@@ -15,7 +15,11 @@ Chaves estrangeiras **não** atravessam bancos: onde uma tabela de prefeitura ap
 `tbcomuns`/`tbinternas`, ficou só a coluna e a integridade passou a ser da aplicação (coluna
 "Observação" abaixo).
 
-## Tabelas da prefeitura (83)
+A coluna `id_empresa`, que no legado separava as prefeituras dentro de um banco só, e a tabela
+`tb_empresa` foram removidas ([ADR-0013](../adr/0013-remove-id-empresa.md)): no STM o banco já é da
+prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam, só com as outras.
+
+## Tabelas da prefeitura (82)
 
 | Tabela | Colunas | Chave primária | Observação |
 | --- | --- | --- | --- |
@@ -26,81 +30,80 @@ Chaves estrangeiras **não** atravessam bancos: onde uma tabela de prefeitura ap
 | `tb_alvara` | 23 | `id_doc` |  |
 | `tb_alvara_cnae` | 5 | `id` | referências sem FK: `tbinternas.ti_cnae` |
 | `tb_alvara_impressao` | 27 | `id_doc` |  |
-| `tb_alvara_tipo` | 4 | `id_tipo_alvara` |  |
+| `tb_alvara_tipo` | 3 | `id_tipo_alvara` |  |
 | `tb_alvara_tipo_adicional_faixas` | 6 | `id_alvara_tipo_adicional_faixas` |  |
-| `tb_base_legal` | 3 | `id_base_legal` |  |
-| `tb_cartorio` | 3 | `id_cartorio` |  |
-| `tb_certidao_negativa` | 13 | `id_certidao` |  |
-| `tb_contribuinte` | 37 | `id_contribuinte` | referências sem FK: `seguranca.sec_users` |
+| `tb_base_legal` | 2 | `id_base_legal` |  |
+| `tb_cartorio` | 2 | `id_cartorio` |  |
+| `tb_certidao_negativa` | 12 | `id_certidao` |  |
+| `tb_contribuinte` | 36 | `id_contribuinte` | referências sem FK: `seguranca.sec_users` |
 | `tb_contribuinte_cnae` | 4 | `id` | referências sem FK: `tbinternas.ti_cnae` |
 | `tb_contribuinte_conta_bancaria` | 6 | `id_contribuinte_conta_bancaria` | referências sem FK: `tbcomuns.tc_banco` |
 | `tb_contribuinte_documento` | 4 | `id_contribuinte_documento` | referências sem FK: `tbinternas.ti_tipo_documento` |
 | `tb_contribuinte_representante` | 5 | `id_contribuinte_representante` |  |
 | `tb_contribuinte_servico` | 10 | `id_cotrib_serv` |  |
 | `tb_contribuinte_situacao` | 6 | `id` |  |
-| `tb_convenio` | 21 | `id_convenio` | referências sem FK: `tbcomuns.tc_banco` |
-| `tb_dados_sociais_imovel` | 19 | `id_dados_sociais` |  |
+| `tb_convenio` | 20 | `id_convenio` | referências sem FK: `tbcomuns.tc_banco` |
+| `tb_dados_sociais_imovel` | 18 | `id_dados_sociais` |  |
 | `tb_dam` | 27 | `id_dam` |  |
 | `tb_dam_doc` | 3 | `id_dam_doc` |  |
 | `tb_dam_impostos` | 7 | `id` |  |
 | `tb_dam_vencimentos` | 8 | `id_dam_vencimentos` |  |
-| `tb_doc` | 12 | `id_doc` | referências sem FK: `tbinternas.ti_dam_tipo` |
+| `tb_doc` | 11 | `id_doc` | referências sem FK: `tbinternas.ti_dam_tipo` |
 | `tb_doc_imposto` | 6 | `id_doc_imposto` |  |
-| `tb_empresa` | 4 | `id_empresa` |  |
 | `tb_endereco` | 8 | `id_endereco` | referências sem FK: `tbcomuns.tc_cidade` |
 | `tb_fator_gleba` | 5 | `id_gleba` |  |
-| `tb_fator_localizacao` | 3 | `id_fator_localizacao` |  |
+| `tb_fator_localizacao` | 2 | `id_fator_localizacao` |  |
 | `tb_fator_localizacao_valores` | 4 | `id_fator_localizacao_valores` |  |
 | `tb_fator_valores` | 4 | `id_fator_valores` | referências sem FK: `tbinternas.ti_fator_itens` |
 | `tb_habite` | 18 | `id_doc` |  |
-| `tb_habite_impressao` | 26 | `id_habite` |  |
-| `tb_imovel` | 21 | `id_imovel` |  |
+| `tb_habite_impressao` | 25 | `id_habite` |  |
+| `tb_imovel` | 20 | `id_imovel` |  |
 | `tb_imovel_detalhamento_iptu` | 50 | `id_imovel_detalhamento_iptu` | referências sem FK: `tbinternas.ti_fator_itens` |
 | `tb_imovel_historico` | 7 | `id_historico` |  |
 | `tb_imovel_itbi_rural` | 7 | `id_imovel` |  |
-| `tb_inss` | 5 | `id_inss` |  |
+| `tb_inss` | 4 | `id_inss` |  |
 | `tb_iptu_lancamentos` | 42 | `id_doc` |  |
-| `tb_iptu_lotes` | 35 | `id_lote` |  |
+| `tb_iptu_lotes` | 34 | `id_lote` |  |
 | `tb_iptu_regra_aliquota` | 6 | `id_iptu_regra_aliquota` |  |
 | `tb_iptu_regra_parcelas` | 5 | `id_iptu_regra_parcelas` |  |
 | `tb_iptu_regra_previo` | 4 | `id_iptu_regra_previo` |  |
-| `tb_ir` | 23 | `id_ir` |  |
-| `tb_isencao` | 3 | `id_isencao` |  |
+| `tb_ir` | 22 | `id_ir` |  |
+| `tb_isencao` | 2 | `id_isencao` |  |
 | `tb_itbi` | 21 | `id_doc` |  |
 | `tb_itbi_contribuintes` | 6 | `id` |  |
 | `tb_itbi_imoveis_originados` | 9 | `id_itbi` |  |
-| `tb_itbi_impressao` | 34 | `id_doc` |  |
-| `tb_levantamento_drone` | 8 | `id_levantamento` |  |
+| `tb_itbi_impressao` | 33 | `id_doc` |  |
+| `tb_levantamento_drone` | 7 | `id_levantamento` |  |
 | `tb_mail_sended` | 7 | `id_mail_sended` |  |
 | `tb_mails_blacklist` | 7 | `mail` |  |
-| `tb_modeldo_historico_nota_fsical` | 4 | `id_modelo_historico_nota` |  |
-| `tb_modelo_certidao_negativa` | 5 | `id_modelo_certidao` |  |
-| `tb_natureza_itbi` | 6 | `id_natureza_itbi` |  |
-| `tb_negociacao` | 7 | `id_negociacao` | referências sem FK: `seguranca.sec_users` |
+| `tb_modeldo_historico_nota_fsical` | 3 | `id_modelo_historico_nota` |  |
+| `tb_modelo_certidao_negativa` | 4 | `id_modelo_certidao` |  |
+| `tb_natureza_itbi` | 5 | `id_natureza_itbi` |  |
+| `tb_negociacao` | 6 | `id_negociacao` | referências sem FK: `seguranca.sec_users` |
 | `tb_nota_fiscal` | 119 | `id_doc` | referências sem FK: `tbcomuns.tc_cidade`, `tbinternas.ti_aliquota_servico_ir`, `tbinternas.ti_nfse_lcp116_detalhamento`, `tbinternas.ti_nfse_nbs` |
 | `tb_nota_fiscal_impressao` | 52 | `id_doc` |  |
 | `tb_nota_fiscal_servico` | 17 | `id_nota_fiscal_servico` |  |
-| `tb_parametro_alvara` | 14 | `id_parametro_alvara` |  |
-| `tb_parametro_certidao_negativa` | 7 | `id_parametro_certidao_negativa` |  |
-| `tb_parametro_habite` | 12 | `id_parametro_habite` |  |
-| `tb_parametro_itbi` | 8 | `id_parametro_itbi` |  |
-| `tb_parametro_nota_fiscal` | 24 | `id_parametro_nota_fiscal` | referências sem FK: `tbinternas.ti_nota_numeracao` |
-| `tb_parametro_receita` | 15 | `id_parametro_receita` |  |
-| `tb_parametros` | 15 | `id_parametro` |  |
-| `tb_parametros_gestores` | 5 | — | referências sem FK: `seguranca.sec_users` |
-| `tb_parametros_imovel_iptu` | 29 | `id_parametro_imovel_iptu` | referências sem FK: `tbinternas.ti_fator` |
-| `tb_parametros_multas_juros` | 8 | `id_parametros_multas_juros` |  |
+| `tb_parametro_alvara` | 13 | `id_parametro_alvara` |  |
+| `tb_parametro_certidao_negativa` | 6 | `id_parametro_certidao_negativa` |  |
+| `tb_parametro_habite` | 11 | `id_parametro_habite` |  |
+| `tb_parametro_itbi` | 7 | `id_parametro_itbi` |  |
+| `tb_parametro_nota_fiscal` | 23 | `id_parametro_nota_fiscal` | referências sem FK: `tbinternas.ti_nota_numeracao` |
+| `tb_parametro_receita` | 14 | `id_parametro_receita` |  |
+| `tb_parametros` | 14 | `id_parametro` |  |
+| `tb_parametros_gestores` | 4 | — | referências sem FK: `seguranca.sec_users` |
+| `tb_parametros_imovel_iptu` | 28 | `id_parametro_imovel_iptu` | referências sem FK: `tbinternas.ti_fator` |
+| `tb_parametros_multas_juros` | 7 | `id_parametros_multas_juros` |  |
 | `tb_parametros_multas_juros_calculos` | 7 | `id_parametros_multas_juros_calculos` |  |
-| `tb_processing` | 9 | `id` |  |
+| `tb_processing` | 8 | `id` |  |
 | `tb_processing_msg` | 5 | `id` |  |
-| `tb_receita` | 11 | `id_receita` |  |
-| `tb_retorno_bancario` | 13 | `id_retorno_bancario` |  |
+| `tb_receita` | 10 | `id_receita` |  |
+| `tb_retorno_bancario` | 12 | `id_retorno_bancario` |  |
 | `tb_retorno_bancario_registros` | 15 | `id_retorno_bancario_registros` |  |
-| `tb_servico` | 11 | `id_servico` | referências sem FK: `tbinternas.ti_lcp116` |
-| `tb_tomador` | 12 | `id_tomador` |  |
+| `tb_servico` | 10 | `id_servico` | referências sem FK: `tbinternas.ti_lcp116` |
+| `tb_tomador` | 11 | `id_tomador` |  |
 | `tb_tomador_contrib` | 3 | `id_tomador_contrib` |  |
-| `tb_tomador_internacional` | 10 | `id_tomador_internacional` | referências sem FK: `tbinternas.ti_pais` |
-| `tb_ufir` | 5 | `id_ufir` |  |
+| `tb_tomador_internacional` | 9 | `id_tomador_internacional` | referências sem FK: `tbinternas.ti_pais` |
+| `tb_ufir` | 4 | `id_ufir` |  |
 | `trigger_log` | 4 | `log_id` |  |
 
 Índices parciais, por expressão ou com `INCLUDE`, e as restrições `CHECK` ficam na migration

@@ -126,29 +126,6 @@ export const menu: Modulo[] = [
         url: '/tabelas/modelos-historico-nota-fiscal',
         icone: History,
       },
-      {
-        titulo: 'Tabelas internas',
-        url: '/tabelas/internas',
-        icone: Database,
-        paginas: [
-          { titulo: 'Cidades', url: '/tabelas/internas/cidades', icone: MapPinned },
-          { titulo: 'Bancos', url: '/tabelas/internas/bancos', icone: Landmark },
-          { titulo: 'CNAE', url: '/tabelas/internas/cnae', icone: ListTree },
-          {
-            titulo: 'Lista de Serviços - Lei Compl. 116/2003',
-            url: '/tabelas/internas/lista-de-servicos',
-            icone: ListChecks,
-          },
-          { titulo: 'SELIC', url: '/tabelas/internas/selic', icone: TrendingUp },
-          { titulo: 'Segmentos', url: '/tabelas/internas/segmentos', icone: Shapes },
-          {
-            titulo: 'Numeração de Notas',
-            url: '/tabelas/internas/numeracao-de-notas',
-            icone: Hash,
-          },
-          { titulo: 'Tipos de DAM', url: '/tabelas/internas/tipos-de-dam', icone: FileType },
-        ],
-      },
     ],
   },
   {
@@ -277,6 +254,33 @@ export const menu: Modulo[] = [
     paginas: [
       { titulo: 'Usuários', url: '/administracao/usuarios', icone: UserCog },
       { titulo: 'Grupos de acesso', url: '/administracao/grupos', icone: LockKeyhole },
+      {
+        titulo: 'Tabelas internas',
+        url: '/administracao/tabelas-internas',
+        icone: Database,
+        paginas: [
+          { titulo: 'Cidades', url: '/administracao/tabelas-internas/cidades', icone: MapPinned },
+          { titulo: 'Bancos', url: '/administracao/tabelas-internas/bancos', icone: Landmark },
+          { titulo: 'CNAE', url: '/administracao/tabelas-internas/cnae', icone: ListTree },
+          {
+            titulo: 'Lista de Serviços - Lei Compl. 116/2003',
+            url: '/administracao/tabelas-internas/lista-de-servicos',
+            icone: ListChecks,
+          },
+          { titulo: 'SELIC', url: '/administracao/tabelas-internas/selic', icone: TrendingUp },
+          { titulo: 'Segmentos', url: '/administracao/tabelas-internas/segmentos', icone: Shapes },
+          {
+            titulo: 'Numeração de Notas',
+            url: '/administracao/tabelas-internas/numeracao-de-notas',
+            icone: Hash,
+          },
+          {
+            titulo: 'Tipos de DAM',
+            url: '/administracao/tabelas-internas/tipos-de-dam',
+            icone: FileType,
+          },
+        ],
+      },
       { titulo: 'Empresas', url: '/administracao/empresas', icone: Landmark },
     ],
   },
@@ -333,7 +337,7 @@ export function primeiraTela(pagina: Pagina): Pagina {
   return folhas(pagina)[0]
 }
 
-/** Caminho do módulo até a tela aberta (ex.: Tabelas › Tabelas internas › Cidades). */
+/** Caminho do módulo até a tela aberta (ex.: Administração › Tabelas internas › Cidades). */
 export function localizar(pathname: string, itens: Pagina[] = menu): Pagina[] {
   for (const item of itens) {
     if (item.url === pathname) return [item]

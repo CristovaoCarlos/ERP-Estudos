@@ -8,6 +8,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 
+- Tela **Parâmetros › Receitas**: formulário único em que a prefeitura define a receita (`tb_receita`) que cada tributo usa nos lançamentos (ISS, Taxa, TLL, IRPF, IRPJ, INSS, ITBI, Habite-se, IPTU, TCL, TCC, TIP e TLP). Rotas `GET/PUT /api/parametros/receitas` e `GET /api/parametros/receitas/opcoes`, com a permissão `parametros.receitas`.
+- Padrão para telas novas sobre tabelas da prefeitura, em formulário único ou lista com cadastro ([guia](docs/guias/criar-tela.md)), e skill `nova-tela` do Claude Code.
+
 - Estrutura do banco herdada do sistema legado ([ADR-0012](docs/adr/0012-schema-do-sistema-legado.md)): as 83 tabelas do schema `public` viraram migrations no banco de cada prefeitura (`database/migrations/tenant/`) e as 25 tabelas de `tbcomuns`/`tbinternas` (cidades, bancos, SELIC, CNAE, LCP 116, países, fatores do IPTU) viraram migrations no banco central. Chaves estrangeiras entre bancos não existem: as 37 referências da prefeitura para as tabelas de apoio ficaram como coluna, com a integridade na aplicação. Índices parciais/por expressão e restrições `CHECK` ficam numa migration em SQL, só no PostgreSQL. O schema `seguranca` do legado não foi migrado. Tabelas e colunas em [Banco de dados](docs/referencia/banco-de-dados.md).
 - Grupo de acesso `Administrador` em toda prefeitura, com todas as telas: é do sistema, acompanha o catálogo (tela nova entra sozinha no próximo `acesso:sincronizar`) e não pode ser alterado nem excluído. O cadastro de empresa passa a exigir CPF, e-mail e senha do administrador e cria o usuário `admin_<subdomínio>` nesse grupo, vinculado à prefeitura nova ([ADR-0011](docs/adr/0011-grupo-administrador-e-admin-da-prefeitura.md)).
 - Padrão de listagem (`components/listagem.tsx`) usado por todas as telas de lista, atuais e futuras: busca rápida à esquerda; Filtros e Colunas à direita (as colunas escolhidas ficam lembradas no navegador, por tela); rodapé com o total de registros, tamanho de página (15, 30, 50 ou 100) e navegação entre páginas. Aplicado em Empresas, Usuários e Grupos de acesso, com filtro por situação em Empresas e Usuários.
@@ -39,6 +42,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- O submenu **Tabelas internas** (Cidades, Bancos, CNAE, Lista de Serviços, SELIC, Segmentos, Numeração de Notas e Tipos de DAM) saiu de Tabelas e foi para **Administração**. As URLs passam a `/administracao/tabelas-internas/...` e as permissões a `administracao.tabelas-internas.*`: o grupo padrão `Tabelas` deixa de incluí-las, e grupos montados na tela precisam marcá-las de novo depois do `acesso:sincronizar`.
 - Administração › Usuários: os grupos saíram da edição do usuário e ganharam o botão "Editar vínculos", ao lado do lápis (`PUT /api/usuarios/{id}/vinculos`). O lápis passa a alterar só nome, e-mail e senha; no cadastro, os grupos continuam disponíveis.
 - Tema do sistema trocado para o preset `modern-minimal` do [tweakcn](https://tweakcn.com/): primário azul, superfícies neutras, cantos um pouco menos arredondados (`--radius` 0.375rem) e paleta de gráficos (`--chart-1..5`). As fontes do projeto (Inter e Geist Mono) foram mantidas, e o token `--marca` da landing e do login passou a usar o mesmo matiz do azul primário.
 - `acesso:sincronizar` deixa de reescrever as permissões dos grupos existentes: agora só acerta o catálogo de permissões e cria os grupos padrão que faltarem, para não desfazer o que foi montado na tela de grupos.
@@ -51,6 +55,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Botão de tema no canto superior direito (fora do menu do usuário), que alterna entre claro e escuro. Sem a opção Sistema: o tema padrão é o claro.
 - Linha divisória de ponta a ponta entre o cabeçalho (seletor de prefeitura, breadcrumb e tema) e a área da tela.
 - Menu lateral com largura ajustável: arraste a borda direita (de 224 a 480 px). A largura fica salva no navegador.
+
+### Removido
+
+- Coluna `id_empresa` das 38 tabelas herdadas do legado que a tinham, e a tabela `tb_empresa` ([ADR-0013](docs/adr/0013-remove-id-empresa.md)): no legado ela separava as prefeituras num banco só; no STM cada prefeitura já tem o seu. Índices que combinavam `id_empresa` com outras colunas continuam só com as outras (ex.: `tb_servico` único por `codigo_servico`). Migration nova, `2026_09_24_120000_remove_id_empresa_do_legado.php`: rode `tenants:migrate` nos bancos já criados.
 
 ### Corrigido
 

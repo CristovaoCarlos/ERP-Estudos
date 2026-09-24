@@ -13,6 +13,7 @@ import Empresas from '@/pages/administracao/Empresas'
 import Grupos from '@/pages/administracao/Grupos'
 import Usuarios from '@/pages/administracao/Usuarios'
 import EmConstrucao from '@/pages/EmConstrucao'
+import ReceitasParametros from '@/pages/parametros/Receitas'
 import Inicio from '@/pages/Inicio'
 import Landing from '@/pages/Landing'
 import EsqueciSenha from '@/pages/EsqueciSenha'
@@ -24,6 +25,7 @@ const paginas: Record<string, ComponentType> = {
   '/administracao/empresas': Empresas,
   '/administracao/grupos': Grupos,
   '/administracao/usuarios': Usuarios,
+  '/parametros/receitas': ReceitasParametros,
 }
 
 export default function App() {

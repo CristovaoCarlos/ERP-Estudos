@@ -36,6 +36,9 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `POST` | `/api/grupos` | prefeitura | `administracao.grupos` | Cria um grupo com as telas escolhidas |
 | `PUT` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Altera nome e telas do grupo |
 | `DELETE` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Exclui o grupo (recusa se houver usuários nele) |
+| `GET` | `/api/parametros/receitas` | prefeitura | `parametros.receitas` | Receita usada por cada tributo (um registro só por prefeitura) |
+| `PUT` | `/api/parametros/receitas` | prefeitura | `parametros.receitas` | Grava as receitas dos tributos (tributo ausente fica sem receita) |
+| `GET` | `/api/parametros/receitas/opcoes` | prefeitura | `parametros.receitas` | Receitas (`tb_receita`) para o formulário |
 | `GET` | `/api/empresas` | prefeitura administradora | superadmin | Lista as empresas (prefeituras clientes) |
 | `POST` | `/api/empresas` | prefeitura administradora | superadmin | Cadastra uma empresa, cria o administrador dela (`admin_<subdomínio>`) e provisiona a prefeitura (em fila) |
 

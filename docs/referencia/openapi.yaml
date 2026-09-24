@@ -35,6 +35,8 @@ tags:
     description: Usuários da prefeitura (permissão `administracao.usuarios`)
   - name: Grupos de acesso
     description: Grupos da prefeitura e as telas de cada um
+  - name: Parâmetros
+    description: Parâmetros da prefeitura (permissão da tela, ex. `parametros.receitas`)
   - name: Empresas
     description: Prefeituras clientes. Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`)
 paths:
@@ -762,6 +764,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
+  /api/parametros/receitas:
+    get:
+      tags: [Parâmetros]
+      summary: Receitas dos tributos da prefeitura
+      description: Um registro só por prefeitura. Sem nada gravado, todos os tributos vêm `null`.
+      operationId: verParametroReceita
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParametroReceita'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    put:
+      tags: [Parâmetros]
+      summary: Gravar as receitas dos tributos
+      description: Cria o registro na primeira vez e responde 200 nos dois casos. Tributo ausente em `receitas` fica sem receita.
+      operationId: gravarParametroReceita
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParametroReceita'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParametroReceita'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Receita inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/parametros/receitas/opcoes:
+    get:
+      tags: [Parâmetros]
+      summary: Receitas para o formulário
+      operationId: opcoesParametroReceita
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [receitas]
+                properties:
+                  receitas:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, descricao, sigla]
+                      properties:
+                        id:
+                          type: integer
+                        descricao:
+                          type: string
+                        sigla:
+                          type: [string, 'null']
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
   /api/empresas:
     get:
       tags: [Empresas]
@@ -1004,6 +1087,41 @@ components:
         criada_em:
           type: [string, 'null']
           format: date-time
+    ReceitasDosTributos:
+      type: object
+      description: Id da receita (`tb_receita`) de cada tributo, ou null. Coluna `id_receita_<tributo>`.
+      properties:
+        iss:
+          type: [integer, 'null']
+        taxa:
+          type: [integer, 'null']
+        tll:
+          type: [integer, 'null']
+        irpf:
+          type: [integer, 'null']
+        irpj:
+          type: [integer, 'null']
+        inss:
+          type: [integer, 'null']
+        itbi:
+          type: [integer, 'null']
+        habite:
+          type: [integer, 'null']
+        iptu:
+          type: [integer, 'null']
+        tcl:
+          type: [integer, 'null']
+        tcc:
+          type: [integer, 'null']
+        tip:
+          type: [integer, 'null']
+        tlp:
+          type: [integer, 'null']
+    ParametroReceita:
+      type: object
+      properties:
+        receitas:
+          $ref: '#/components/schemas/ReceitasDosTributos'
     ErroDeValidacao:
       type: object
       required: [message, errors]

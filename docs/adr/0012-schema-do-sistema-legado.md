@@ -1,5 +1,5 @@
 ---
-status: aceita
+status: aceita (a parte de `id_empresa` e `tb_empresa` foi substituída por [0013](0013-remove-id-empresa.md))
 data: 2026-09-23
 decisores: equipe STM
 ---
