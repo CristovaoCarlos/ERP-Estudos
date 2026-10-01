@@ -913,6 +913,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/administracao/tabelas-comuns/cidades/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Tabelas Comuns]
+      summary: Alterar nome e UF de uma cidade
+      description: O código do IBGE não muda (é ignorado se vier no corpo). Vale para todas as prefeituras.
+      operationId: alterarCidade
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, uf]
+              properties:
+                nome:
+                  type: string
+                  maxLength: 100
+                uf:
+                  type: string
+                  examples: [SP]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cidade'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Cidade inexistente
+        '422':
+          description: Nome vazio ou UF inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
   /api/administracao/tabelas-comuns/bancos:
     get:
       tags: [Tabelas Comuns]

@@ -13,8 +13,8 @@ import { FieldGroup } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 
 /**
- * Moldura dos formulários de inclusão: diálogo, formulário e rodapé com Cancelar e Cadastrar.
- * A tela só declara os campos (`children`) e o envio.
+ * Moldura dos formulários de inclusão e alteração: diálogo, formulário e rodapé com Cancelar e o
+ * botão de envio (Cadastrar, ou `rotuloDoBotao`). A tela só declara os campos e o envio.
  */
 export function DialogoDeCadastro({
   id,
@@ -24,6 +24,7 @@ export function DialogoDeCadastro({
   aoEnviar,
   aoFechar,
   largo = false,
+  rotuloDoBotao = 'Cadastrar',
   children,
 }: {
   /** Liga o botão Cadastrar ao formulário. */
@@ -34,6 +35,8 @@ export function DialogoDeCadastro({
   aoEnviar: FormEventHandler<HTMLFormElement>
   aoFechar: () => void
   largo?: boolean
+  /** Texto do botão de envio: Cadastrar na inclusão, Salvar na alteração. */
+  rotuloDoBotao?: string
   children: ReactNode
 }) {
   return (
@@ -52,7 +55,7 @@ export function DialogoDeCadastro({
           </Button>
           <Button type="submit" form={id} disabled={salvando}>
             {salvando && <Spinner data-icon="inline-start" />}
-            Cadastrar
+            {rotuloDoBotao}
           </Button>
         </DialogFooter>
       </DialogContent>

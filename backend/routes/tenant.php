@@ -76,6 +76,7 @@ Route::middleware([
         Route::middleware('can:gerenciar-tabelas-comuns')->prefix('administracao/tabelas-comuns')->group(function () {
             Route::get('/cidades', [CidadeController::class, 'index']);
             Route::post('/cidades', [CidadeController::class, 'store']);
+            Route::put('/cidades/{cidade}', [CidadeController::class, 'update']);
             Route::get('/bancos', [BancoController::class, 'index']);
             Route::post('/bancos', [BancoController::class, 'store']);
             Route::get('/cnae', [CnaeController::class, 'index']);

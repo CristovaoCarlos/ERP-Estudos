@@ -1060,6 +1060,31 @@ describe('administração › tabelas comuns › cidades', () => {
     expect(within(dialogo).getByText('Escolha a UF.')).toBeInTheDocument()
     expect(post).not.toHaveBeenCalled()
   })
+
+  it('altera nome e UF com o código IBGE só para leitura', async () => {
+    abrirCidades()
+    const put = vi.spyOn(api, 'put').mockResolvedValue({
+      data: { id: 3, codigo_ibge: '3509502', nome: 'Campinas (SP)', uf: 'MG' },
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Campinas' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByLabelText('Código IBGE')).toHaveValue('3509502')
+    expect(within(dialogo).getByLabelText('Código IBGE')).toBeDisabled()
+    expect(within(dialogo).getByRole('combobox', { name: 'UF' })).toHaveTextContent('SP')
+
+    const nome = within(dialogo).getByLabelText('Nome')
+    await userEvent.clear(nome)
+    await userEvent.type(nome, 'Campinas (SP)')
+    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'UF' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'MG' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    expect(put).toHaveBeenCalledWith('/administracao/tabelas-comuns/cidades/3', {
+      nome: 'Campinas (SP)',
+      uf: 'MG',
+    })
+  })
 })
 
 describe('administração › tabelas comuns › bancos', () => {

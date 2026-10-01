@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Cidade;
 use App\Models\Lcp116;
 use App\Models\Segmento;
 use App\Models\Tenant;
@@ -20,7 +21,7 @@ class TabelasComunsAcessoTest extends TestCase
 
     /** Todas as rotas do módulo: método, caminho. */
     private const ROTAS = [
-        ['get', 'cidades'], ['post', 'cidades'],
+        ['get', 'cidades'], ['post', 'cidades'], ['put', 'cidades/1'],
         ['get', 'bancos'], ['post', 'bancos'],
         ['get', 'cnae'], ['post', 'cnae'],
         ['get', 'lista-de-servicos'], ['post', 'lista-de-servicos'], ['put', 'lista-de-servicos/01'],
@@ -46,6 +47,7 @@ class TabelasComunsAcessoTest extends TestCase
         if (! Lcp116::whereKey('01')->exists()) {
             Lcp116::insert([['codigo' => '01', 'descricao' => 'Serviços de informática.']]);
             Segmento::insert([['codigo' => '1', 'descricao' => 'PREFEITURA']]);
+            Cidade::insert([['id_cidade' => 1, 'codigo' => '3550308', 'descricao' => 'São Paulo', 'uf' => 'SP']]);
         }
 
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);

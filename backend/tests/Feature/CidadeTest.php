@@ -107,4 +107,36 @@ class CidadeTest extends TestCase
         $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cidades', ['codigo_ibge' => '123', 'nome' => 'X', 'uf' => 'SP'])
             ->assertJsonValidationErrors(['codigo_ibge' => 'O código do IBGE tem 7 dígitos.']);
     }
+
+    public function test_altera_nome_e_uf_sem_mudar_o_codigo_ibge(): void
+    {
+        $this->criarTenant();
+        Cidade::insert([['id_cidade' => 5, 'codigo' => '3550308', 'descricao' => 'Sao Paulo', 'uf' => 'RJ']]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/cidades/5', [
+            'nome' => ' São Paulo ',
+            'uf' => 'SP',
+            'codigo_ibge' => '9999999',
+        ])
+            ->assertOk()
+            ->assertJsonPath('nome', 'São Paulo')
+            ->assertJsonPath('uf', 'SP')
+            ->assertJsonPath('codigo_ibge', '3550308');
+
+        $this->assertSame('3550308', Cidade::find(5)->codigo);
+    }
+
+    public function test_valida_a_alteracao_e_recusa_cidade_inexistente(): void
+    {
+        $this->criarTenant();
+        Cidade::insert([['id_cidade' => 5, 'codigo' => '3550308', 'descricao' => 'São Paulo', 'uf' => 'SP']]);
+        $token = $this->entrar();
+
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/cidades/5', ['nome' => '', 'uf' => 'XX'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['nome' => 'Informe o nome.', 'uf' => 'UF inválida.']);
+        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/cidades/99', ['nome' => 'X', 'uf' => 'SP'])
+            ->assertNotFound();
+    }
 }

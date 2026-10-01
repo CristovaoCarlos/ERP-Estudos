@@ -34,3 +34,15 @@ export function useCadastrarCidade() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE }),
   })
 }
+
+export type AlteracaoDaCidade = { nome: string; uf: string }
+
+/** Altera nome e UF. O código do IBGE não muda. */
+export function useAlterarCidade(id: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (dados: AlteracaoDaCidade) =>
+      (await api.put<Cidade>(`/administracao/tabelas-comuns/cidades/${id}`, dados)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE }),
+  })
+}

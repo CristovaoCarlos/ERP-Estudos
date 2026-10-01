@@ -27,18 +27,15 @@ class CidadeController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        [$regras, $mensagens] = $this->regrasDeNomeEUf();
         $dados = $request->validate([
             'codigo_ibge' => ['required', 'digits:7', Rule::unique(Cidade::class, 'codigo')],
-            'nome' => ['required', 'string', 'max:100'],
-            'uf' => ['required', Rule::in(self::UFS)],
+            ...$regras,
         ], [
             'codigo_ibge.required' => 'Informe o código do IBGE.',
             'codigo_ibge.digits' => 'O código do IBGE tem 7 dígitos.',
             'codigo_ibge.unique' => 'Já existe uma cidade com este código do IBGE.',
-            'nome.required' => 'Informe o nome.',
-            'nome.max' => 'Use no máximo 100 caracteres.',
-            'uf.required' => 'Escolha a UF.',
-            'uf.in' => 'UF inválida.',
+            ...$mensagens,
         ]);
 
         // `id_cidade` não é autoincremento no legado: o próximo é o maior + 1.
@@ -50,5 +47,37 @@ class CidadeController extends Controller
         ]));
 
         return (new CidadeResource($cidade))->response()->setStatusCode(201);
+    }
+
+    /** Altera nome e UF. O código do IBGE não muda: é ele que identifica o município. */
+    public function update(Request $request, Cidade $cidade): CidadeResource
+    {
+        [$regras, $mensagens] = $this->regrasDeNomeEUf();
+        $dados = $request->validate($regras, $mensagens);
+
+        $cidade->update(['descricao' => trim($dados['nome']), 'uf' => $dados['uf']]);
+
+        return new CidadeResource($cidade);
+    }
+
+    /**
+     * Regras de nome e UF, iguais na inclusão e na alteração.
+     *
+     * @return array{0: array<string, list<mixed>>, 1: array<string, string>}
+     */
+    private function regrasDeNomeEUf(): array
+    {
+        return [
+            [
+                'nome' => ['required', 'string', 'max:100'],
+                'uf' => ['required', Rule::in(self::UFS)],
+            ],
+            [
+                'nome.required' => 'Informe o nome.',
+                'nome.max' => 'Use no máximo 100 caracteres.',
+                'uf.required' => 'Escolha a UF.',
+                'uf.in' => 'UF inválida.',
+            ],
+        ];
     }
 }

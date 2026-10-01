@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MapPinned, Plus } from 'lucide-react'
+import { MapPinned, Pencil, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -10,7 +10,7 @@ import { Listagem, type Coluna } from '@/components/listagem'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  useAlterarCidade,
   useCadastrarCidade,
   useCidades,
   type Cidade,
@@ -91,6 +92,38 @@ const esquemaDaCidade = z.object({
 
 type CamposDaCidade = z.infer<typeof esquemaDaCidade>
 
+/** UF numa lista de seleção, usada na inclusão e na alteração. */
+function CampoUf({
+  id,
+  valor,
+  aoMudar,
+  erro,
+}: {
+  id: string
+  valor: string
+  aoMudar: (uf: string) => void
+  erro?: string
+}) {
+  return (
+    <Field data-invalid={erro ? true : undefined}>
+      <FieldLabel htmlFor={id}>UF</FieldLabel>
+      <Select value={valor} onValueChange={aoMudar}>
+        <SelectTrigger id={id} className="w-28" aria-invalid={erro ? true : undefined}>
+          <SelectValue placeholder="UF" />
+        </SelectTrigger>
+        <SelectContent>
+          {UFS.map((uf) => (
+            <SelectItem key={uf} value={uf}>
+              {uf}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FieldError>{erro}</FieldError>
+    </Field>
+  )
+}
+
 function NovaCidade({ aoFechar }: { aoFechar: () => void }) {
   const cadastrar = useCadastrarCidade()
   const {
@@ -153,34 +186,101 @@ function NovaCidade({ aoFechar }: { aoFechar: () => void }) {
         />
         <FieldError>{errors.nome?.message}</FieldError>
       </Field>
-      <Field data-invalid={errors.uf ? true : undefined}>
-        <FieldLabel htmlFor="uf">UF</FieldLabel>
-        <Controller
-          control={control}
-          name="uf"
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="uf" className="w-28" aria-invalid={errors.uf ? true : undefined}>
-                <SelectValue placeholder="UF" />
-              </SelectTrigger>
-              <SelectContent>
-                {UFS.map((uf) => (
-                  <SelectItem key={uf} value={uf}>
-                    {uf}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+      <Controller
+        control={control}
+        name="uf"
+        render={({ field }) => (
+          <CampoUf id="uf" valor={field.value} aoMudar={field.onChange} erro={errors.uf?.message} />
+        )}
+      />
+    </DialogoDeCadastro>
+  )
+}
+
+const esquemaDaAlteracao = esquemaDaCidade.omit({ codigo_ibge: true })
+
+type CamposDaAlteracao = z.infer<typeof esquemaDaAlteracao>
+
+/** Altera nome e UF. O código do IBGE aparece, mas não muda: é ele que identifica o município. */
+function AlterarCidade({ cidade, aoFechar }: { cidade: Cidade; aoFechar: () => void }) {
+  const alterar = useAlterarCidade(cidade.id)
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<CamposDaAlteracao>({
+    resolver: zodResolver(esquemaDaAlteracao),
+    defaultValues: { nome: cidade.nome, uf: cidade.uf },
+  })
+
+  const salvar = handleSubmit((dados) =>
+    alterar.mutate(dados, {
+      onSuccess: () => {
+        toast.success(`Cidade ${dados.nome} alterada.`)
+        aoFechar()
+      },
+      onError: (erro) =>
+        mostrarErrosDoServidor(
+          erro,
+          setError,
+          ['nome', 'uf'],
+          'Não foi possível alterar a cidade.',
+        ),
+    }),
+  )
+
+  return (
+    <DialogoDeCadastro
+      id="form-alterar-cidade"
+      titulo="Alterar cidade"
+      descricao="As cidades são as mesmas para todas as prefeituras: a alteração vale para todas."
+      salvando={alterar.isPending}
+      aoEnviar={salvar}
+      aoFechar={aoFechar}
+      rotuloDoBotao="Salvar"
+    >
+      <Field>
+        <FieldLabel htmlFor="alterar-codigo">Código IBGE</FieldLabel>
+        <Input
+          id="alterar-codigo"
+          value={cidade.codigo_ibge}
+          readOnly
+          disabled
+          className="w-32 font-mono"
         />
-        <FieldError>{errors.uf?.message}</FieldError>
+        <FieldDescription>O código do IBGE identifica o município e não muda.</FieldDescription>
       </Field>
+      <Field data-invalid={errors.nome ? true : undefined}>
+        <FieldLabel htmlFor="alterar-nome">Nome</FieldLabel>
+        <Input
+          id="alterar-nome"
+          maxLength={100}
+          aria-invalid={errors.nome ? true : undefined}
+          {...register('nome')}
+        />
+        <FieldError>{errors.nome?.message}</FieldError>
+      </Field>
+      <Controller
+        control={control}
+        name="uf"
+        render={({ field }) => (
+          <CampoUf
+            id="alterar-uf"
+            valor={field.value}
+            aoMudar={field.onChange}
+            erro={errors.uf?.message}
+          />
+        )}
+      />
     </DialogoDeCadastro>
   )
 }
 
 export default function Cidades() {
   const [cadastrando, setCadastrando] = useState(false)
+  const [emEdicao, setEmEdicao] = useState<Cidade | null>(null)
   const cidades = useCidades()
   const [ufs, setUfs] = useState<string[]>([])
 
@@ -188,6 +288,26 @@ export default function Cidades() {
     () => [...new Set(cidades.data?.map((cidade) => cidade.uf))].sort(),
     [cidades.data],
   )
+
+  const colunasComAcoes: Coluna<Cidade>[] = [
+    ...colunas,
+    {
+      id: 'acoes',
+      titulo: 'Ações',
+      fixa: true,
+      className: 'w-16 text-right',
+      conteudo: (cidade) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Alterar ${cidade.nome}`}
+          onClick={() => setEmEdicao(cidade)}
+        >
+          <Pencil />
+        </Button>
+      ),
+    },
+  ]
 
   const filtradas = ufs.length
     ? cidades.data?.filter((cidade) => ufs.includes(cidade.uf))
@@ -211,7 +331,7 @@ export default function Cidades() {
         itens={filtradas}
         carregando={cidades.isPending}
         erro={cidades.isError}
-        colunas={colunas}
+        colunas={colunasComAcoes}
         identificador={(cidade) => cidade.id}
         placeholder="Buscar por cidade, UF ou código IBGE…"
         filtrosAtivos={ufs.length}
@@ -243,6 +363,7 @@ export default function Cidades() {
       />
 
       {cadastrando && <NovaCidade aoFechar={() => setCadastrando(false)} />}
+      {emEdicao && <AlterarCidade cidade={emEdicao} aoFechar={() => setEmEdicao(null)} />}
     </div>
   )
 }
