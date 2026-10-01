@@ -15,7 +15,7 @@ Copie `backend/.env.example` para `backend/.env`. Os valores abaixo são os de d
 | `APP_URL` | `http://localhost:8000` | URL base do backend. |
 | `APP_LOCALE` / `APP_FAKER_LOCALE` | `pt_BR` | Idioma da aplicação e dos dados falsos. |
 | `CENTRAL_DOMAINS` | `localhost,127.0.0.1` | Domínios que **não** são prefeituras, separados por vírgula. Em produção, o domínio principal (ex.: `stm.gov.br`). O **primeiro** é a base dos endereços das empresas cadastradas (`<subdomínio>.<primeiro domínio>`). |
-| `TENANT_ADMINISTRADOR` | `lemarq` | Id da prefeitura da Lemarq. Só entrando por ela o superadmin tem acesso total e o cadastro de empresas ([ADR-0009](../adr/0009-grupos-de-acesso-e-empresas.md)). |
+| `TENANT_ADMINISTRADOR` | `demo` | Id da prefeitura administradora. Só entrando por ela o superadmin tem acesso total e o cadastro de empresas ([ADR-0009](../adr/0009-grupos-de-acesso-e-empresas.md)). |
 
 ### Banco de dados
 

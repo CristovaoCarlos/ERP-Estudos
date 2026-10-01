@@ -59,7 +59,7 @@ Baseado no levantamento de tecnologias do projeto. Versões são as faixas do `c
 
 ### Qualidade
 
-- Vitest 4 + jsdom + Testing Library (react, user-event, jest-dom). O jsdom roda no endereço de uma prefeitura (`lemarq.localhost`).
+- Vitest 4 + jsdom + Testing Library (react, user-event, jest-dom). O jsdom roda no endereço de uma prefeitura (`demo.localhost`).
 - ESLint 10 + typescript-eslint + react-hooks + react-refresh + eslint-config-prettier.
 - Prettier 3.
 

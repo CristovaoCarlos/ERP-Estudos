@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Superadmin da Lemarq: acesso total, mas só quando entra pela prefeitura administradora
+ * Superadmin: acesso total, mas só quando entra pela prefeitura administradora
  * (`config('acesso.tenant_administrador')`). É o único que cadastra empresas.
  */
 return new class extends Migration

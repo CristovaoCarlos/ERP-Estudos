@@ -95,9 +95,7 @@ function Apresentacao() {
           </ul>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Lemarq Software · Sistema de Tributação Municipal
-        </p>
+        <p className="text-xs text-muted-foreground">STM · Sistema de Tributação Municipal</p>
       </div>
     </aside>
   )

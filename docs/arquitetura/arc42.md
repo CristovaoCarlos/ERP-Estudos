@@ -20,7 +20,7 @@ O STM (Sistema de Tributação Municipal) é um sistema SaaS usado por várias p
 | Papel | Expectativa |
 | --- | --- |
 | Servidores da prefeitura | Acessar o sistema pelo endereço da sua prefeitura e trabalhar apenas com os dados dela. |
-| Equipe de desenvolvimento (Lemarq Software) | Código previsível, testes rápidos, ambiente reproduzível. |
+| Equipe de desenvolvimento | Código previsível, testes rápidos, ambiente reproduzível. |
 | Operação | Deploy automatizado e seguro, sem publicar código que falhou no CI. |
 
 ## 2. Restrições
@@ -142,8 +142,8 @@ sequenceDiagram
     participant A as API (tenant)
     participant C as stm_central
 
-    U->>F: CPF e senha em lemarq.dominio
-    F->>A: POST /api/login (Host: lemarq.dominio)
+    U->>F: CPF e senha em demo.dominio
+    F->>A: POST /api/login (Host: demo.dominio)
     A->>C: identifica o tenant pelo domínio
     A->>C: busca usuário, confere senha e vínculo tenant_user
     alt credenciais válidas e vinculado
@@ -247,7 +247,7 @@ Servidor próprio (bare-metal), sem Docker. O workflow `deploy.yml` roda o CI co
 - **Permissões:** uma por tela do menu, com o nome da URL (`/parametros/receitas` → `parametros.receitas`), catalogadas em `config/acesso.php`.
 - **Grupos de acesso:** `Administrador` (todas as telas, do sistema, acompanha o catálogo e não pode ser alterado nem excluído) e `Parâmetros`, `Tabelas` e `Lançamentos`, cada um com as telas do seu módulo, criados no provisionamento. Cada prefeitura monta os seus em Administração › Grupos de acesso; `acesso:sincronizar` só recria os que faltam ([ADR-0010](../adr/0010-grupos-editaveis-na-tela.md)).
 - **Frontend:** o `GET /api/me` traz `permissoes`. O menu mostra só as telas permitidas, e a rota de uma tela sem permissão mostra "Sem acesso".
-- **Superadmin da Lemarq** (`users.superadmin`): pode tudo, mas só na prefeitura `TENANT_ADMINISTRADOR`. É o único que usa Administração › Empresas, que cadastra prefeituras clientes e provisiona o tenant delas.
+- **Superadmin** (`users.superadmin`): pode tudo, mas só na prefeitura `TENANT_ADMINISTRADOR`. É o único que usa Administração › Empresas, que cadastra prefeituras clientes e provisiona o tenant delas.
 - Models `App\Models\Role`/`Permission` fixos na conexão `tenant`; cache do spatie com chave por prefeitura.
 
 ### Idioma
@@ -269,7 +269,7 @@ Registradas como ADRs no formato MADR em [docs/adr](../adr/).
 | --- | --- | --- |
 | Isolamento | Usuário da prefeitura A usa seu token na prefeitura B, sem vínculo → 403 | `AuthTest::test_token_de_um_tenant_nao_acessa_tenant_sem_vinculo` |
 | Isolamento | Grupos do usuário na prefeitura A não valem na prefeitura B | `AcessoTest::test_grupos_e_permissoes_sao_separados_por_prefeitura` |
-| Segurança | Superadmin fora da prefeitura da Lemarq não cadastra empresas → 403 | `EmpresasTest::test_superadmin_fora_da_lemarq_nao_acessa_empresas` |
+| Segurança | Superadmin fora da prefeitura administradora não cadastra empresas → 403 | `EmpresasTest::test_superadmin_fora_da_administradora_nao_acessa_empresas` |
 | Segurança | 6ª tentativa de login em 1 minuto → 429 | `AuthTest::test_login_e_limitado_apos_cinco_tentativas` |
 | Segurança | Token após logout → 401 | `AuthTest::test_logout_revoga_o_token` |
 | Manutenibilidade | PR com código fora do padrão ou teste quebrado não entra na `main` | `ci.yml` |

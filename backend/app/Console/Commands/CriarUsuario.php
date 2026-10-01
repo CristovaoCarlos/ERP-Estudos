@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
-#[Signature('usuarios:criar {email} {nome} {--cpf= : CPF usado no login (se omitido num usuário sem CPF, é solicitado)} {--tenant=* : Id do tenant a que o usuário terá acesso} {--grupo=* : Grupo de acesso nos tenants informados (ex.: Parâmetros)} {--superadmin : Marca como superadmin da Lemarq} {--senha= : Senha (se omitida, é solicitada)}')]
+#[Signature('usuarios:criar {email} {nome} {--cpf= : CPF usado no login (se omitido num usuário sem CPF, é solicitado)} {--tenant=* : Id do tenant a que o usuário terá acesso} {--grupo=* : Grupo de acesso nos tenants informados (ex.: Parâmetros)} {--superadmin : Marca como superadmin} {--senha= : Senha (se omitida, é solicitada)}')]
 #[Description('Cria ou atualiza um usuário central e o vincula aos tenants informados')]
 class CriarUsuario extends Command
 {

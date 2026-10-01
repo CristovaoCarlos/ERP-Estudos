@@ -8,12 +8,12 @@ decisores: equipe STM
 
 ## Contexto e problema
 
-Depois do [ADR-0010](0010-grupos-editaveis-na-tela.md), cada prefeitura monta os próprios grupos. Faltavam duas coisas: um grupo com acesso a tudo, que não dependa de alguém montar tela a tela, e um primeiro usuário na prefeitura nova — sem ele, só o superadmin da Lemarq consegue entrar, e a prefeitura não administra a si mesma.
+Depois do [ADR-0010](0010-grupos-editaveis-na-tela.md), cada prefeitura monta os próprios grupos. Faltavam duas coisas: um grupo com acesso a tudo, que não dependa de alguém montar tela a tela, e um primeiro usuário na prefeitura nova — sem ele, só o superadmin consegue entrar, e a prefeitura não administra a si mesma.
 
 ## Fatores de decisão
 
 - Prefeitura provisionada precisa nascer utilizável, sem intervenção manual.
-- O superadmin da Lemarq não deve ser o operador do dia a dia das prefeituras.
+- O superadmin não deve ser o operador do dia a dia das prefeituras.
 - Um grupo de acesso total não pode ser esvaziado ou apagado por engano.
 
 ## Opções consideradas

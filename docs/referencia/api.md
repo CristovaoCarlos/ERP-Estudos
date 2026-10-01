@@ -5,7 +5,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 ## Convenções
 
 - **Formato:** JSON. Envie `Accept: application/json`.
-- **Prefeitura:** identificada pelo header `Host` (ex.: `lemarq.localhost`). O frontend não precisa enviar nada além do endereço em que está aberto.
+- **Prefeitura:** identificada pelo header `Host` (ex.: `demo.localhost`). O frontend não precisa enviar nada além do endereço em que está aberto.
 - **Autenticação:** `Authorization: Bearer <token>`, com o token de `POST /api/login`.
 - **Erros de validação:** `422` com `{ "message": "...", "errors": { "campo": ["..."] } }`.
 
@@ -77,13 +77,13 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 
 ```bash
 # login
-curl -s http://lemarq.localhost:8000/api/login \
+curl -s http://demo.localhost:8000/api/login \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
   -d '{"cpf":"529.982.247-25","password":"<senha>"}'
 
 # usuário atual
-curl -s http://lemarq.localhost:8000/api/me \
+curl -s http://demo.localhost:8000/api/me \
   -H 'Accept: application/json' -H 'Authorization: Bearer <token>'
 ```
 
-Se o sistema não resolver `*.localhost`, envie o domínio pelo header: `curl -H 'Host: lemarq.localhost' http://127.0.0.1:8000/api/tenant`.
+Se o sistema não resolver `*.localhost`, envie o domínio pelo header: `curl -H 'Host: demo.localhost' http://127.0.0.1:8000/api/tenant`.

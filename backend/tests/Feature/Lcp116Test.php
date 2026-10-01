@@ -22,7 +22,7 @@ class Lcp116Test extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -30,13 +30,13 @@ class Lcp116Test extends TestCase
         return $tenant;
     }
 
-    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    /** Token do superadmin entrando pela Demo: as Tabelas Comuns são só dele. */
     private function entrar(): string
     {
         $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
-        $user->tenants()->attach('lemarq');
+        $user->tenants()->attach('demo');
 
-        $token = $this->postJson('http://lemarq.localhost/api/login', [
+        $token = $this->postJson('http://demo.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -46,9 +46,9 @@ class Lcp116Test extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -70,7 +70,7 @@ class Lcp116Test extends TestCase
         $this->criarItens();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/lista-de-servicos')
+        $this->emDemo($token, 'get', '/api/administracao/tabelas-comuns/lista-de-servicos')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', ['01', '01.01', '01.02'])
             ->assertJsonPath('data.0.tipo', 'item')
@@ -83,7 +83,7 @@ class Lcp116Test extends TestCase
         $this->criarItens();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.02', [
+        $this->emDemo($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.02', [
             'descricao' => '  Programação de computadores.  ',
             'codigo' => '99',
         ])
@@ -101,10 +101,10 @@ class Lcp116Test extends TestCase
         $this->criarItens();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.01', ['descricao' => ''])
+        $this->emDemo($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/01.01', ['descricao' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['descricao' => 'Informe a descrição.']);
-        $this->emLemarq($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/77.77', ['descricao' => 'X'])
+        $this->emDemo($token, 'put', '/api/administracao/tabelas-comuns/lista-de-servicos/77.77', ['descricao' => 'X'])
             ->assertNotFound();
     }
 
@@ -114,10 +114,10 @@ class Lcp116Test extends TestCase
         $this->criarItens();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02', 'descricao' => 'Pesquisas.'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02', 'descricao' => 'Pesquisas.'])
             ->assertCreated()
             ->assertJsonPath('tipo', 'item');
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02.01', 'descricao' => 'Pesquisa e desenvolvimento.'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '02.01', 'descricao' => 'Pesquisa e desenvolvimento.'])
             ->assertCreated()
             ->assertJsonPath('tipo', 'subitem');
 
@@ -130,11 +130,11 @@ class Lcp116Test extends TestCase
         $this->criarItens();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '01.01', 'descricao' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '01.01', 'descricao' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'Já existe um item com este código.']);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '1.1', 'descricao' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '1.1', 'descricao' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'Use 01 para item ou 01.01 para subitem.']);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '05.01', 'descricao' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/lista-de-servicos', ['codigo' => '05.01', 'descricao' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'Cadastre antes o item 05.']);
     }
 }

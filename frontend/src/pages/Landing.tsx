@@ -229,7 +229,7 @@ export default function Landing({
             <span className="flex flex-col leading-none">
               <span className="text-sm font-semibold">STM</span>
               <span className="font-mono text-[0.6rem] tracking-widest text-muted-foreground uppercase">
-                Lemarq Software
+                Tributação Municipal
               </span>
             </span>
           </a>
@@ -286,10 +286,9 @@ export default function Landing({
                 <span className="text-marca">em um só lugar.</span>
               </h1>
               <p className="max-w-xl text-lg text-pretty text-muted-foreground">
-                O STM é o sistema de tributação municipal da Lemarq Software para prefeituras.
-                Cadastro econômico e imobiliário, lançamentos de ISS, IPTU, ITBI e alvará, emissão
-                de DAM e relatórios de arrecadação — com os dados de cada prefeitura separados e
-                protegidos.
+                O STM é o sistema de tributação municipal para prefeituras. Cadastro econômico e
+                imobiliário, lançamentos de ISS, IPTU, ITBI e alvará, emissão de DAM e relatórios de
+                arrecadação — com os dados de cada prefeitura separados e protegidos.
               </p>
               <div>
                 <Button
@@ -335,7 +334,7 @@ export default function Landing({
 
       <footer className="border-t">
         <p className="mx-auto w-full max-w-6xl px-6 py-8 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Lemarq Software · STM — Sistema de Tributação Municipal
+          © {new Date().getFullYear()} STM — Sistema de Tributação Municipal
         </p>
       </footer>
     </div>

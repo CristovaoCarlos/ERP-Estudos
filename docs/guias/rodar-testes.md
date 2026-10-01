@@ -33,12 +33,12 @@ npm run build          # build de produção
 - **Backend, rotas de prefeitura:** crie a prefeitura no teste e chame a URL com o domínio dela, como em `tests/Feature/AuthTest.php`:
 
   ```php
-  $tenant = Tenant::create(['id' => 'lemarq']);
-  $tenant->domains()->create(['domain' => 'lemarq.localhost']);
+  $tenant = Tenant::create(['id' => 'demo']);
+  $tenant->domains()->create(['domain' => 'demo.localhost']);
 
-  $this->getJson('http://lemarq.localhost/api/tenant')->assertOk();
+  $this->getJson('http://demo.localhost/api/tenant')->assertOk();
   ```
 
   Apague a prefeitura no `tearDown` (isso remove o arquivo SQLite dela) e chame `tenancy()->end()`.
 
-- **Frontend:** o jsdom roda em `http://lemarq.localhost:5173`. Faça mock de `api.get`/`api.post` com `vi.spyOn`, como em `src/App.test.tsx`.
+- **Frontend:** o jsdom roda em `http://demo.localhost:5173`. Faça mock de `api.get`/`api.post` com `vi.spyOn`, como em `src/App.test.tsx`.

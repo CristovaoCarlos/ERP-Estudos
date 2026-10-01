@@ -17,7 +17,7 @@ export type Usuario = {
   email: string
   /** Endereço da foto (`/api/fotos/...`) ou `null`. */
   foto: string | null
-  /** Superadmin da Lemarq com efeito nesta prefeitura (só na prefeitura administradora). */
+  /** Superadmin com efeito nesta prefeitura (só na prefeitura administradora). */
   superadmin: boolean
   /** Grupos de acesso nesta prefeitura. */
   grupos: string[]

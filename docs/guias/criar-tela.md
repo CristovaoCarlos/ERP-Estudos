@@ -41,7 +41,7 @@ As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco 
 
 - O model usa `CentralConnection` no lugar de `TenantConnection`; se a chave primária não for autoincremento, `$incrementing = false`. Se ela for um número sem sequência no legado, a inclusão usa o maior + 1 numa transação (veja `CidadeController::store`).
 - **Acesso:** a permissão da tela vai na chave `superadmin` de `config/acesso.php`, não no catálogo de grupos. A rota entra no grupo `can:gerenciar-tabelas-comuns` de `routes/tenant.php`, sob o prefixo `administracao/tabelas-comuns`. No frontend, `exclusivaDoSuperadmin()` (`lib/navegacao.ts`) tira a tela da tela de grupos.
-- **Testes:** entram como superadmin na Lemarq; os dados vão direto pelo model, fora do `Tenant::run(...)`. Rota nova do módulo entra na lista de `TabelasComunsAcessoTest`, que confere o 403 para os demais.
+- **Testes:** entram como superadmin na prefeitura administradora; os dados vão direto pelo model, fora do `Tenant::run(...)`. Rota nova do módulo entra na lista de `TabelasComunsAcessoTest`, que confere o 403 para os demais.
 - **Inclusão:** o botão "Novo…" fica à direita do título e abre o formulário na moldura `DialogoDeCadastro` (`components/dialogo-de-cadastro.tsx`); os erros 422 voltam para os campos com `mostrarErrosDoServidor` (`lib/formularios.ts`). A descrição do diálogo avisa que o registro vale para todas as prefeituras.
 - Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`; as mutações invalidam a consulta.
 - Tabelas grandes (Cidades tem ~5.600 linhas) ainda cabem numa resposta só; a `Listagem` pagina e busca no navegador.
@@ -74,13 +74,13 @@ Um model por tabela, no banco da prefeitura:
 
 ### Teste da API
 
-Um `tests/Feature/<Model>Test.php` com os helpers `criarTenant`, `entrar` e `emLemarq` (copie da referência) e, no mínimo:
+Um `tests/Feature/<Model>Test.php` com os helpers `criarTenant`, `entrar` e `emDemo` (copie da referência) e, no mínimo:
 
 1. sem a permissão da tela → `403`;
 2. o caminho feliz completo (formulário único: lê vazio, grava, grava de novo no mesmo registro; lista: cadastra, lista, altera e exclui);
 3. cada regra de validação.
 
-Dados de apoio são criados com os models, dentro de `Tenant::find('lemarq')->run(...)`.
+Dados de apoio são criados com os models, dentro de `Tenant::find('demo')->run(...)`.
 
 ## Frontend
 

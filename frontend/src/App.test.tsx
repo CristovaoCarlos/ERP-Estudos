@@ -23,7 +23,7 @@ const usuario = {
   grupos: [] as string[],
   permissoes: telas.filter((tela) => tela.url !== '/').map((tela) => permissaoDaTela(tela.url)),
   prefeituras: [
-    { id: 'lemarq', nome: 'Lemarq', dominio: 'lemarq.localhost' },
+    { id: 'demo', nome: 'Demo', dominio: 'demo.localhost' },
     { id: 'prefeitura_teste', nome: null, dominio: 'prefeitura-teste.localhost' },
   ],
 }
@@ -86,8 +86,8 @@ afterEach(() => {
 
 describe('prefeitura pelo endereço', () => {
   it('identifica o subdomínio da prefeitura', () => {
-    expect(window.location.hostname).toBe('lemarq.localhost')
-    expect(subdominioDaPrefeitura()).toBe('lemarq')
+    expect(window.location.hostname).toBe('demo.localhost')
+    expect(subdominioDaPrefeitura()).toBe('demo')
     expect(subdominioDaPrefeitura('prefeitura-teste.localhost')).toBe('prefeitura-teste')
   })
 
@@ -146,7 +146,7 @@ describe('landing page', () => {
 
 describe('login', () => {
   it('sem sessão, a raiz da prefeitura mostra a landing com o botão Painel', async () => {
-    mockGet({ '/tenant': { id: 'lemarq' } })
+    mockGet({ '/tenant': { id: 'demo' } })
     renderizar(<App />)
 
     const painel = await screen.findByRole('link', { name: 'Painel' })
@@ -159,14 +159,14 @@ describe('login', () => {
   })
 
   it('redireciona para o login ao abrir uma tela sem sessão', async () => {
-    mockGet({ '/tenant': { id: 'lemarq' } })
+    mockGet({ '/tenant': { id: 'demo' } })
     renderizar(<App />, '/parametros/receitas')
 
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   })
 
   it('valida os campos antes de enviar', async () => {
-    mockGet({ '/tenant': { id: 'lemarq' } })
+    mockGet({ '/tenant': { id: 'demo' } })
     const post = vi.spyOn(api, 'post')
     renderizar(<App />, '/login')
 
@@ -178,7 +178,7 @@ describe('login', () => {
   })
 
   it('faz login, guarda o token e abre a página inicial', async () => {
-    mockGet({ '/tenant': { id: 'lemarq' } })
+    mockGet({ '/tenant': { id: 'demo' } })
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { token: 'tok-123', usuario } })
     renderizar(<App />, '/login')
 
@@ -195,7 +195,7 @@ describe('login', () => {
   })
 
   it('mostra a mensagem do servidor quando as credenciais são inválidas', async () => {
-    mockGet({ '/tenant': { id: 'lemarq' } })
+    mockGet({ '/tenant': { id: 'demo' } })
     vi.spyOn(api, 'post').mockRejectedValue(
       erroHttp(422, { errors: { cpf: ['CPF ou senha inválidos.'] } }),
     )
@@ -211,7 +211,7 @@ describe('login', () => {
 
   it('sair revoga a sessão e volta para o login', async () => {
     setToken('tok-123')
-    mockGet({ '/tenant': { id: 'lemarq' }, '/me': usuario })
+    mockGet({ '/tenant': { id: 'demo' }, '/me': usuario })
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: null })
     renderizar(<App />)
 
@@ -227,7 +227,7 @@ describe('login', () => {
 describe('sistema', () => {
   function entrarLogado(rota = '/') {
     setToken('tok-123')
-    mockGet({ '/tenant': { id: 'lemarq' }, '/me': usuario })
+    mockGet({ '/tenant': { id: 'demo' }, '/me': usuario })
     renderizar(<App />, rota)
   }
 
@@ -385,17 +385,17 @@ describe('sistema', () => {
   it('lista as prefeituras do usuário no seletor', async () => {
     entrarLogado()
 
-    await abrirMenu(/Lemarq/)
+    await abrirMenu(/Demo/)
 
     expect(await screen.findByRole('menuitem', { name: /Prefeitura Teste/ })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: /Lemarq/ })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /Demo/ })).toBeInTheDocument()
   })
 })
 
 describe('grupos de acesso', () => {
   function entrarComo(me: typeof usuario, rota = '/') {
     setToken('tok-123')
-    mockGet({ '/tenant': { id: 'lemarq', nome: 'Lemarq' }, '/me': me })
+    mockGet({ '/tenant': { id: 'demo', nome: 'Demo' }, '/me': me })
     renderizar(<App />, rota)
   }
 
@@ -431,10 +431,10 @@ describe('grupos de acesso', () => {
 describe('empresas', () => {
   const empresas = [
     {
-      id: 'lemarq',
-      nome: 'Lemarq',
+      id: 'demo',
+      nome: 'Demo',
       cnpj: null,
-      dominio: 'lemarq.localhost',
+      dominio: 'demo.localhost',
       situacao: 'ativa',
       criada_em: '2026-09-22T12:00:00+00:00',
     },
@@ -451,7 +451,7 @@ describe('empresas', () => {
   function abrirEmpresas() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/empresas': { data: empresas },
     })
@@ -477,7 +477,7 @@ describe('empresas', () => {
     expect(linha).toHaveTextContent('11.222.333/0001-81')
     expect(linha).toHaveTextContent('nova-esperanca.localhost')
     expect(linha).toHaveTextContent('Provisionando')
-    expect(within(screen.getByRole('table')).getByText('Lemarq').closest('tr')).toHaveTextContent(
+    expect(within(screen.getByRole('table')).getByText('Demo').closest('tr')).toHaveTextContent(
       'Ativa',
     )
   })
@@ -527,7 +527,7 @@ describe('empresas', () => {
       erroHttp(422, { errors: { subdominio: ['Este endereço já está em uso.'] } }),
     )
 
-    const dialogo = await preencher('Lemarq 2', '11222333000181', 'lemarq')
+    const dialogo = await preencher('Demo 2', '11222333000181', 'demo')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
 
     expect(await within(dialogo).findByText('Este endereço já está em uso.')).toBeInTheDocument()
@@ -571,7 +571,7 @@ describe('usuarios', () => {
   function abrirUsuarios() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/usuarios': { data: usuarios },
       '/grupos': { data: gruposMock },
@@ -640,7 +640,7 @@ describe('usuarios', () => {
     }))
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/usuarios': { data: muitos },
       '/grupos': { data: gruposMock },
@@ -754,7 +754,7 @@ describe('usuarios', () => {
   it('mostra quem está inativo e ativa sem confirmação', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/usuarios': { data: [usuarios[0], { ...usuarios[1], ativo: false }] },
       '/grupos': { data: gruposMock },
@@ -794,7 +794,7 @@ describe('grupos de acesso', () => {
   function abrirGrupos() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/grupos': { data: gruposMock },
     })
@@ -931,7 +931,7 @@ describe('parâmetros › receitas', () => {
   function abrirReceitas(receitas: Record<string, number | null> = semReceitas) {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/parametros/receitas': { receitas },
       '/parametros/receitas/opcoes': opcoes,
@@ -986,7 +986,7 @@ describe('administração › tabelas comuns › cidades', () => {
   function abrirCidades() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/cidades': { data: cidades },
     })
@@ -1096,7 +1096,7 @@ describe('administração › tabelas comuns › bancos', () => {
   function abrirBancos() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/bancos': { data: bancos },
     })
@@ -1184,7 +1184,7 @@ describe('administração › tabelas comuns › cnae', () => {
   function abrirCnae() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/cnae': { data: cnae },
     })
@@ -1283,7 +1283,7 @@ describe('administração › tabelas comuns › lista de serviços', () => {
   function abrirLista() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/lista-de-servicos': { data: itens },
     })
@@ -1376,7 +1376,7 @@ describe('administração › tabelas comuns › selic', () => {
   function abrirSelic(dados = taxas) {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/selic': { data: dados },
     })
@@ -1456,7 +1456,7 @@ describe('administração › tabelas comuns › segmentos', () => {
   function abrirSegmentos() {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/segmentos': { data: segmentos },
     })
@@ -1531,7 +1531,7 @@ describe('administração › tabelas comuns › numeração de notas', () => {
   it('lista os tipos de numeração na ordem do código', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/numeracao-de-notas': {
         data: [
@@ -1555,7 +1555,7 @@ describe('administração › tabelas comuns › numeração de notas', () => {
   it('cadastra uma numeração com o código em maiúscula', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/numeracao-de-notas': { data: [] },
     })
@@ -1581,7 +1581,7 @@ describe('administração › tabelas comuns › tipos de dam', () => {
   it('lista os tipos de DAM na ordem do código', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/tipos-de-dam': {
         data: [
@@ -1604,7 +1604,7 @@ describe('administração › tabelas comuns › tipos de dam', () => {
   it('cadastra um tipo de DAM com código numérico', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/administracao/tabelas-comuns/tipos-de-dam': { data: [] },
     })
@@ -1628,7 +1628,7 @@ describe('administração › tabelas comuns › tipos de dam', () => {
 
 describe('recuperação de senha', () => {
   function abrirLogin(rota = '/login') {
-    mockGet({ '/tenant': { id: 'lemarq', nome: 'Lemarq' } })
+    mockGet({ '/tenant': { id: 'demo', nome: 'Demo' } })
     renderizar(<App />, rota)
   }
 
@@ -1716,7 +1716,7 @@ describe('recuperação de senha', () => {
 describe('minha conta', () => {
   function entrarLogado() {
     setToken('tok-123')
-    mockGet({ '/tenant': { id: 'lemarq', nome: 'Lemarq' }, '/me': usuario })
+    mockGet({ '/tenant': { id: 'demo', nome: 'Demo' }, '/me': usuario })
     renderizar(<App />)
   }
 
@@ -1814,7 +1814,7 @@ describe('minha conta', () => {
   it('remove a foto quando já existe uma', async () => {
     setToken('tok-123')
     mockGet({
-      '/tenant': { id: 'lemarq', nome: 'Lemarq' },
+      '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': { ...usuario, foto: '/api/fotos/abc.png' },
     })
     renderizar(<App />)

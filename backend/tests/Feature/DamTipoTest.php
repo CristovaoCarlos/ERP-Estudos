@@ -22,7 +22,7 @@ class DamTipoTest extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -30,13 +30,13 @@ class DamTipoTest extends TestCase
         return $tenant;
     }
 
-    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    /** Token do superadmin entrando pela Demo: as Tabelas Comuns são só dele. */
     private function entrar(): string
     {
         $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
-        $user->tenants()->attach('lemarq');
+        $user->tenants()->attach('demo');
 
-        $token = $this->postJson('http://lemarq.localhost/api/login', [
+        $token = $this->postJson('http://demo.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -46,9 +46,9 @@ class DamTipoTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -65,7 +65,7 @@ class DamTipoTest extends TestCase
         ]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/tipos-de-dam')
+        $this->emDemo($token, 'get', '/api/administracao/tabelas-comuns/tipos-de-dam')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', [1, 2, 3])
             ->assertJsonPath('data.0', ['codigo' => 1, 'descricao' => 'NOTA FISCAL']);
@@ -76,7 +76,7 @@ class DamTipoTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 8, 'descricao' => 'MULTAS'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 8, 'descricao' => 'MULTAS'])
             ->assertCreated()
             ->assertJsonPath('codigo', 8);
 
@@ -89,13 +89,13 @@ class DamTipoTest extends TestCase
         DamTipo::insert([['cod_dam_tipo' => 1, 'descricao' => 'NOTA FISCAL']]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 1, 'descricao' => ''])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 1, 'descricao' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'codigo' => 'Já existe um tipo de DAM com este código.',
                 'descricao' => 'Informe a descrição.',
             ]);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 0, 'descricao' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/tipos-de-dam', ['codigo' => 0, 'descricao' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'Use um código de 1 a 9999.']);
     }
 }

@@ -28,7 +28,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Acesso usuário ↔ prefeitura: tabela `tenant_user`. Toda rota autenticada de prefeitura usa `auth:sanctum` + `EnsureUserBelongsToTenant`.
 - Papéis/permissões (spatie) ficam **no banco de cada prefeitura**. Use `App\Models\Role`/`Permission` (conexão `tenant` fixa); os models do spatie herdariam a conexão central do `User`.
 - Grupo `Administrador` (todas as telas) existe em toda prefeitura e é mantido pelo sistema: não é alterado nem excluído pela API. Cadastrar empresa cria o usuário `admin_<subdominio>` nele.
-- Tela nova no menu: adicione a permissão (nome = URL com `.` no lugar de `/`) em `backend/config/acesso.php` e rode `acesso:sincronizar` (ele não mexe em grupos já existentes; quem edita grupos é a tela Administração › Grupos de acesso). Superadmin só vale na prefeitura `TENANT_ADMINISTRADOR` (`lemarq`); só ele acessa Administração › Empresas, que provisiona tenants, e Administração › Tabelas Comuns (banco central, vale para todas as prefeituras; ADR-0014). Telas só dele ficam na chave `superadmin` de `config/acesso.php`, fora do catálogo de grupos.
+- Tela nova no menu: adicione a permissão (nome = URL com `.` no lugar de `/`) em `backend/config/acesso.php` e rode `acesso:sincronizar` (ele não mexe em grupos já existentes; quem edita grupos é a tela Administração › Grupos de acesso). Superadmin só vale na prefeitura `TENANT_ADMINISTRADOR` (`demo`); só ele acessa Administração › Empresas, que provisiona tenants, e Administração › Tabelas Comuns (banco central, vale para todas as prefeituras; ADR-0014). Telas só dele ficam na chave `superadmin` de `config/acesso.php`, fora do catálogo de grupos.
 - Rotas de prefeitura: `routes/tenant.php`. Rotas centrais: `routes/api.php` (restritas a `CENTRAL_DOMAINS`).
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
 - O usuário `stm` cria os bancos `stm_tenant_*` graças a `docker/mysql/init/01-permissoes.sql`, que só roda na primeira inicialização do volume `mysql-data`.
@@ -40,7 +40,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 ## Testes
 
 - Backend: rotas de prefeitura são testadas criando o tenant e chamando `http://<id>.localhost/api/...`; apague o tenant no `tearDown` (veja `tests/Feature/AuthTest.php`).
-- Frontend: jsdom roda em `http://lemarq.localhost:5173`; mock de `api.get`/`api.post` com `vi.spyOn` (veja `src/App.test.tsx`).
+- Frontend: jsdom roda em `http://demo.localhost:5173`; mock de `api.get`/`api.post` com `vi.spyOn` (veja `src/App.test.tsx`).
 - Antes de concluir, rode as checagens do CI: `pint --test`, `php artisan test`, `typecheck`, `lint`, `format:check`, `test`, `build`.
 
 ## Convenções

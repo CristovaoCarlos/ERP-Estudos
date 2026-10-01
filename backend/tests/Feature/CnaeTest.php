@@ -22,7 +22,7 @@ class CnaeTest extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -30,13 +30,13 @@ class CnaeTest extends TestCase
         return $tenant;
     }
 
-    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    /** Token do superadmin entrando pela Demo: as Tabelas Comuns são só dele. */
     private function entrar(): string
     {
         $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
-        $user->tenants()->attach('lemarq');
+        $user->tenants()->attach('demo');
 
-        $token = $this->postJson('http://lemarq.localhost/api/login', [
+        $token = $this->postJson('http://demo.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -46,9 +46,9 @@ class CnaeTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -67,7 +67,7 @@ class CnaeTest extends TestCase
         ]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/cnae')
+        $this->emDemo($token, 'get', '/api/administracao/tabelas-comuns/cnae')
             ->assertOk()
             ->assertJsonCount(4, 'data')
             ->assertJsonPath('data.0.nivel', 'secao')
@@ -86,7 +86,7 @@ class CnaeTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
             'secao' => 'P',
             'divisao' => '85',
             'grupo' => '85.9',
@@ -108,17 +108,17 @@ class CnaeTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', ['secao' => 'Z', 'grupo' => '85.9', 'denominacao' => ''])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/cnae', ['secao' => 'Z', 'grupo' => '85.9', 'denominacao' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'secao' => 'A seção é uma letra de A a U.',
                 'divisao' => 'Informe este nível: o nível abaixo dele foi preenchido.',
                 'denominacao' => 'Informe a denominação.',
             ]);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
             'secao' => 'P', 'divisao' => '85', 'grupo' => '86.1', 'denominacao' => 'X',
         ])->assertJsonValidationErrors(['grupo' => 'O código precisa começar pelo código do nível de cima.']);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/cnae', [
             'secao' => 'P', 'divisao' => '85', 'grupo' => '85.9', 'classe' => '8593-7', 'denominacao' => 'X',
         ])->assertJsonValidationErrors(['classe' => 'A classe segue o formato 85.93-7.']);
     }

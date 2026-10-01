@@ -2,7 +2,7 @@
 
 ## Criar pela tela (recomendado)
 
-Entre como superadmin em `lemarq.<domínio>` e abra **Administração › Empresas › Nova empresa**. Informe nome, CNPJ e endereço (subdomínio). O sistema cria o tenant e o domínio, e o worker cria o banco, roda as migrations e cria os grupos de acesso. A empresa aparece como **Provisionando** até o banco ficar pronto e depois como **Ativa**.
+Entre como superadmin em `demo.<domínio>` e abra **Administração › Empresas › Nova empresa**. Informe nome, CNPJ e endereço (subdomínio). O sistema cria o tenant e o domínio, e o worker cria o banco, roda as migrations e cria os grupos de acesso. A empresa aparece como **Provisionando** até o banco ficar pronto e depois como **Ativa**.
 
 - **Endereço:** `nova-esperanca` vira o domínio `nova-esperanca.<primeiro CENTRAL_DOMAINS>` e o tenant `nova_esperanca` (banco `stm_tenant_nova_esperanca`). Não pode ser alterado depois.
 - **CNPJ:** numérico ou alfanumérico, conferido pelos dígitos verificadores. Não pode repetir.

@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
-        // Superadmin, na prefeitura da Lemarq, pode tudo; os demais dependem dos grupos de acesso.
+        // Superadmin, na prefeitura administradora, pode tudo; os demais dependem dos grupos de acesso.
         Gate::before(fn (User $user) => $user->ehSuperadmin() ? true : null);
         Gate::define('gerenciar-empresas', fn (User $user) => $user->ehSuperadmin());
         // Tabelas Comuns gravam no banco central (valem para todas as prefeituras): só o superadmin.

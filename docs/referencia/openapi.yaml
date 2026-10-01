@@ -7,7 +7,7 @@ info:
     API JSON consumida pelo frontend do STM.
 
     **Prefeitura (tenant):** as rotas de prefeitura são identificadas pelo header `Host`.
-    A mesma rota `/api/login` em `lemarq.localhost` e em `prefeitura-teste.localhost`
+    A mesma rota `/api/login` em `demo.localhost` e em `prefeitura-teste.localhost`
     atende prefeituras diferentes, com bancos diferentes.
 
     **Autenticação:** token Bearer obtido em `POST /api/login`.
@@ -18,7 +18,7 @@ servers:
     description: Prefeitura em desenvolvimento (nginx do Docker)
     variables:
       prefeitura:
-        default: lemarq
+        default: demo
         description: Subdomínio da prefeitura
   - url: 'http://localhost:8000'
     description: Domínio central em desenvolvimento
@@ -91,11 +91,11 @@ paths:
                 properties:
                   id:
                     type: string
-                    examples: [lemarq]
+                    examples: [demo]
                   nome:
                     type: [string, 'null']
                     description: Nome cadastrado em Administração › Empresas.
-                    examples: [Lemarq]
+                    examples: [Demo]
         '404':
           $ref: '#/components/responses/PrefeituraNaoEncontrada'
   /api/login:
@@ -1664,13 +1664,13 @@ components:
             properties:
               id:
                 type: string
-                examples: [lemarq]
+                examples: [demo]
               nome:
                 type: [string, 'null']
-                examples: [Lemarq]
+                examples: [Demo]
               dominio:
                 type: [string, 'null']
-                examples: [lemarq.localhost]
+                examples: [demo.localhost]
     Grupo:
       type: object
       required: [id, nome, telas, usuarios, sistema]

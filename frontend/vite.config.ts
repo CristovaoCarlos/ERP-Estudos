@@ -26,7 +26,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     environmentOptions: {
-      jsdom: { url: 'http://lemarq.localhost:5173' },
+      jsdom: { url: 'http://demo.localhost:5173' },
     },
     setupFiles: ['./src/test/setup.ts'],
     css: false,

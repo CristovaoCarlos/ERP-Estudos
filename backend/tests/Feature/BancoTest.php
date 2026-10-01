@@ -22,7 +22,7 @@ class BancoTest extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -30,13 +30,13 @@ class BancoTest extends TestCase
         return $tenant;
     }
 
-    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    /** Token do superadmin entrando pela Demo: as Tabelas Comuns são só dele. */
     private function entrar(): string
     {
         $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
-        $user->tenants()->attach('lemarq');
+        $user->tenants()->attach('demo');
 
-        $token = $this->postJson('http://lemarq.localhost/api/login', [
+        $token = $this->postJson('http://demo.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -46,9 +46,9 @@ class BancoTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -64,7 +64,7 @@ class BancoTest extends TestCase
         ]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/bancos')
+        $this->emDemo($token, 'get', '/api/administracao/tabelas-comuns/bancos')
             ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.codigo', '0001')
@@ -77,7 +77,7 @@ class BancoTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '0077', 'nome' => 'Banco Inter S.A.'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '0077', 'nome' => 'Banco Inter S.A.'])
             ->assertCreated()
             ->assertJsonPath('codigo', '0077')
             ->assertJsonPath('nome', 'Banco Inter S.A.');
@@ -91,13 +91,13 @@ class BancoTest extends TestCase
         Banco::insert([['codigo' => '0001', 'descricao' => 'Banco do Brasil S.A.']]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '0001', 'nome' => ''])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '0001', 'nome' => ''])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'codigo' => 'Já existe um banco com este código.',
                 'nome' => 'Informe o nome.',
             ]);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '1', 'nome' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/bancos', ['codigo' => '1', 'nome' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'O código tem 4 dígitos (com zeros à esquerda, ex.: 0001).']);
     }
 }
