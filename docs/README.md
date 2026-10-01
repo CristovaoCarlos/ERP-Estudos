@@ -1,6 +1,6 @@
 # Documentação do ERP para Estudos
 
-ERP para Estudos. Monorepo com `backend/` (Laravel, API) e `frontend/` (React), multi-tenant: cada prefeitura é um tenant, com banco de dados próprio, acessado pelo seu subdomínio.
+ERP para Estudos. Monorepo com `backend/` (Laravel, API) e `frontend/` (Vue 3), multi-tenant: cada prefeitura é um tenant, com banco de dados próprio, acessado pelo seu subdomínio.
 
 ## Como esta documentação está organizada
 

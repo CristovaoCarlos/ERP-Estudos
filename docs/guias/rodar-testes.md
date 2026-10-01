@@ -41,4 +41,4 @@ npm run build          # build de produção
 
   Apague a prefeitura no `tearDown` (isso remove o arquivo SQLite dela) e chame `tenancy()->end()`.
 
-- **Frontend:** o jsdom roda em `http://demo.localhost:5173`. Faça mock de `api.get`/`api.post` com `vi.spyOn`, como em `src/App.test.tsx`.
+- **Frontend:** o jsdom roda em `http://demo.localhost:5173`. Faça mock de `api.get`/`api.post` com `vi.spyOn`, como em `src/App.test.ts`. A validação dos formulários é assíncrona: espere a chamada à API com `esperarChamada` (`vi.waitFor`).

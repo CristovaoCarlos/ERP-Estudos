@@ -1,34 +1,25 @@
-import js from '@eslint/js'
-import prettier from 'eslint-config-prettier'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import pluginVue from 'eslint-plugin-vue'
+import { globalIgnores } from 'eslint/config'
 import globals from 'globals'
-import tseslint from 'typescript-eslint'
 
-export default defineConfig([
+export default defineConfigWithVueTs(
   globalIgnores(['dist', 'coverage']),
   {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-      prettier,
-    ],
-    languageOptions: {
-      ecmaVersion: 2023,
-      globals: globals.browser,
-    },
+    files: ['**/*.{ts,vue}'],
+    languageOptions: { ecmaVersion: 2023, globals: globals.browser },
+  },
+  pluginVue.configs['flat/recommended'],
+  vueTsConfigs.recommended,
+  {
+    // Nomes de tela e de componente em português, de uma palavra (Login, Listagem, Tela).
+    rules: { 'vue/multi-word-component-names': 'off' },
   },
   {
-    // Código gerado pelo CLI do shadcn: exporta variantes junto com o componente e o
-    // skeleton do sidebar sorteia a largura com Math.random.
-    files: ['src/components/ui/**/*.tsx'],
-    rules: {
-      'react-refresh/only-export-components': 'off',
-      'react-hooks/purity': 'off',
-    },
+    // Código gerado pelo CLI do shadcn-vue: props opcionais sem valor padrão.
+    files: ['src/components/ui/**/*.vue'],
+    rules: { 'vue/require-default-prop': 'off' },
   },
-])
+  skipFormatting,
+)

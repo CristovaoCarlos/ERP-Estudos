@@ -51,6 +51,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Frontend reescrito em **Vue 3** ([ADR-0016](docs/adr/0016-frontend-em-vue.md)), com shadcn-vue sobre Reka UI, vue-router, `@tanstack/vue-query`, vee-validate (zod 4), `@lucide/vue`, vue-sonner e `@vueuse/core`. Telas, rotas, textos e visual continuam os mesmos. O React e todas as dependências dele saíram do `package.json`, assim como `@tanstack/react-table`, `@tiptap/*` e `cmdk`, que não eram usados. Quem desenvolve: rode `npm install` em `frontend/` (o lockfile mudou) e entre de novo no sistema.
 - O sistema passa a se chamar **ERP para Estudos** (antes STM — Sistema de Tributação Municipal) e o projeto, `erp_estudos`: projeto Compose `erp_estudos` (imagem `erp_estudos-php:dev`), bancos `erp_estudos_central` e `erp_estudos_tenant_<id>`, usuário do banco `erp_estudos`, pacotes `erp_estudos/backend` e `erp_estudos-frontend` e chaves `erp_estudos.*` no `localStorage` (é preciso entrar de novo). Ambientes existentes: faça backup, atualize `APP_NAME`, `DB_DATABASE` e `DB_USERNAME` no `backend/.env`, suba o projeto novo e restaure os dados nos bancos com os nomes novos, ajustando `tenants.data.tenancy_db_name`. A tabela `stm_migrations` e o valor `STMSIAT_WEB` são do legado e não mudaram.
 - Banco de dados trocado de PostgreSQL 17 para **MySQL 8.4** ([ADR-0015](docs/adr/0015-mysql.md)): serviço `db` com a imagem `mysql:8.4` na porta `127.0.0.1:33061` e volume `mysql-data`, `pdo_mysql` na imagem PHP e `DB_CONNECTION=mysql`. Migrations da prefeitura ajustadas (tipos das chaves estrangeiras, `json` no lugar de `jsonb`, índices e `CHECK` do legado reescritos). Ambientes existentes: faça backup, troque `DB_CONNECTION`/`DB_PORT` no `backend/.env` (`mysql`/`3306`), recrie com `docker compose up -d --build` e rode `migrate` e `tenants:migrate`.
 - O módulo **Parâmetros** do menu passou a se chamar **Parâmetros da Empresa** e fica logo abaixo de Relatórios. URLs (`/parametros/...`) e permissões (`parametros.*`) não mudaram.
@@ -70,6 +71,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Removido
 
+- Skills `shadcn` e `migrate-radix-to-base` de `.claude/skills/` (eram do shadcn/ui para React).
 - Dependências do PostgreSQL: conexão `pgsql`, gerenciador `PostgreSQLDatabaseManager`, extensão `pdo_pgsql`/`libpq-dev` e o SQL próprio do PostgreSQL nas migrations.
 - Coluna `id_empresa` das 38 tabelas herdadas do legado que a tinham, e a tabela `tb_empresa` ([ADR-0013](docs/adr/0013-remove-id-empresa.md)): no legado ela separava as prefeituras num banco só; no ERP para Estudos cada prefeitura já tem o seu. Índices que combinavam `id_empresa` com outras colunas continuam só com as outras (ex.: `tb_servico` único por `codigo_servico`). Migration nova, `2026_09_24_120000_remove_id_empresa_do_legado.php`: rode `tenants:migrate` nos bancos já criados.
 

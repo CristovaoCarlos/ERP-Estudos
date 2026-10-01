@@ -1,6 +1,6 @@
 # ERP para Estudos
 
-Sistema multi-prefeitura: cada prefeitura acessa pelo seu subdomínio e tem banco de dados próprio. Monorepo com `backend/` (Laravel 13, API) e `frontend/` (React 19 + Vite).
+Sistema multi-prefeitura: cada prefeitura acessa pelo seu subdomínio e tem banco de dados próprio. Monorepo com `backend/` (Laravel 13, API) e `frontend/` (Vue 3 + Vite).
 
 ## Início rápido
 

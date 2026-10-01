@@ -52,7 +52,7 @@ flowchart LR
 
 | Parceiro | Interface |
 | --- | --- |
-| Navegador do usuário | HTTPS; SPA React consumindo a API JSON. |
+| Navegador do usuário | HTTPS; SPA Vue consumindo a API JSON. |
 | SMTP | Envio de e-mails (Mailpit em desenvolvimento). |
 | S3 | Arquivos em produção via `league/flysystem-aws-s3-v3`; disco local em desenvolvimento. |
 
@@ -63,7 +63,7 @@ flowchart LR
 | Várias prefeituras, dados isolados | Multi-tenancy com **um banco por prefeitura**, identificada pelo subdomínio (`stancl/tenancy`) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
 | Mesmo usuário em várias prefeituras | Usuários e tokens **centralizados** no `erp_estudos_central`, com vínculo explícito usuário ↔ prefeitura | [ADR-0003](../adr/0003-usuarios-centralizados.md) |
 | Autenticação da SPA | **Tokens de API do Sanctum** (Bearer) | [ADR-0004](../adr/0004-autenticacao-por-token.md) |
-| Separar front e back | **Monorepo** com API Laravel e SPA React | [ADR-0001](../adr/0001-monorepo-laravel-react.md) |
+| Separar front e back | **Monorepo** com API Laravel e SPA Vue | [ADR-0001](../adr/0001-monorepo-laravel-react.md), [ADR-0016](../adr/0016-frontend-em-vue.md) |
 | Criar banco do tenant sem travar a requisição | Provisionamento **assíncrono** em fila (Redis + worker) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
 | Testes rápidos e seguros | Testes em **SQLite**, com trava contra rodar no banco real | [ADR-0006](../adr/0006-testes-em-sqlite.md) |
 
@@ -76,7 +76,7 @@ flowchart TB
     usuario(["Usuário"])
 
     subgraph erp["ERP para Estudos"]
-        spa["<b>Frontend</b><br/>React 19 + Vite<br/>SPA"]
+        spa["<b>Frontend</b><br/>Vue 3 + Vite<br/>SPA"]
         nginx["<b>Nginx</b> 1.27<br/>servidor web"]
         app["<b>API</b><br/>Laravel 13 / PHP-FPM 8.4"]
         worker["<b>Worker</b><br/>Laravel queue:work"]
@@ -119,16 +119,17 @@ flowchart TB
 | Bloco | Local | Responsabilidade |
 | --- | --- | --- |
 | Cliente HTTP | `src/lib/api.ts` | Axios com base `/api`, envia o token e trata 401 (sessão expirada). |
-| Autenticação | `src/lib/auth.ts` | Hooks `useUsuario`, `useLogin`, `useLogout`. |
+| Autenticação | `src/lib/auth.ts` | Composables `useUsuario`, `useLogin`, `useLogout`. O token da sessão é um `ref` em `src/lib/api.ts`. |
 | Prefeitura | `src/lib/prefeitura.ts` | Descobre a prefeitura pelo endereço (`VITE_CENTRAL_DOMAIN`) e consulta `/api/tenant`. |
-| Menu | `src/lib/navegacao.ts` | Módulos e telas do sistema. Fonte única do menu lateral, das rotas e do breadcrumb. Todo item tem `icone` (lucide-react). Um item com `paginas` vira submenu, e submenus podem ter outros submenus dentro. |
-| `App` | `src/App.tsx` | Sem prefeitura no endereço (ou prefeitura inexistente) → landing page; senão, rotas do sistema. Na prefeitura, `/` sem sessão também mostra a landing, com o botão "Painel" para o login. |
-| `Listagem` | `src/components/listagem.tsx` | Padrão das telas de listagem: busca rápida, Filtros, Colunas (lembradas no navegador), tabela e paginação no rodapé. |
+| Menu | `src/lib/navegacao.ts` | Módulos e telas do sistema. Fonte única do menu lateral, das rotas e do breadcrumb. Todo item tem `icone` (`@lucide/vue`). Um item com `paginas` vira submenu, e submenus podem ter outros submenus dentro. |
+| `App` e rotas | `src/App.vue`, `src/router.ts` | Sem prefeitura no endereço (ou prefeitura inexistente) → landing page; senão, as rotas de `src/router.ts`, montadas a partir do menu. Na prefeitura, `/` sem sessão também mostra a landing, com o botão "Painel" para o login. |
+| `Listagem` | `src/components/Listagem.vue` | Padrão das telas de listagem: busca rápida, Filtros, Colunas (lembradas no navegador), tabela e paginação no rodapé. Células ricas pelo slot `#coluna-<id>`. |
+| Formulários | `src/lib/formularios.ts` | `useFormulario` (vee-validate com schema zod 4) e `mostrarErrosDoServidor` (422 nos campos). |
 | `AppLayout` | `src/components` | Layout do sistema no modelo `sidebar-07` do shadcn: seletor de prefeitura, menu de módulos, menu do usuário, breadcrumb. |
 | `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida (em `/`, mostra a landing da prefeitura). |
-| Recuperação de senha | `src/pages/EsqueciSenha.tsx`, `RedefinirSenha.tsx` | Pede o link por CPF e troca a senha com o token do e-mail. |
+| Recuperação de senha | `src/pages/EsqueciSenha.vue`, `RedefinirSenha.vue` | Pede o link por CPF e troca a senha com o token do e-mail. |
 | Páginas | `src/pages` | `Landing`, `Login`, `Inicio`, `administracao/Empresas`, `administracao/Usuarios`, `administracao/Grupos`, `EmConstrucao` (telas do menu ainda não implementadas). |
-| Componentes de UI | `src/components/ui` | shadcn/ui sobre Radix, gerados pelo CLI. Tema (cores, raio e sombras) em `src/index.css`, no preset `modern-minimal` do tweakcn, com o token extra `--marca` da landing e do login. |
+| Componentes de UI | `src/components/ui` | shadcn-vue sobre Reka UI, gerados pelo CLI ([ADR-0016](../adr/0016-frontend-em-vue.md)). Tema (cores, raio e sombras) em `src/index.css`, no preset `modern-minimal` do tweakcn, com o token extra `--marca` da landing e do login. |
 | Gráficos | `src/components/graficos` | Gráficos em SVG próprio, sem biblioteca. *A construir.* |
 
 ## 6. Visão de tempo de execução

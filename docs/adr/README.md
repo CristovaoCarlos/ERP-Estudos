@@ -5,7 +5,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | Nº | Decisão | Status |
 | --- | --- | --- |
 | [0000](0000-registrar-decisoes-com-madr.md) | Registrar decisões de arquitetura com MADR | Aceita |
-| [0001](0001-monorepo-laravel-react.md) | Monorepo com API Laravel e SPA React | Aceita |
+| [0001](0001-monorepo-laravel-react.md) | Monorepo com API Laravel e SPA React | Aceita; SPA React substituída por Vue em [0016](0016-frontend-em-vue.md) |
 | [0002](0002-multi-tenancy-banco-por-prefeitura.md) | Multi-tenancy com um banco por prefeitura, identificada pelo subdomínio | Aceita |
 | [0003](0003-usuarios-centralizados.md) | Usuários e tokens centralizados no `erp_estudos_central` | Aceita |
 | [0004](0004-autenticacao-por-token.md) | Autenticação por token do Sanctum com vínculo usuário ↔ prefeitura | Aceita |
@@ -20,6 +20,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0013](0013-remove-id-empresa.md) | Remoção de `id_empresa` e `tb_empresa` do banco da prefeitura | Aceita |
 | [0014](0014-tabelas-comuns-so-do-superadmin.md) | Tabelas Comuns só para o superadmin | Aceita |
 | [0015](0015-mysql.md) | MySQL 8.4 como banco de dados | Aceita |
+| [0016](0016-frontend-em-vue.md) | Frontend em Vue 3 com shadcn-vue | Aceita |
 
 ## Como criar um ADR
 

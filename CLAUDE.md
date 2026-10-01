@@ -1,6 +1,6 @@
 # ERP para Estudos
 
-Monorepo multi-tenant: `backend/` (Laravel 13, só API, PHP 8.4) + `frontend/` (React 19, Vite 8, TypeScript 6). Cada prefeitura é um tenant com banco próprio, identificada pelo subdomínio (`Host`). Documentação completa em `docs/` — comece por `docs/arquitetura/arc42.md`.
+Monorepo multi-tenant: `backend/` (Laravel 13, só API, PHP 8.4) + `frontend/` (Vue 3, Vite 8, TypeScript 6; ADR-0016). Cada prefeitura é um tenant com banco próprio, identificada pelo subdomínio (`Host`). Documentação completa em `docs/` — comece por `docs/arquitetura/arc42.md`.
 
 Responda e escreva mensagens, documentação e textos de interface em **português do Brasil**.
 
@@ -40,19 +40,20 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 ## Testes
 
 - Backend: rotas de prefeitura são testadas criando o tenant e chamando `http://<id>.localhost/api/...`; apague o tenant no `tearDown` (veja `tests/Feature/AuthTest.php`).
-- Frontend: jsdom roda em `http://demo.localhost:5173`; mock de `api.get`/`api.post` com `vi.spyOn` (veja `src/App.test.tsx`).
+- Frontend: jsdom roda em `http://demo.localhost:5173`; mock de `api.get`/`api.post` com `vi.spyOn` (veja `src/App.test.ts`). A validação dos formulários (vee-validate) é assíncrona: confira a chamada à API com `esperarChamada`, não com `expect(...).toHaveBeenCalledWith` logo após o clique.
 - Antes de concluir, rode as checagens do CI: `pint --test`, `php artisan test`, `typecheck`, `lint`, `format:check`, `test`, `build`.
 
 ## Convenções
 
 - Nomes de domínio em português (`Relatorios`, `usuarios:criar`, `acessaTenant`); termos do framework em inglês.
-- Componentes de UI: shadcn/ui sobre `radix-ui` em `src/components/ui` (skill `shadcn` em `.claude/skills/`). O projeto usa **Radix**; não migre para Base UI sem pedido explícito.
-- `npx shadcn@latest add ...` (rode no contêiner node, com `HOME=/tmp`) gera imports `from "cn"` e instala o pacote `cn`. O projeto usa `cn` de `@/lib/utils`: depois de todo `add`, troque os imports e rode `npm uninstall cn`. Use `--overwrite` se o CLI perguntar sobre arquivo existente (sem TTY ele aborta).
+- Frontend em **Vue 3** (SFC `<script setup lang="ts">`, componentes em PascalCase). Não há React no projeto; não adicione pacotes `react*`.
+- Componentes de UI: **shadcn-vue** sobre `reka-ui` em `src/components/ui`. Para adicionar: `npx shadcn-vue@latest add <componente> --yes --overwrite` (no contêiner node, com `HOME=/tmp`) e depois `npx prettier --write src/components/ui`. Ícones de `@lucide/vue`.
+- Formulários: `useFormulario(esquemaZod, valoresIniciais)` de `src/lib/formularios.ts` (vee-validate + zod 4; o `@vee-validate/zod` oficial só aceita zod 3). `campo('nome')` dá o `v-model`; erros 422 com `mostrarErrosDoServidor`.
 - **Tela nova sobre tabela da prefeitura** (formulário único de parâmetros ou lista com cadastro, com a API): siga `docs/guias/criar-tela.md` (skill `nova-tela`).
-- Toda tela de listagem usa `src/components/listagem.tsx`: busca rápida à esquerda, Filtros e Colunas à direita, tabela e rodapé com total e paginação. A tela só declara as colunas (`Coluna<T>`, com `busca` para entrar na busca rápida) e, se houver, o conteúdo do menu Filtros.
-- Layout do sistema: modelo `sidebar-07` (`src/components/AppLayout.tsx`). Módulos e telas ficam **só** em `src/lib/navegacao.ts`, que alimenta menu, rotas e breadcrumb. Tela nova: adicione ali e troque `EmConstrucao` pela página real em `App.tsx`.
-- Sem prefeitura no endereço (domínio central ou prefeitura inexistente) o frontend mostra a landing page (`src/pages/Landing.tsx`).
-- Testes de menus Radix (`DropdownMenu`): abra pelo teclado (`gatilho.focus()` + `{Enter}`), como no helper `abrirMenu` de `src/App.test.tsx`. Clique via `user-event` abre e fecha o menu no jsdom quando outro teste renderizou o login antes.
+- Toda tela de listagem usa `src/components/Listagem.vue`: busca rápida à esquerda, Filtros e Colunas à direita, tabela e rodapé com total e paginação. A tela só declara as colunas (`Coluna<T>` de `src/lib/listagem.ts`, com `valor` para o texto e `busca` para entrar na busca rápida), o slot `#coluna-<id>` para células com badge ou botões e, se houver, o slot `#filtros` (opções com `ItemDeFiltro` e `useSelecao`).
+- Layout do sistema: modelo `sidebar-07` (`src/components/AppLayout.vue`). Módulos e telas ficam **só** em `src/lib/navegacao.ts`, que alimenta menu, rotas e breadcrumb. Tela nova: adicione ali e troque `EmConstrucao` pela página real no mapa `paginas` de `src/router.ts`.
+- Sem prefeitura no endereço (domínio central ou prefeitura inexistente) o frontend mostra a landing page (`src/pages/Landing.vue`).
+- Testes de menus (`DropdownMenu`): abra pelo teclado (`gatilho.focus()` + `{Enter}`), como no helper `abrirMenu` de `src/App.test.ts`. Monte o app com `await renderizar(App, rota)`, que já instala o vue-query e o router em memória.
 - Gráficos: SVG próprio em `src/components/graficos/`, sem biblioteca de charts.
 - HTML do editor rico deve passar por `mews/purifier` antes de ser salvo (o token fica no `localStorage`).
 - Commits: Conventional Commits em português (`feat(auth): ...`). Só commite quando pedido.

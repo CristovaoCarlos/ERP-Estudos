@@ -59,7 +59,7 @@ import {
   Users,
   Wrench,
   type LucideIcon,
-} from 'lucide-react'
+} from '@lucide/vue'
 
 /** Tela do menu. Com `paginas`, vira um submenu (que pode ter outros submenus dentro). */
 export type Pagina = { titulo: string; url: string; icone: LucideIcon; paginas?: Pagina[] }
