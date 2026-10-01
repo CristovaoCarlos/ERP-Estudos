@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('tb_negociacao', function (Blueprint $table) {
             $table->increments('id_negociacao');
             $table->integer('id_dam');
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->integer('id_usuario_acao');
             $table->string('responsavel', 150);
             $table->text('descricao')->nullable();

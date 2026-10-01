@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('id_empresa');
             $table->string('nome_arquivo', 255)->nullable();
             $table->decimal('area_sq_meters', 14, 4)->nullable();
-            $table->jsonb('polygon_coords');
+            $table->json('polygon_coords');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
             $table->unique(['id_imovel'], 'uq_levantamento_imovel');

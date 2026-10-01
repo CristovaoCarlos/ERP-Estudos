@@ -14,11 +14,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_alvara', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->date('data_vencimento');
             $table->date('data_inicio');
             $table->date('data_fim');
-            $table->integer('id_tipo_alvara');
+            $table->unsignedInteger('id_tipo_alvara');
             $table->text('observacao')->nullable();
             $table->integer('qtd_impressao')->nullable();
             $table->string('horario_funcionamento_sem', 31)->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('horario_funcionamento_dom', 31)->nullable();
             $table->integer('id_origem')->nullable();
             $table->string('usa_imovel', 1)->default('N');
-            $table->bigInteger('id_imovel')->nullable();
+            $table->unsignedBigInteger('id_imovel')->nullable();
             $table->string('obra_endereco', 255)->nullable();
             $table->string('obra_autor_projeto', 180)->nullable();
             $table->string('obra_autor_cau', 30)->nullable();

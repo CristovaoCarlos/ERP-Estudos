@@ -35,7 +35,7 @@ return new class extends Migration
             $table->text('formula_tcc');
             $table->text('formula_tip');
             $table->text('formula_tlp');
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->increments('id_parametro_imovel_iptu');
             $table->date('exercicio');
             $table->string('desconto_cota_unica_base', 1)->default('I');

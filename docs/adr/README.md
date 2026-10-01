@@ -11,7 +11,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0004](0004-autenticacao-por-token.md) | Autenticação por token do Sanctum com vínculo usuário ↔ prefeitura | Aceita |
 | [0005](0005-frontend-fora-do-docker.md) | Frontend roda fora do Docker em desenvolvimento | Aceita |
 | [0006](0006-testes-em-sqlite.md) | Testes em SQLite, com trava contra o banco real | Aceita |
-| [0007](0007-postgresql.md) | PostgreSQL 17 como banco de dados | Aceita |
+| [0007](0007-postgresql.md) | PostgreSQL 17 como banco de dados | Substituída por [0015](0015-mysql.md) |
 | [0008](0008-login-por-cpf.md) | Login por CPF no lugar do e-mail | Aceita |
 | [0009](0009-grupos-de-acesso-e-empresas.md) | Grupos de acesso por módulo, superadmin da Lemarq e cadastro de empresas | Aceita |
 | [0010](0010-grupos-editaveis-na-tela.md) | Grupos de acesso montados pela prefeitura, na tela | Aceita |
@@ -19,6 +19,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0012](0012-schema-do-sistema-legado.md) | Estrutura do banco herdada do sistema legado | Aceita; `id_empresa` substituído por [0013](0013-remove-id-empresa.md) |
 | [0013](0013-remove-id-empresa.md) | Remoção de `id_empresa` e `tb_empresa` do banco da prefeitura | Aceita |
 | [0014](0014-tabelas-comuns-so-do-superadmin.md) | Tabelas Comuns só para o superadmin | Aceita |
+| [0015](0015-mysql.md) | MySQL 8.4 como banco de dados | Aceita |
 
 ## Como criar um ADR
 

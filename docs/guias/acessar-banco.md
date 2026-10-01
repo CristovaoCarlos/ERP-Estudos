@@ -1,31 +1,29 @@
 # Como acessar o banco de dados
 
-O PostgreSQL 17 do Docker fica acessível só na sua máquina.
+O MySQL 8.4 do Docker fica acessível só na sua máquina.
 
 | Campo | Valor |
 | --- | --- |
-| Tipo | PostgreSQL |
+| Tipo | MySQL |
 | Host | `127.0.0.1` |
-| Porta | `54321` |
+| Porta | `33061` |
 | Usuário | `stm` |
 | Senha | `secret` |
 | Banco | `stm_central` (ou `stm_tenant_<id>`) |
 
-## DBeaver / pgAdmin / HeidiSQL
+## DBeaver / MySQL Workbench / HeidiSQL
 
-1. Nova conexão do tipo *PostgreSQL*.
-2. Preencha os campos da tabela acima. No DBeaver, marque *Show all databases* para ver os bancos das prefeituras.
+1. Nova conexão do tipo *MySQL*.
+2. Preencha os campos da tabela acima. No DBeaver, se aparecer `Public Key Retrieval is not allowed`, ative `allowPublicKeyRetrieval` nas propriedades do driver.
 3. Conectar.
-
-> Feche a conexão com o banco de uma prefeitura antes de excluí-la: o PostgreSQL não apaga um banco com conexões abertas.
 
 ## Linha de comando
 
 ```bash
-docker compose exec db psql -U stm stm_central
+docker compose exec db mysql -ustm -psecret stm_central
 ```
 
-Liste os bancos com `\l` e troque de banco com `\c stm_tenant_<id>`.
+Liste os bancos com `SHOW DATABASES;` e troque de banco com `USE stm_tenant_<id>;`.
 
 ## Bancos
 
@@ -39,11 +37,11 @@ Liste os bancos com `\l` e troque de banco com `\c stm_tenant_<id>`.
 ## Backup
 
 ```bash
-docker compose exec db pg_dumpall -U stm > backup.sql
+docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --routines' > backup.sql
 ```
 
-Para restaurar num banco vazio:
+Para restaurar:
 
 ```bash
-docker compose exec -T db psql -U stm -d postgres < backup.sql
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < backup.sql
 ```

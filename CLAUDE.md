@@ -17,8 +17,9 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 ## Segurança do banco de desenvolvimento
 
 - Testes rodam **só em SQLite**. `tests/TestCase.php` aborta se a conexão for outra. Nunca contorne essa trava.
-- **Não** adicione `env_file` ao `docker-compose.yml`: ele injeta `DB_CONNECTION=pgsql` no ambiente e faz os testes (com `RefreshDatabase` e exclusão de tenants) apagarem o banco real. Isso já aconteceu (ADR-0006).
-- Banco de desenvolvimento: PostgreSQL 17 (ADR-0007). Antes de qualquer operação destrutiva, faça dump: `docker compose exec db pg_dumpall -U stm > backup.sql`.
+- **Não** adicione `env_file` ao `docker-compose.yml`: ele injeta `DB_CONNECTION=mysql` no ambiente e faz os testes (com `RefreshDatabase` e exclusão de tenants) apagarem o banco real. Isso já aconteceu (ADR-0006).
+- Banco de desenvolvimento: MySQL 8.4 (ADR-0015, que substituiu o PostgreSQL do ADR-0007). Antes de qualquer operação destrutiva, faça dump: `docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --routines' > backup.sql`.
+- Migrations de prefeitura: coluna de FK com o mesmo tipo da chave referenciada (`unsignedBigInteger` para `bigIncrements`, `unsignedInteger` para `increments`); o MySQL recusa a FK se o tipo ou o sinal diferirem. `TEXT` não aceita índice nem default literal (use `new Expression("('valor')")`).
 
 ## Multi-tenancy (não óbvio)
 
@@ -30,7 +31,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Tela nova no menu: adicione a permissão (nome = URL com `.` no lugar de `/`) em `backend/config/acesso.php` e rode `acesso:sincronizar` (ele não mexe em grupos já existentes; quem edita grupos é a tela Administração › Grupos de acesso). Superadmin só vale na prefeitura `TENANT_ADMINISTRADOR` (`lemarq`); só ele acessa Administração › Empresas, que provisiona tenants, e Administração › Tabelas Comuns (banco central, vale para todas as prefeituras; ADR-0014). Telas só dele ficam na chave `superadmin` de `config/acesso.php`, fora do catálogo de grupos.
 - Rotas de prefeitura: `routes/tenant.php`. Rotas centrais: `routes/api.php` (restritas a `CENTRAL_DOMAINS`).
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
-- No PostgreSQL, `DROP DATABASE` falha se houver conexão aberta no banco da prefeitura (ex.: psql/DBeaver): feche-as antes de excluir um tenant.
+- O usuário `stm` cria os bancos `stm_tenant_*` graças a `docker/mysql/init/01-permissoes.sql`, que só roda na primeira inicialização do volume `mysql-data`.
 - Fotos de usuário ficam no disco `fotos` (`storage/app/fotos`), fora dos discos com sufixo por prefeitura (`config/tenancy.php`), porque o usuário é o mesmo em todas. São servidas por `GET /api/fotos/{arquivo}`: a pasta `public` montada no nginx não enxerga o storage.
 - `id_empresa` e `tb_empresa` do legado foram removidos (ADR-0013): o banco já é da prefeitura. Não crie campo, filtro nem coluna de empresa.
 - Ids de tenant podem ter `_`, mas domínios usam `-` (hostnames não aceitam `_`).

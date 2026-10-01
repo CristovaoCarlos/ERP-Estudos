@@ -8,7 +8,7 @@ Neste tutorial você vai subir o STM na sua máquina, criar uma prefeitura, cria
 - Node 22 e npm (para o frontend)
 - Git
 
-Não é preciso ter PHP, Composer ou PostgreSQL instalados: eles rodam no Docker.
+Não é preciso ter PHP, Composer ou MySQL instalados: eles rodam no Docker.
 
 ## 1. Configure o backend
 

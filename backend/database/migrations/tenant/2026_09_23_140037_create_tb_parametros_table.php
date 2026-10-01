@@ -20,8 +20,8 @@ return new class extends Migration
             $table->binary('logomarca2')->nullable();
             $table->string('logomarca1_nome', 100)->nullable();
             $table->string('logomarca2_nome', 100)->nullable();
-            $table->integer('id_empresa');
-            $table->integer('id_endereco')->nullable();
+            $table->unsignedBigInteger('id_empresa');
+            $table->unsignedBigInteger('id_endereco')->nullable();
             $table->string('slogan', 150)->nullable();
             $table->string('site', 150)->nullable();
             $table->string('client_id', 80)->nullable();

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_itbi_impressao', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->date('data_lancamento')->nullable();
             $table->integer('id_contribuinte')->nullable();
             $table->text('nome_adquirente')->nullable();

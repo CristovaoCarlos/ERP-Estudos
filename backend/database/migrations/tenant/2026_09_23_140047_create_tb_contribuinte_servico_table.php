@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('tb_contribuinte_servico', function (Blueprint $table) {
             $table->bigIncrements('id_cotrib_serv');
-            $table->integer('id_contribuinte');
-            $table->integer('id_servico');
+            $table->unsignedBigInteger('id_contribuinte');
+            $table->unsignedBigInteger('id_servico');
             $table->decimal('iss_aliquota', 18, 2)->nullable();
             $table->string('inss_cobranca', 1)->nullable();
             $table->decimal('inss_deducao', 18, 2)->nullable();

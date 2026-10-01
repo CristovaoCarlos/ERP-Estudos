@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_contribuinte_representante', function (Blueprint $table) {
             $table->increments('id_contribuinte_representante');
-            $table->integer('id_contribuinte');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->string('cpf_cnpj', 14);
             $table->string('nome_razao_social', 200);
             $table->string('tipo', 1);

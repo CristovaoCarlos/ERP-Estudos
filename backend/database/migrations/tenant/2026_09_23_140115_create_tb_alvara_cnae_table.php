@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_alvara_cnae', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->integer('cnae');
             $table->string('descricao', 200);
             $table->string('principal', 1);

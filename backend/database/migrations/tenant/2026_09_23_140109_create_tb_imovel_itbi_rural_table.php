@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_imovel_itbi_rural', function (Blueprint $table) {
-            $table->bigInteger('id_imovel');
+            $table->unsignedBigInteger('id_imovel');
             $table->string('nirf', 20)->nullable();
             $table->string('ccir', 20)->nullable();
             $table->decimal('area_total_hec', 18, 2)->nullable();

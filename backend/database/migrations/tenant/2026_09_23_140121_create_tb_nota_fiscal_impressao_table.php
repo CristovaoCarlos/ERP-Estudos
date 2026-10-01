@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_nota_fiscal_impressao', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->string('prestador_cpf_cnpj', 14)->nullable();
             $table->string('prestador_inscricao_municipal', 15)->nullable();
             $table->string('prestador_nome_razao_social', 150)->nullable();

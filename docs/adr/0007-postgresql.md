@@ -1,5 +1,5 @@
 ---
-status: aceita
+status: substituída por [0015](0015-mysql.md)
 data: 2026-09-22
 decisores: equipe STM
 ---

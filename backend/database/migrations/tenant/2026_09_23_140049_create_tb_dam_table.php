@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_dam', function (Blueprint $table) {
             $table->bigIncrements('id_dam');
-            $table->bigInteger('id_contribuinte');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->date('data_emissao')->nullable();
             $table->date('data_vencimento')->nullable();
             $table->string('status', 1);

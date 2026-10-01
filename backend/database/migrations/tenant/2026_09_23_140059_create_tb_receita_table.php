@@ -20,8 +20,8 @@ return new class extends Migration
             $table->decimal('valor', 18, 2)->nullable();
             $table->string('possui_teto', 1);
             $table->decimal('valor_teto', 18, 2)->nullable();
-            $table->integer('id_convenio')->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedInteger('id_convenio')->nullable();
+            $table->unsignedBigInteger('id_empresa');
             $table->string('codigo_stn', 10)->nullable();
             $table->string('sigla', 15)->nullable();
             $table->integer('id_origem')->nullable();

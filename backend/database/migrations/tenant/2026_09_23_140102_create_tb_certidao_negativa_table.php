@@ -22,11 +22,11 @@ return new class extends Migration
             $table->string('codigo_autenticidade', 32);
             $table->timestamp('data_hora_emissao');
             $table->string('usuario', 255);
-            $table->integer('id_contribuinte');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->integer('versao_relatorio');
-            $table->integer('id_empresa')->nullable();
+            $table->unsignedBigInteger('id_empresa')->nullable();
             $table->string('titulo', 100)->nullable();
-            $table->bigInteger('id_imovel')->nullable();
+            $table->unsignedBigInteger('id_imovel')->nullable();
             $table->foreign('id_contribuinte', 'tb_certidao_negativa_id_contribuinte_fkey')->references('id_contribuinte')->on('tb_contribuinte');
             $table->foreign('id_empresa', 'tb_certidao_negativa_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');
             $table->foreign('id_imovel', 'tb_certidao_negativa_id_imovel_fkey')->references('id_imovel')->on('tb_imovel');

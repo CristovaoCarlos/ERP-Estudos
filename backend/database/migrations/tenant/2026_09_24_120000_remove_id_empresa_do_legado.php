@@ -98,22 +98,12 @@ return new class extends Migration
         'tb_ufir' => ['integer', false, null, []],
     ];
 
-    /** Índices por expressão de `tb_processing` (só PostgreSQL): versão com e sem `id_empresa`. */
-    private const LOTE_ATIVO = "WHERE ((parametros IS NOT NULL) AND ((name_process)::text = ANY (ARRAY[('PROCESS_LOTE'::character varying)::text, ('CRIAR_DAMS_LOTE'::character varying)::text])) AND ((status)::text = ANY (ARRAY[('IN QUEUE'::character varying)::text, ('PROCESSING'::character varying)::text])))";
-
     public function up(): void
     {
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP INDEX IF EXISTS idx_tb_processing_lote');
-            DB::statement('DROP INDEX IF EXISTS uq_processing_iptu_ativo');
-            DB::statement("CREATE INDEX idx_tb_processing_lote ON tb_processing USING btree (((parametros ->> 'id_lote'::text))) WHERE (parametros IS NOT NULL)");
-            DB::statement("CREATE UNIQUE INDEX uq_processing_iptu_ativo ON tb_processing USING btree (((parametros ->> 'id_lote'::text))) ".self::LOTE_ATIVO);
-        }
-
         foreach ($this->tabelas as $tabela => [, , $chave, $indices]) {
             // Chave e índices saem antes da coluna (o SQLite não apaga coluna indexada).
             Schema::table($tabela, function (Blueprint $table) use ($chave, $indices) {
-                // O SQLite (testes) só acha a chave pela coluna; o PostgreSQL, pelo nome.
+                // O SQLite (testes) só acha a chave pela coluna; o MySQL, pelo nome.
                 if ($chave) {
                     $table->dropForeign(DB::getDriverName() === 'sqlite' ? ['id_empresa'] : $chave);
                 }
@@ -157,7 +147,8 @@ return new class extends Migration
             });
 
             Schema::table($tabela, function (Blueprint $table) use ($tipo, $chave, $indices) {
-                $table->{$tipo}('id_empresa')->nullable();
+                // Com chave estrangeira, o MySQL exige o mesmo tipo de `tb_empresa.id_empresa`.
+                $table->{$chave ? 'unsignedBigInteger' : $tipo}('id_empresa')->nullable();
                 foreach ($indices as $nome => [$unico, $colunas]) {
                     $unico ? $table->unique($colunas, $nome) : $table->index($colunas, $nome);
                 }
@@ -165,13 +156,6 @@ return new class extends Migration
                     $table->foreign('id_empresa', $chave)->references('id_empresa')->on('tb_empresa');
                 }
             });
-        }
-
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP INDEX IF EXISTS idx_tb_processing_lote');
-            DB::statement('DROP INDEX IF EXISTS uq_processing_iptu_ativo');
-            DB::statement("CREATE INDEX idx_tb_processing_lote ON tb_processing USING btree (id_empresa, ((parametros ->> 'id_lote'::text))) WHERE (parametros IS NOT NULL)");
-            DB::statement("CREATE UNIQUE INDEX uq_processing_iptu_ativo ON tb_processing USING btree (id_empresa, ((parametros ->> 'id_lote'::text))) ".self::LOTE_ATIVO);
         }
     }
 };

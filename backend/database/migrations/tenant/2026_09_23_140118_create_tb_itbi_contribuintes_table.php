@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_itbi_contribuintes', function (Blueprint $table) {
             $table->integer('id');
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->string('tipo', 1);
             $table->string('cpf_cnpj', 14);
             $table->string('nome', 200);

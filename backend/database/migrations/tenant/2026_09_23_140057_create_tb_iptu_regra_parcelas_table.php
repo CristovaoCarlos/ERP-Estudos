@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('qtd_parcelas');
             $table->decimal('valor_iptu_minimo', 18, 2);
             $table->decimal('valor_iptu_maximo', 18, 2);
-            $table->integer('id_parametro_imovel_iptu');
+            $table->unsignedInteger('id_parametro_imovel_iptu');
             $table->foreign('id_parametro_imovel_iptu', 'tb_iptu_regra_parcelas_id_parametro_imovel_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');
         });
     }

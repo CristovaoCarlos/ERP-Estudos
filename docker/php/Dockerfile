@@ -5,10 +5,10 @@ ARG GID=1000
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git unzip libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
-        libonig-dev libicu-dev libpq-dev \
+        libonig-dev libicu-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
-        pdo_pgsql mbstring zip gd intl bcmath pcntl opcache exif \
+        pdo_mysql mbstring zip gd intl bcmath pcntl opcache exif \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get purge -y --auto-remove \

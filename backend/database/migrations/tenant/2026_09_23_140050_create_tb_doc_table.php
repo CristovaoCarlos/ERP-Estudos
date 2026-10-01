@@ -16,13 +16,13 @@ return new class extends Migration
         Schema::create('tb_doc', function (Blueprint $table) {
             $table->bigIncrements('id_doc');
             $table->integer('tipo');
-            $table->bigInteger('id_empresa');
-            $table->bigInteger('id_contribuinte');
+            $table->unsignedBigInteger('id_empresa');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->date('data_cancelamento')->nullable();
             $table->text('motivo_cancelamento')->nullable();
             $table->date('data_lancamento');
             $table->string('status', 1)->comment('L - Lançado; E - Emitido; C - Cancelado;');
-            $table->bigInteger('id_base_legal')->nullable();
+            $table->unsignedBigInteger('id_base_legal')->nullable();
             $table->decimal('base_calculo', 18, 2)->default(0.00);
             $table->decimal('valor_total', 18, 2)->default(0.00);
             $table->text('observacao')->nullable();

@@ -46,9 +46,9 @@ return new class extends Migration
             $table->integer('qtd_cancelado')->nullable();
             $table->string('dam_linha1', 40)->nullable();
             $table->string('dam_linha2', 100)->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->integer('id_origem')->nullable();
-            $table->integer('id_parametro_iptu');
+            $table->unsignedInteger('id_parametro_iptu');
             $table->foreign('id_empresa', 'tb_iptu_lotes_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');
             $table->foreign('id_parametro_iptu', 'tb_iptu_lotes_id_parametro_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');
         });

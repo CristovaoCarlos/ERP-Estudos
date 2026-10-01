@@ -51,6 +51,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- Banco de dados trocado de PostgreSQL 17 para **MySQL 8.4** ([ADR-0015](docs/adr/0015-mysql.md)): serviço `db` com a imagem `mysql:8.4` na porta `127.0.0.1:33061` e volume `mysql-data`, `pdo_mysql` na imagem PHP e `DB_CONNECTION=mysql`. Migrations da prefeitura ajustadas (tipos das chaves estrangeiras, `json` no lugar de `jsonb`, índices e `CHECK` do legado reescritos). Ambientes existentes: faça backup, troque `DB_CONNECTION`/`DB_PORT` no `backend/.env` (`mysql`/`3306`), recrie com `docker compose up -d --build` e rode `migrate` e `tenants:migrate`.
 - O módulo **Parâmetros** do menu passou a se chamar **Parâmetros da Empresa** e fica logo abaixo de Relatórios. URLs (`/parametros/...`) e permissões (`parametros.*`) não mudaram.
 - **Tabelas Comuns** (Cidades, Bancos, CNAE, Lista de Serviços, SELIC, Segmentos, Numeração de Notas e Tipos de DAM), que era o submenu Tabelas internas de Tabelas, agora fica em **Administração**, abaixo de Empresas, e é **só do superadmin** na prefeitura administradora ([ADR-0014](docs/adr/0014-tabelas-comuns-so-do-superadmin.md)): os dados são do banco central e valem para todas as prefeituras. As permissões `administracao.tabelas-comuns.*` saem do catálogo de grupos (nem o `Administrador` das prefeituras as tem, e a tela Grupos de acesso não as oferece) e as rotas `/api/administracao/tabelas-comuns/*` exigem o superadmin. Rode `acesso:sincronizar` para apagar as permissões antigas dos grupos.
 - Administração › Usuários: os grupos saíram da edição do usuário e ganharam o botão "Editar vínculos", ao lado do lápis (`PUT /api/usuarios/{id}/vinculos`). O lápis passa a alterar só nome, e-mail e senha; no cadastro, os grupos continuam disponíveis.
@@ -68,6 +69,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Removido
 
+- Dependências do PostgreSQL: conexão `pgsql`, gerenciador `PostgreSQLDatabaseManager`, extensão `pdo_pgsql`/`libpq-dev` e o SQL próprio do PostgreSQL nas migrations.
 - Coluna `id_empresa` das 38 tabelas herdadas do legado que a tinham, e a tabela `tb_empresa` ([ADR-0013](docs/adr/0013-remove-id-empresa.md)): no legado ela separava as prefeituras num banco só; no STM cada prefeitura já tem o seu. Índices que combinavam `id_empresa` com outras colunas continuam só com as outras (ex.: `tb_servico` único por `codigo_servico`). Migration nova, `2026_09_24_120000_remove_id_empresa_do_legado.php`: rode `tenants:migrate` nos bancos já criados.
 
 ### Corrigido

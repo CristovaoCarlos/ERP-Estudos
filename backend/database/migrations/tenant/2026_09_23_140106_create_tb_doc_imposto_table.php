@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('tb_doc_imposto', function (Blueprint $table) {
             $table->bigIncrements('id_doc_imposto');
-            $table->bigInteger('id_doc');
-            $table->bigInteger('id_receita');
+            $table->unsignedBigInteger('id_doc');
+            $table->unsignedBigInteger('id_receita');
             $table->string('tipo_valor', 1);
             $table->decimal('valor', 18, 2);
             $table->decimal('referencia', 18, 2);

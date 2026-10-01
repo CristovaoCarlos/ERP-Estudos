@@ -106,8 +106,9 @@ prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam
 | `tb_ufir` | 4 | `id_ufir` |  |
 | `trigger_log` | 4 | `log_id` |  |
 
-Índices parciais, por expressão ou com `INCLUDE`, e as restrições `CHECK` ficam na migration
-`2026_09_23_142000_adiciona_indices_e_checks_do_legado.php`, em SQL, e só rodam no PostgreSQL.
+Índices por expressão (sobre o JSON de `tb_processing`), os equivalentes dos índices parciais do legado e as
+restrições `CHECK` ficam na migration `2026_09_23_142000_adiciona_indices_e_checks_do_legado.php`, em SQL,
+e só rodam no MySQL ([ADR-0015](../adr/0015-mysql.md)).
 
 ## Tabelas do banco central (25)
 

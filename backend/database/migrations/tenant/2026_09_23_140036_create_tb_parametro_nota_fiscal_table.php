@@ -30,11 +30,11 @@ return new class extends Migration
             $table->text('imp_apos_pagamento_te');
             $table->string('exibir_banco_prestador', 1)->nullable();
             $table->string('exibir_carimbo_op', 1);
-            $table->bigInteger('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->string('vencimento_tipo', 1)->nullable()->comment('B - Dia base\\nA - Dias após emissão');
             $table->smallInteger('vencimento_valor')->nullable()->comment('Para B: aceita valores de 1 - 31');
             $table->integer('prazo_max_cancelamento')->nullable();
-            $table->integer('id_modelo_historico_nota')->nullable();
+            $table->unsignedInteger('id_modelo_historico_nota')->nullable();
             $table->decimal('p_ibsuf', 14, 2)->nullable();
             $table->decimal('p_ibsmun', 14, 2)->nullable();
             $table->decimal('p_cbs', 14, 2)->nullable();

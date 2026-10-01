@@ -17,7 +17,7 @@ return new class extends Migration
             $table->increments('id_fator_valores');
             $table->integer('id_item');
             $table->decimal('valor_fator', 18, 4)->nullable();
-            $table->integer('id_parametro_imovel_iptu');
+            $table->unsignedInteger('id_parametro_imovel_iptu');
             $table->unique(['id_parametro_imovel_iptu', 'id_item'], 'tb_fator_valores_id_parametro_imovel_iptu_id_item_key');
             $table->foreign('id_parametro_imovel_iptu', 'tb_fator_valores_id_parametro_imovel_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');
         });

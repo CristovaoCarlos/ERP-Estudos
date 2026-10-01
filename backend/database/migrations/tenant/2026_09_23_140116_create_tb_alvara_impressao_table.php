@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_alvara_impressao', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->string('data_emissao', 15)->nullable();
             $table->string('data_fim', 15)->nullable();
             $table->string('tipo_alvara', 50)->nullable();

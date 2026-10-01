@@ -14,10 +14,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_retorno_bancario_registros', function (Blueprint $table) {
-            $table->integer('id_retorno_bancario');
+            $table->unsignedInteger('id_retorno_bancario');
             $table->integer('sequencial_registro');
             $table->string('tipo_registro', 1);
-            $table->bigInteger('id_dam')->nullable();
+            $table->unsignedBigInteger('id_dam')->nullable();
             $table->string('tipo_dam', 50);
             $table->date('data_vencimento')->nullable();
             $table->date('data_pagamento');
