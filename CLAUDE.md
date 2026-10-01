@@ -1,4 +1,4 @@
-# STM — Sistema de Tributação Municipal
+# ERP para Estudos
 
 Monorepo multi-tenant: `backend/` (Laravel 13, só API, PHP 8.4) + `frontend/` (React 19, Vite 8, TypeScript 6). Cada prefeitura é um tenant com banco próprio, identificada pelo subdomínio (`Host`). Documentação completa em `docs/` — comece por `docs/arquitetura/arc42.md`.
 
@@ -23,7 +23,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 
 ## Multi-tenancy (não óbvio)
 
-- Banco central: `stm_central`. Bancos de prefeitura: `stm_tenant_<id>` (prefixo em `config/tenancy.php`). O nome também fica gravado em `tenants.data.tenancy_db_name` — renomear banco exige atualizar esse campo.
+- Banco central: `erp_estudos_central`. Bancos de prefeitura: `erp_estudos_tenant_<id>` (prefixo em `config/tenancy.php`). O nome também fica gravado em `tenants.data.tenancy_db_name` — renomear banco exige atualizar esse campo.
 - Usuários, tokens, sessões e reset de senha ficam **só no central**. `User` e `PersonalAccessToken` usam `CentralConnection`. Não crie essas tabelas em `database/migrations/tenant/`.
 - Acesso usuário ↔ prefeitura: tabela `tenant_user`. Toda rota autenticada de prefeitura usa `auth:sanctum` + `EnsureUserBelongsToTenant`.
 - Papéis/permissões (spatie) ficam **no banco de cada prefeitura**. Use `App\Models\Role`/`Permission` (conexão `tenant` fixa); os models do spatie herdariam a conexão central do `User`.
@@ -31,7 +31,7 @@ Responda e escreva mensagens, documentação e textos de interface em **portugu�
 - Tela nova no menu: adicione a permissão (nome = URL com `.` no lugar de `/`) em `backend/config/acesso.php` e rode `acesso:sincronizar` (ele não mexe em grupos já existentes; quem edita grupos é a tela Administração › Grupos de acesso). Superadmin só vale na prefeitura `TENANT_ADMINISTRADOR` (`demo`); só ele acessa Administração › Empresas, que provisiona tenants, e Administração › Tabelas Comuns (banco central, vale para todas as prefeituras; ADR-0014). Telas só dele ficam na chave `superadmin` de `config/acesso.php`, fora do catálogo de grupos.
 - Rotas de prefeitura: `routes/tenant.php`. Rotas centrais: `routes/api.php` (restritas a `CENTRAL_DOMAINS`).
 - Criação de prefeitura provisiona o banco **em fila** (worker). Em testes a fila é `sync`.
-- O usuário `stm` cria os bancos `stm_tenant_*` graças a `docker/mysql/init/01-permissoes.sql`, que só roda na primeira inicialização do volume `mysql-data`.
+- O usuário `erp_estudos` cria os bancos `erp_estudos_tenant_*` graças a `docker/mysql/init/01-permissoes.sql`, que só roda na primeira inicialização do volume `mysql-data`.
 - Fotos de usuário ficam no disco `fotos` (`storage/app/fotos`), fora dos discos com sufixo por prefeitura (`config/tenancy.php`), porque o usuário é o mesmo em todas. São servidas por `GET /api/fotos/{arquivo}`: a pasta `public` montada no nginx não enxerga o storage.
 - `id_empresa` e `tb_empresa` do legado foram removidos (ADR-0013): o banco já é da prefeitura. Não crie campo, filtro nem coluna de empresa.
 - Ids de tenant podem ter `_`, mas domínios usam `-` (hostnames não aceitam `_`).

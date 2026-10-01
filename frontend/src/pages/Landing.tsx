@@ -227,7 +227,7 @@ export default function Landing({
               <Landmark className="size-4" />
             </span>
             <span className="flex flex-col leading-none">
-              <span className="text-sm font-semibold">STM</span>
+              <span className="text-sm font-semibold">ERP para Estudos</span>
               <span className="font-mono text-[0.6rem] tracking-widest text-muted-foreground uppercase">
                 Tributação Municipal
               </span>
@@ -280,15 +280,15 @@ export default function Landing({
                   </AlertDescription>
                 </Alert>
               )}
-              <Rotulo>Sistema de Tributação Municipal</Rotulo>
+              <Rotulo>ERP para Estudos</Rotulo>
               <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-[3.5rem] lg:leading-[1.05]">
                 Toda a tributação do seu município, do cadastro à arrecadação,{' '}
                 <span className="text-marca">em um só lugar.</span>
               </h1>
               <p className="max-w-xl text-lg text-pretty text-muted-foreground">
-                O STM é o sistema de tributação municipal para prefeituras. Cadastro econômico e
-                imobiliário, lançamentos de ISS, IPTU, ITBI e alvará, emissão de DAM e relatórios de
-                arrecadação — com os dados de cada prefeitura separados e protegidos.
+                O ERP para Estudos é um sistema de tributação municipal para prefeituras. Cadastro
+                econômico e imobiliário, lançamentos de ISS, IPTU, ITBI e alvará, emissão de DAM e
+                relatórios de arrecadação — com os dados de cada prefeitura separados e protegidos.
               </p>
               <div>
                 <Button
@@ -334,7 +334,7 @@ export default function Landing({
 
       <footer className="border-t">
         <p className="mx-auto w-full max-w-6xl px-6 py-8 font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} STM — Sistema de Tributação Municipal
+          © {new Date().getFullYear()} ERP para Estudos
         </p>
       </footer>
     </div>

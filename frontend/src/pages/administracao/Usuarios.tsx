@@ -125,7 +125,7 @@ function Formulario({
         onSuccess: (novo) => {
           toast.success(
             novo.vinculado
-              ? `${novo.name} já tinha cadastro no STM e agora tem acesso a esta prefeitura. O nome e a senha atuais foram mantidos.`
+              ? `${novo.name} já tinha cadastro no ERP para Estudos e agora tem acesso a esta prefeitura. O nome e a senha atuais foram mantidos.`
               : 'Usuário cadastrado.',
           )
           aoFechar()
@@ -180,8 +180,8 @@ function Formulario({
                   <FieldError>{errors.cpf.message}</FieldError>
                 ) : (
                   <FieldDescription>
-                    É o login. Se o CPF já existir no STM, o usuário passa a ter acesso a esta
-                    prefeitura, mantendo nome e senha.
+                    É o login. Se o CPF já existir no ERP para Estudos, o usuário passa a ter acesso
+                    a esta prefeitura, mantendo nome e senha.
                   </FieldDescription>
                 )}
               </Field>
@@ -396,7 +396,8 @@ function ConfirmarRemocao({
           <DialogTitle>Remover acesso</DialogTitle>
           <DialogDescription>
             {usuario?.name} perde o acesso a esta prefeitura e as sessões abertas dele aqui são
-            encerradas. O cadastro continua no STM, nas outras prefeituras em que ele trabalha.
+            encerradas. O cadastro continua no ERP para Estudos, nas outras prefeituras em que ele
+            trabalha.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

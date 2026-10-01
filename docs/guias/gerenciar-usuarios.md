@@ -1,12 +1,12 @@
 # Como criar e vincular usuários
 
-Usuários ficam no banco central (`stm_central`) e só entram nas prefeituras a que estão vinculados.
+Usuários ficam no banco central (`erp_estudos_central`) e só entram nas prefeituras a que estão vinculados.
 
 ## Pela tela (recomendado)
 
 **Administração › Usuários** lista quem tem acesso à prefeitura e permite cadastrar, alterar grupos e tirar o acesso. Precisa da permissão `administracao.usuarios`, que hoje só o superadmin tem (nenhum dos três grupos padrão inclui o módulo Administração).
 
-- **CPF já cadastrado no STM:** o usuário existente passa a ter acesso a esta prefeitura, mantendo nome e senha. Um administrador de uma prefeitura não troca a senha de quem também trabalha em outra.
+- **CPF já cadastrado no ERP para Estudos:** o usuário existente passa a ter acesso a esta prefeitura, mantendo nome e senha. Um administrador de uma prefeitura não troca a senha de quem também trabalha em outra.
 - **Editar vínculos:** botão ao lado do lápis, onde se marcam e desmarcam os grupos do usuário nesta prefeitura. O lápis cuida só de nome, e-mail e senha.
 - **Usuário em mais de uma prefeitura:** só os vínculos podem ser alterados aqui.
 - **Desativar:** suspende o acesso **nesta** prefeitura e encerra as sessões dele aqui, mantendo cadastro e grupos. Ao tentar entrar, ele recebe "Seu acesso a esta prefeitura está desativado". Reativar devolve o acesso com os mesmos grupos. Em outra prefeitura, ele continua entrando normalmente.
@@ -49,7 +49,7 @@ Os grupos valem só nas prefeituras de `--tenant`: a mesma pessoa pode ter grupo
 O superadmin vê todas as telas e é o único que cadastra empresas (Administração › Empresas), mas só quando entra pela prefeitura administradora (`TENANT_ADMINISTRADOR`, padrão `demo`). Nas outras prefeituras ele é um usuário comum.
 
 ```bash
-docker compose exec app php artisan usuarios:criar admin@stm.localhost "Administrador" --tenant=demo --superadmin
+docker compose exec app php artisan usuarios:criar admin@erp-estudos.localhost "Administrador" --tenant=demo --superadmin
 ```
 
 ### Dar acesso a mais prefeituras

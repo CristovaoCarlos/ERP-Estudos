@@ -34,7 +34,7 @@ class AuthTest extends TestCase
 
     private function criarUsuario(Tenant ...$tenants): User
     {
-        $user = User::factory()->create(['name' => 'Teste', 'cpf' => '52998224725', 'email' => 'fiscal@stm.localhost', 'password' => 'senha-correta']);
+        $user = User::factory()->create(['name' => 'Teste', 'cpf' => '52998224725', 'email' => 'fiscal@erp-estudos.localhost', 'password' => 'senha-correta']);
         $user->tenants()->attach(array_map(fn (Tenant $t) => $t->id, $tenants));
 
         return $user;
@@ -60,7 +60,7 @@ class AuthTest extends TestCase
 
         $this->withToken($token)->getJson('http://demo.localhost/api/me')
             ->assertOk()
-            ->assertJsonPath('email', 'fiscal@stm.localhost');
+            ->assertJsonPath('email', 'fiscal@erp-estudos.localhost');
     }
 
     public function test_me_lista_as_prefeituras_do_usuario_com_dominio(): void
@@ -77,7 +77,7 @@ class AuthTest extends TestCase
                 'id' => 1,
                 'name' => 'Teste',
                 'cpf' => '52998224725',
-                'email' => 'fiscal@stm.localhost',
+                'email' => 'fiscal@erp-estudos.localhost',
                 'foto' => null,
                 'superadmin' => false,
                 'grupos' => [],
@@ -119,7 +119,7 @@ class AuthTest extends TestCase
         $this->criarUsuario($this->criarTenant('demo'));
 
         $this->postJson('http://demo.localhost/api/login', [
-            'email' => 'fiscal@stm.localhost',
+            'email' => 'fiscal@erp-estudos.localhost',
             'password' => 'senha-correta',
         ])->assertUnprocessable()->assertJsonValidationErrors(['cpf']);
     }

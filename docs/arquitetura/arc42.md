@@ -1,10 +1,10 @@
-# Arquitetura do STM
+# Arquitetura do ERP para Estudos
 
 Documento no modelo [arc42](https://arc42.org/overview), com diagramas no [modelo C4](https://c4model.com/) escritos em Mermaid. As decisões citadas estão detalhadas em [ADRs](../adr/).
 
 ## 1. Introdução e objetivos
 
-O STM (Sistema de Tributação Municipal) é um sistema SaaS usado por várias prefeituras. Cada prefeitura é um **tenant**: tem subdomínio e banco de dados próprios. Os usuários são cadastrados uma única vez e podem ter acesso a uma ou mais prefeituras.
+O ERP para Estudos é um sistema SaaS usado por várias prefeituras. Cada prefeitura é um **tenant**: tem subdomínio e banco de dados próprios. Os usuários são cadastrados uma única vez e podem ter acesso a uma ou mais prefeituras.
 
 ### Objetivos de qualidade
 
@@ -41,13 +41,13 @@ O STM (Sistema de Tributação Municipal) é um sistema SaaS usado por várias p
 ```mermaid
 flowchart LR
     servidor(["Servidor da prefeitura<br/>(usuário)"])
-    stm["<b>STM</b><br/>Sistema de Tributação Municipal"]
+    erp["<b>ERP para Estudos</b>"]
     smtp["Servidor SMTP<br/>(Mailpit em dev)"]
     s3["Armazenamento S3<br/>(produção)"]
 
-    servidor -- "usa pelo navegador<br/>https://&lt;prefeitura&gt;.dominio" --> stm
-    stm -- "envia e-mails" --> smtp
-    stm -- "guarda arquivos" --> s3
+    servidor -- "usa pelo navegador<br/>https://&lt;prefeitura&gt;.dominio" --> erp
+    erp -- "envia e-mails" --> smtp
+    erp -- "guarda arquivos" --> s3
 ```
 
 | Parceiro | Interface |
@@ -61,7 +61,7 @@ flowchart LR
 | Problema | Solução | Decisão |
 | --- | --- | --- |
 | Várias prefeituras, dados isolados | Multi-tenancy com **um banco por prefeitura**, identificada pelo subdomínio (`stancl/tenancy`) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
-| Mesmo usuário em várias prefeituras | Usuários e tokens **centralizados** no `stm_central`, com vínculo explícito usuário ↔ prefeitura | [ADR-0003](../adr/0003-usuarios-centralizados.md) |
+| Mesmo usuário em várias prefeituras | Usuários e tokens **centralizados** no `erp_estudos_central`, com vínculo explícito usuário ↔ prefeitura | [ADR-0003](../adr/0003-usuarios-centralizados.md) |
 | Autenticação da SPA | **Tokens de API do Sanctum** (Bearer) | [ADR-0004](../adr/0004-autenticacao-por-token.md) |
 | Separar front e back | **Monorepo** com API Laravel e SPA React | [ADR-0001](../adr/0001-monorepo-laravel-react.md) |
 | Criar banco do tenant sem travar a requisição | Provisionamento **assíncrono** em fila (Redis + worker) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
@@ -75,13 +75,13 @@ flowchart LR
 flowchart TB
     usuario(["Usuário"])
 
-    subgraph stm["STM"]
+    subgraph erp["ERP para Estudos"]
         spa["<b>Frontend</b><br/>React 19 + Vite<br/>SPA"]
         nginx["<b>Nginx</b> 1.27<br/>servidor web"]
         app["<b>API</b><br/>Laravel 13 / PHP-FPM 8.4"]
         worker["<b>Worker</b><br/>Laravel queue:work"]
-        central[("<b>stm_central</b><br/>MySQL<br/>tenants, domínios,<br/>usuários, tokens")]
-        tenants[("<b>stm_tenant_*</b><br/>MySQL<br/>um banco por prefeitura")]
+        central[("<b>erp_estudos_central</b><br/>MySQL<br/>tenants, domínios,<br/>usuários, tokens")]
+        tenants[("<b>erp_estudos_tenant_*</b><br/>MySQL<br/>um banco por prefeitura")]
         redis[("<b>Redis</b><br/>cache, sessão, fila")]
     end
 
@@ -140,7 +140,7 @@ sequenceDiagram
     actor U as Usuário
     participant F as Frontend
     participant A as API (tenant)
-    participant C as stm_central
+    participant C as erp_estudos_central
 
     U->>F: CPF e senha em demo.dominio
     F->>A: POST /api/login (Host: demo.dominio)
@@ -160,7 +160,7 @@ sequenceDiagram
 
 1. O frontend envia `Authorization: Bearer <token>`.
 2. `InitializeTenancyByDomain` identifica a prefeitura pelo `Host` e troca a conexão padrão para o banco dela.
-3. O Sanctum valida o token no `stm_central`.
+3. O Sanctum valida o token no `erp_estudos_central`.
 4. `EnsureUserBelongsToTenant` confere o vínculo; sem vínculo → 403.
 5. Resposta 401 faz o frontend apagar o token e voltar para `/login`.
 
@@ -170,7 +170,7 @@ sequenceDiagram
 sequenceDiagram
     participant Op as Operador
     participant A as API / artisan
-    participant C as stm_central
+    participant C as erp_estudos_central
     participant R as Redis
     participant W as Worker
     participant DB as MySQL
@@ -179,7 +179,7 @@ sequenceDiagram
     A->>C: grava tenant e domínio
     A->>R: enfileira CreateDatabase + MigrateDatabase
     W->>R: consome o job
-    W->>DB: CREATE DATABASE stm_tenant_<id>
+    W->>DB: CREATE DATABASE erp_estudos_tenant_<id>
     W->>DB: roda migrations de database/migrations/tenant
 ```
 
@@ -191,7 +191,7 @@ sequenceDiagram
 flowchart LR
     subgraph maquina["Máquina do desenvolvedor"]
         vite["Vite :5173<br/>(fora do Docker)"]
-        subgraph compose["Docker Compose (projeto stm)"]
+        subgraph compose["Docker Compose (projeto erp_estudos)"]
             nginx["nginx :8000"]
             app["app"]
             worker["worker"]
@@ -220,22 +220,22 @@ Servidor próprio (bare-metal), sem Docker. O workflow `deploy.yml` roda o CI co
 ### Multi-tenancy
 
 - **Identificação:** pelo domínio da requisição (`Host`). Domínios em `CENTRAL_DOMAINS` são centrais; os demais são procurados na tabela `domains`.
-- **Nome do banco:** `stm_tenant_` + id do tenant (ex.: `stm_tenant_prefeitura_teste`). O nome fica gravado em `tenants.data.tenancy_db_name`.
+- **Nome do banco:** `erp_estudos_tenant_` + id do tenant (ex.: `erp_estudos_tenant_prefeitura_teste`). O nome fica gravado em `tenants.data.tenancy_db_name`.
 - **Migrations:** as do banco central ficam em `database/migrations/`; as de tenant em `database/migrations/tenant/`.
 - **O que fica onde:**
 
 | Banco | Tabelas |
 | --- | --- |
-| `stm_central` | `tenants`, `domains`, `tenant_user`, `users`, `personal_access_tokens`, `password_reset_tokens`, `sessions`, `cache`, `jobs`, tabelas de permissão |
-| `stm_tenant_*` | tabelas de permissão (`roles`, `permissions`, …): grupos de acesso e permissões por tela; futuramente, os dados tributários da prefeitura |
+| `erp_estudos_central` | `tenants`, `domains`, `tenant_user`, `users`, `personal_access_tokens`, `password_reset_tokens`, `sessions`, `cache`, `jobs`, tabelas de permissão |
+| `erp_estudos_tenant_*` | tabelas de permissão (`roles`, `permissions`, …): grupos de acesso e permissões por tela; futuramente, os dados tributários da prefeitura |
 
 ### Segurança
 
 - Senhas com bcrypt (`password` com cast `hashed`).
-- Tokens do Sanctum guardados como hash no `stm_central`; logout apaga o token.
+- Tokens do Sanctum guardados como hash no `erp_estudos_central`; logout apaga o token.
 - Limite de 5 tentativas de login por minuto por CPF + IP.
 - Login por CPF (dígitos verificadores conferidos no backend e no frontend), [ADR-0008](../adr/0008-login-por-cpf.md).
-- Recuperação de senha por e-mail: token de 60 minutos, uso único, guardado no `stm_central`; a resposta não revela se o CPF existe, e trocar a senha revoga todos os tokens do usuário.
+- Recuperação de senha por e-mail: token de 60 minutos, uso único, guardado no `erp_estudos_central`; a resposta não revela se o CPF existe, e trocar a senha revoga todos os tokens do usuário.
 - Vínculo usuário ↔ prefeitura checado no login e em toda rota autenticada; o vínculo tem status (`tenant_user.ativo`), e o acesso desativado impede o login e derruba os tokens daquela prefeitura.
 - HTML vindo do editor rico deve passar pelo `mews/purifier` antes de ser salvo.
 - Serviços de desenvolvimento publicados só em loopback.
@@ -291,8 +291,8 @@ Registradas como ADRs no formato MADR em [docs/adr](../adr/).
 | Termo | Significado |
 | --- | --- |
 | **Tenant** | Uma prefeitura cliente, com banco e subdomínio próprios. |
-| **Banco central** (`stm_central`) | Banco com tenants, domínios, usuários e tokens. |
-| **Banco do tenant** (`stm_tenant_<id>`) | Banco exclusivo de uma prefeitura. |
+| **Banco central** (`erp_estudos_central`) | Banco com tenants, domínios, usuários e tokens. |
+| **Banco do tenant** (`erp_estudos_tenant_<id>`) | Banco exclusivo de uma prefeitura. |
 | **Domínio central** | Endereço que não pertence a nenhuma prefeitura (ex.: `localhost`). |
 | **Vínculo** (`tenant_user`) | Registro que dá a um usuário acesso a uma prefeitura. |
 | **Provisionamento** | Criação e migração do banco de uma prefeitura nova, feita pelo worker. |

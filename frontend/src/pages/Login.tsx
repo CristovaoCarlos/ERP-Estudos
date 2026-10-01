@@ -66,7 +66,7 @@ function Apresentacao() {
           <span className="flex size-7 items-center justify-center rounded-sm bg-white text-[oklch(0.17_0.05_265)]">
             <Landmark className="size-4" />
           </span>
-          STM
+          ERP para Estudos
         </Link>
 
         <div className="flex max-w-lg flex-col gap-10">
@@ -75,9 +75,9 @@ function Apresentacao() {
               Cada tributo lançado. Cada receita no lugar.
             </h2>
             <p className="text-pretty text-muted-foreground">
-              O <strong className="font-semibold text-foreground">STM</strong> é o Sistema de
-              Tributação Municipal da sua prefeitura: do cadastro do contribuinte à arrecadação, com
-              o histórico de tudo.
+              O <strong className="font-semibold text-foreground">ERP para Estudos</strong> é o
+              sistema de tributação da sua prefeitura: do cadastro do contribuinte à arrecadação,
+              com o histórico de tudo.
             </p>
           </div>
           <ul className="flex flex-col gap-6">
@@ -95,7 +95,7 @@ function Apresentacao() {
           </ul>
         </div>
 
-        <p className="text-xs text-muted-foreground">STM · Sistema de Tributação Municipal</p>
+        <p className="text-xs text-muted-foreground">ERP para Estudos</p>
       </div>
     </aside>
   )
@@ -127,7 +127,7 @@ export function PaginaDeAcesso({
             <span className="flex size-7 items-center justify-center rounded-sm bg-marca text-marca-foreground">
               <Landmark className="size-4" />
             </span>
-            STM
+            ERP para Estudos
           </Link>
           <SeletorDeTema />
         </div>

@@ -1,14 +1,14 @@
 ---
 status: aceita
 data: 2026-09-24
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Remoção de `id_empresa` e `tb_empresa` do banco da prefeitura
 
 ## Contexto e problema
 
-No legado, todas as prefeituras dividiam um banco, e a coluna `id_empresa` (chave para `tb_empresa`) dizia de qual prefeitura era cada linha. O [ADR-0012](0012-schema-do-sistema-legado.md) trouxe a estrutura como estava e deixou essa questão para depois. No STM cada prefeitura tem o seu banco ([ADR-0002](0002-multi-tenancy-banco-por-prefeitura.md)), então `id_empresa` não separa nada. Mantê-la obriga toda tela e toda regra a escolher uma "empresa" que é sempre a mesma.
+No legado, todas as prefeituras dividiam um banco, e a coluna `id_empresa` (chave para `tb_empresa`) dizia de qual prefeitura era cada linha. O [ADR-0012](0012-schema-do-sistema-legado.md) trouxe a estrutura como estava e deixou essa questão para depois. No ERP para Estudos cada prefeitura tem o seu banco ([ADR-0002](0002-multi-tenancy-banco-por-prefeitura.md)), então `id_empresa` não separa nada. Mantê-la obriga toda tela e toda regra a escolher uma "empresa" que é sempre a mesma.
 
 ## Fatores de decisão
 

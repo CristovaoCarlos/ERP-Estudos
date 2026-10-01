@@ -1,14 +1,14 @@
 ---
 status: aceita
 data: 2026-09-21
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Testes em SQLite, com trava contra o banco real
 
 ## Contexto e problema
 
-Os testes usam `RefreshDatabase`, que recria o banco, e criam e apagam prefeituras, o que apaga bancos. Em 21/09/2026, com o `.env` injetado como variáveis de ambiente do contêiner, o `phpunit.xml` não conseguiu trocar a conexão e os testes rodaram no MariaDB de desenvolvimento, apagando dados de teste do `stm_central` e o banco de uma prefeitura.
+Os testes usam `RefreshDatabase`, que recria o banco, e criam e apagam prefeituras, o que apaga bancos. Em 21/09/2026, com o `.env` injetado como variáveis de ambiente do contêiner, o `phpunit.xml` não conseguiu trocar a conexão e os testes rodaram no MariaDB de desenvolvimento, apagando dados de teste do `erp_estudos_central` e o banco de uma prefeitura.
 
 ## Opções consideradas
 

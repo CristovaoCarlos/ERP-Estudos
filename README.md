@@ -1,4 +1,4 @@
-# STM — Sistema de Tributação Municipal
+# ERP para Estudos
 
 Sistema multi-prefeitura: cada prefeitura acessa pelo seu subdomínio e tem banco de dados próprio. Monorepo com `backend/` (Laravel 13, API) e `frontend/` (React 19 + Vite).
 
@@ -20,7 +20,7 @@ Passo a passo completo, com criação de prefeitura e usuário: **[Primeiros pas
 | --- | --- |
 | Frontend (fora do Docker) | http://&lt;prefeitura&gt;.localhost:5173 |
 | API (nginx) | http://localhost:8000 |
-| MySQL 8.4 | 127.0.0.1:33061 (stm / secret) |
+| MySQL 8.4 | 127.0.0.1:33061 (erp_estudos / secret) |
 | Mailpit | http://localhost:8025 |
 
 ## Qualidade

@@ -192,8 +192,8 @@ function NovaEmpresa() {
               <FieldLabel htmlFor="administrador-cpf">Administrador da prefeitura</FieldLabel>
               <FieldDescription>
                 Cria o usuário <span className="font-mono">admin_{subdominio || '…'}</span>, no
-                grupo Administrador, com acesso a todas as telas. Se o CPF já existir no STM, o
-                usuário atual é aproveitado.
+                grupo Administrador, com acesso a todas as telas. Se o CPF já existir no ERP para
+                Estudos, o usuário atual é aproveitado.
               </FieldDescription>
             </Field>
             <Field data-invalid={errors.administrador?.cpf ? true : undefined}>
@@ -315,7 +315,8 @@ export default function Empresas() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Empresas</h1>
           <p className="text-muted-foreground">
-            Prefeituras clientes do STM. Cada uma tem endereço e banco de dados próprios.
+            Prefeituras clientes do ERP para Estudos. Cada uma tem endereço e banco de dados
+            próprios.
           </p>
         </div>
         <NovaEmpresa />

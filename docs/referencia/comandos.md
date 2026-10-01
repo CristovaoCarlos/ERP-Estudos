@@ -6,7 +6,7 @@ Comandos do backend rodam dentro do contêiner: `docker compose exec app <comand
 
 ### `usuarios:criar`
 
-Cria um usuário no `stm_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
+Cria um usuário no `erp_estudos_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
 
 ```
 php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--grupo=GRUPO ...] [--superadmin] [--senha=SENHA]

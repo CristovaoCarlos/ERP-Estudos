@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
-  title: STM API
+  title: ERP para Estudos API
   version: 0.1.0
-  summary: API do Sistema de Tributação Municipal
+  summary: API do ERP para Estudos
   description: |
-    API JSON consumida pelo frontend do STM.
+    API JSON consumida pelo frontend do ERP para Estudos.
 
     **Prefeitura (tenant):** as rotas de prefeitura são identificadas pelo header `Host`.
     A mesma rota `/api/login` em `demo.localhost` e em `prefeitura-teste.localhost`
@@ -69,7 +69,7 @@ paths:
                 properties:
                   app:
                     type: string
-                    examples: [STM]
+                    examples: [ERP para Estudos]
                   status:
                     type: string
                     examples: [ok]
@@ -426,7 +426,7 @@ paths:
       summary: Cadastrar ou vincular usuário
       description: |
         Cria o usuário no banco central e o vincula à prefeitura do domínio.
-        Se o CPF já existir no STM, **vincula o usuário existente** (mantendo nome e senha) e
+        Se o CPF já existir no ERP para Estudos, **vincula o usuário existente** (mantendo nome e senha) e
         responde com `vinculado: true`.
       operationId: cadastrarUsuario
       security:
@@ -471,7 +471,7 @@ paths:
                     properties:
                       vinculado:
                         type: boolean
-                        description: O usuário já existia no STM e só ganhou acesso a esta prefeitura.
+                        description: O usuário já existia no ERP para Estudos e só ganhou acesso a esta prefeitura.
         '401':
           $ref: '#/components/responses/NaoAutenticado'
         '403':
@@ -541,7 +541,7 @@ paths:
       summary: Tirar o acesso do usuário à prefeitura
       description: |
         Remove o vínculo, os grupos e os tokens do usuário **nesta** prefeitura.
-        O cadastro continua no STM. Ninguém pode remover o próprio acesso.
+        O cadastro continua no ERP para Estudos. Ninguém pode remover o próprio acesso.
       operationId: removerUsuario
       security:
         - token: []
@@ -1544,7 +1544,7 @@ paths:
       summary: Cadastrar empresa
       description: |
         Cria o tenant `<subdominio com _ no lugar de ->`, o domínio `<subdominio>.<primeiro CENTRAL_DOMAINS>`
-        e, em fila, o banco `stm_tenant_<id>` com as migrations e os grupos de acesso.
+        e, em fila, o banco `erp_estudos_tenant_<id>` com as migrations e os grupos de acesso.
         A empresa volta com `situacao: provisionando` até o banco ficar pronto.
       operationId: cadastrarEmpresa
       security:
@@ -1569,13 +1569,13 @@ paths:
                   type: string
                   maxLength: 40
                   pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
-                  description: Não pode ser reservado (www, api, admin, app, mail, stm) nem estar em uso.
+                  description: Não pode ser reservado (www, api, admin, app, mail, erp-estudos) nem estar em uso.
                   examples: [nova-esperanca]
                 administrador:
                   type: object
                   description: |
                     Primeiro usuário da prefeitura, criado como `admin_<subdominio>` e colocado no
-                    grupo Administrador (acesso a todas as telas). Se o CPF já existir no STM,
+                    grupo Administrador (acesso a todas as telas). Se o CPF já existir no ERP para Estudos,
                     o usuário existente é aproveitado, mantendo nome e senha.
                   required: [cpf, email, senha]
                   properties:
@@ -1634,7 +1634,7 @@ components:
         email:
           type: string
           format: email
-          examples: [admin@stm.localhost]
+          examples: [admin@erp-estudos.localhost]
         foto:
           type: [string, 'null']
           description: Endereço da foto (`/api/fotos/...`).
@@ -1737,7 +1737,7 @@ components:
       properties:
         id:
           type: string
-          description: Id do tenant; o banco é `stm_tenant_<id>`.
+          description: Id do tenant; o banco é `erp_estudos_tenant_<id>`.
           examples: [nova_esperanca]
         nome:
           type: [string, 'null']

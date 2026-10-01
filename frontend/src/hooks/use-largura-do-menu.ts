@@ -4,7 +4,7 @@ export const LARGURA_PADRAO = 256
 export const LARGURA_MINIMA = 224
 export const LARGURA_MAXIMA = 480
 export const PASSO_TECLADO = 16
-const CHAVE = 'stm.menu.largura'
+const CHAVE = 'erp_estudos.menu.largura'
 
 const limitar = (largura: number) =>
   Math.round(Math.min(LARGURA_MAXIMA, Math.max(LARGURA_MINIMA, largura)))

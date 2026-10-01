@@ -50,7 +50,7 @@ Referências: **Cidades** (listagem com filtro por UF e inclusão com `Select`),
 
 ## Sem `id_empresa`
 
-O banco já é da prefeitura: `id_empresa` e `tb_empresa` não existem no STM ([ADR-0013](../adr/0013-remove-id-empresa.md)). Nenhuma tela tem campo Empresa, nenhuma consulta filtra por empresa. Tabela nova vinda do legado entra sem essa coluna.
+O banco já é da prefeitura: `id_empresa` e `tb_empresa` não existem no ERP para Estudos ([ADR-0013](../adr/0013-remove-id-empresa.md)). Nenhuma tela tem campo Empresa, nenhuma consulta filtra por empresa. Tabela nova vinda do legado entra sem essa coluna.
 
 ## Backend
 

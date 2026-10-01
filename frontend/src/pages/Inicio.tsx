@@ -19,7 +19,7 @@ export default function Inicio() {
           Olá, {usuario.data?.name.split(' ')[0]}
         </h1>
         <p className="text-muted-foreground">
-          {prefeitura.data && nomeExibido(prefeitura.data)} · Sistema de Tributação Municipal
+          {prefeitura.data && nomeExibido(prefeitura.data)} · ERP para Estudos
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

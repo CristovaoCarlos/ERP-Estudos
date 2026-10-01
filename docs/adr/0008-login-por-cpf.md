@@ -1,7 +1,7 @@
 ---
 status: aceita
 data: 2026-09-22
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Login por CPF no lugar do e-mail

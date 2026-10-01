@@ -16,7 +16,7 @@ const usuario = {
   id: 1,
   name: 'Fiscal Teste',
   cpf: '52998224725',
-  email: 'fiscal@stm.localhost',
+  email: 'fiscal@erp-estudos.localhost',
   foto: null,
   // Superadmin: vê todas as telas, inclusive Administração › Empresas.
   superadmin: true,
@@ -81,7 +81,7 @@ function sidebar() {
 afterEach(() => {
   vi.restoreAllMocks()
   setToken(null)
-  localStorage.removeItem('stm.menu.largura')
+  localStorage.removeItem('erp_estudos.menu.largura')
 })
 
 describe('prefeitura pelo endereço', () => {
@@ -367,7 +367,7 @@ describe('sistema', () => {
 
     expect(wrapper.style.getPropertyValue('--sidebar-width')).toBe('288px')
     expect(alca).toHaveAttribute('aria-valuenow', '288')
-    expect(localStorage.getItem('stm.menu.largura')).toBe('288')
+    expect(localStorage.getItem('erp_estudos.menu.largura')).toBe('288')
   })
 
   it('mostra o seletor de tema no topo, fora do menu do usuário', async () => {
@@ -548,7 +548,7 @@ describe('usuarios', () => {
       id: 1,
       name: 'Fiscal Teste',
       cpf: '52998224725',
-      email: 'fiscal@stm.localhost',
+      email: 'fiscal@erp-estudos.localhost',
       foto: null,
       superadmin: true,
       ativo: true,
@@ -616,7 +616,7 @@ describe('usuarios', () => {
     await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'CPF' }))
 
     expect(screen.queryByRole('columnheader', { name: 'CPF' })).not.toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem('stm.colunas.usuarios')!)).toEqual(['cpf'])
+    expect(JSON.parse(localStorage.getItem('erp_estudos.colunas.usuarios')!)).toEqual(['cpf'])
     // Ações não pode ser escondida.
     expect(screen.queryByRole('menuitemcheckbox', { name: 'Ações' })).not.toBeInTheDocument()
   })
@@ -1750,7 +1750,7 @@ describe('minha conta', () => {
 
     expect(put).toHaveBeenCalledWith('/me', {
       name: 'Fiscal Novo',
-      email: 'fiscal@stm.localhost',
+      email: 'fiscal@erp-estudos.localhost',
     })
   })
 

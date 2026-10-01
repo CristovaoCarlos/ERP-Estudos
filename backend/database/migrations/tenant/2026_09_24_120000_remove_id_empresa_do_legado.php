@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Remove `id_empresa` das tabelas herdadas do legado e a tabela `tb_empresa` (ADR-0013).
  *
- * No legado, um banco guardava todas as prefeituras e `id_empresa` separava uma da outra. No STM
+ * No legado, um banco guardava todas as prefeituras e `id_empresa` separava uma da outra. No ERP para Estudos
  * cada prefeitura tem o seu banco, então a coluna não separa nada. Índices com `id_empresa` e mais
  * colunas são recriados só com as outras colunas: um `unique (codigo, id_empresa)` vira
  * `unique (codigo)`, que tem o mesmo efeito dentro do banco da prefeitura.

@@ -1,6 +1,6 @@
 ---
 name: nova-tela
-description: Cria uma tela do STM (formulário único de parâmetros ou lista com cadastro, com a API) sobre uma tabela do banco da prefeitura, no padrão do projeto. Use sempre que pedirem uma tela, listagem, formulário ou CRUD novo de um item do menu.
+description: Cria uma tela do ERP para Estudos (formulário único de parâmetros ou lista com cadastro, com a API) sobre uma tabela do banco da prefeitura, no padrão do projeto. Use sempre que pedirem uma tela, listagem, formulário ou CRUD novo de um item do menu.
 ---
 
 # Nova tela

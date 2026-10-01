@@ -1,7 +1,7 @@
 ---
 status: aceita
 data: 2026-09-24
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Tabelas Comuns só para o superadmin
@@ -13,7 +13,7 @@ As Tabelas Comuns (cidades, bancos, CNAE, lista de serviços da LC 116, SELIC, s
 ## Fatores de decisão
 
 - Uma alteração feita por um cliente não pode mudar o que os outros clientes usam.
-- Quem mantém as tabelas de referência é a mantenedora do STM, que já tem o superadmin e a tela Empresas.
+- Quem mantém as tabelas de referência é a mantenedora do ERP para Estudos, que já tem o superadmin e a tela Empresas.
 - O mecanismo precisa valer no backend (rotas) e no frontend (menu e tela de grupos).
 
 ## Opções consideradas
@@ -34,7 +34,7 @@ Opção escolhida: "restringir ao superadmin", porque é a única em que nenhum 
 
 - Bom, porque os dados centrais só mudam por uma pessoa, na prefeitura administradora.
 - Bom, porque segue o mecanismo que Empresas já usava: nada novo para entender.
-- Ruim, porque um cliente que precisar de uma cidade ou de um banco novo depende da mantenedora do STM para cadastrar.
+- Ruim, porque um cliente que precisar de uma cidade ou de um banco novo depende da mantenedora do ERP para Estudos para cadastrar.
 
 ### Confirmação
 

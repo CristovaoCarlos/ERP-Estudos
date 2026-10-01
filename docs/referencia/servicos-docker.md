@@ -1,13 +1,13 @@
 # Serviços do Docker Compose
 
-Projeto Compose: `stm` (contêineres `stm-<serviço>-1`). Todas as portas são publicadas **apenas em `127.0.0.1`**.
+Projeto Compose: `erp_estudos` (contêineres `erp_estudos-<serviço>-1`). Todas as portas são publicadas **apenas em `127.0.0.1`**.
 
 | Serviço | Imagem | Porta no host | Papel |
 | --- | --- | --- | --- |
-| `app` | `stm-php:dev` (build de `docker/php/Dockerfile`, base `php:8.4-fpm`) | — | API Laravel (PHP-FPM na porta interna 9000). |
-| `worker` | `stm-php:dev` | — | `php artisan queue:work --timeout=300 --tries=1`: provisionamento de prefeituras. |
+| `app` | `erp_estudos-php:dev` (build de `docker/php/Dockerfile`, base `php:8.4-fpm`) | — | API Laravel (PHP-FPM na porta interna 9000). |
+| `worker` | `erp_estudos-php:dev` | — | `php artisan queue:work --timeout=300 --tries=1`: provisionamento de prefeituras. |
 | `nginx` | `nginx:1.27-alpine` | `8000` | Servidor web; repassa `.php` ao `app`. |
-| `db` | `mysql:8.4` | `33061` | Bancos `stm_central` e `stm_tenant_*`. Na primeira inicialização roda `docker/mysql/init/`, que dá ao `stm` acesso aos bancos `stm_*`. |
+| `db` | `mysql:8.4` | `33061` | Bancos `erp_estudos_central` e `erp_estudos_tenant_*`. Na primeira inicialização roda `docker/mysql/init/`, que dá ao `erp_estudos` acesso aos bancos `erp_estudos_*`. |
 | `redis` | `redis:7-alpine` | — | Cache, sessão e fila. |
 | `mailpit` | `axllent/mailpit:v1.21` | `8025` (web), `1025` (SMTP) | Caixa de e-mail de desenvolvimento. |
 

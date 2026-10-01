@@ -1,7 +1,7 @@
 ---
 status: aceita
 data: 2026-10-01
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # MySQL 8.4 como banco de dados

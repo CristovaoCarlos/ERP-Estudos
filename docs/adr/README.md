@@ -7,7 +7,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0000](0000-registrar-decisoes-com-madr.md) | Registrar decisões de arquitetura com MADR | Aceita |
 | [0001](0001-monorepo-laravel-react.md) | Monorepo com API Laravel e SPA React | Aceita |
 | [0002](0002-multi-tenancy-banco-por-prefeitura.md) | Multi-tenancy com um banco por prefeitura, identificada pelo subdomínio | Aceita |
-| [0003](0003-usuarios-centralizados.md) | Usuários e tokens centralizados no `stm_central` | Aceita |
+| [0003](0003-usuarios-centralizados.md) | Usuários e tokens centralizados no `erp_estudos_central` | Aceita |
 | [0004](0004-autenticacao-por-token.md) | Autenticação por token do Sanctum com vínculo usuário ↔ prefeitura | Aceita |
 | [0005](0005-frontend-fora-do-docker.md) | Frontend roda fora do Docker em desenvolvimento | Aceita |
 | [0006](0006-testes-em-sqlite.md) | Testes em SQLite, com trava contra o banco real | Aceita |

@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-stm.ini
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-erp-estudos.ini
 
 RUN groupmod -o -g "${GID}" www-data && usermod -o -u "${UID}" -g www-data www-data \
     && mkdir -p /var/www/.config /var/www/.cache && chown -R www-data:www-data /var/www/.config /var/www/.cache

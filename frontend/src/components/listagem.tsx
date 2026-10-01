@@ -148,7 +148,7 @@ function Paginacao({
 
 /** Colunas escondidas ficam lembradas no navegador, por tela. */
 function useColunasVisiveis<T>(chave: string, colunas: Coluna<T>[]) {
-  const armazenamento = `stm.colunas.${chave}`
+  const armazenamento = `erp_estudos.colunas.${chave}`
   const [escondidas, setEscondidas] = useState<string[]>(() => {
     try {
       const salvo = localStorage.getItem(armazenamento)

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const TOKEN_KEY = 'stm.token'
+const TOKEN_KEY = 'erp_estudos.token'
 
 export const api = axios.create({
   baseURL: '/api',

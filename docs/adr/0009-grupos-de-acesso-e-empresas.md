@@ -1,14 +1,14 @@
 ---
 status: aceita
 data: 2026-09-22
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Grupos de acesso por módulo, superadmin e cadastro de empresas
 
 ## Contexto e problema
 
-Todo usuário vinculado a uma prefeitura via todas as telas, e prefeituras novas só eram criadas pelo tinker. Precisamos definir quem acessa cada tela, em cada prefeitura, e dar à mantenedora do STM uma forma controlada de cadastrar prefeituras clientes (empresas) e provisionar o tenant delas.
+Todo usuário vinculado a uma prefeitura via todas as telas, e prefeituras novas só eram criadas pelo tinker. Precisamos definir quem acessa cada tela, em cada prefeitura, e dar à mantenedora do ERP para Estudos uma forma controlada de cadastrar prefeituras clientes (empresas) e provisionar o tenant delas.
 
 ## Fatores de decisão
 

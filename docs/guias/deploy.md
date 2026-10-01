@@ -41,7 +41,7 @@ Em *Settings → Environments → production*:
 - Repositório clonado em `DEPLOY_PATH`, com `backend/.env` de produção:
   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` próprio.
   - `CENTRAL_DOMAINS` com o domínio principal.
-  - `DB_CONNECTION=mysql` e usuário de banco próprio (não `root`) com todos os privilégios nos bancos `stm_*` (como em `docker/mysql/init/01-permissoes.sql`), para criar e excluir os bancos `stm_tenant_*`.
+  - `DB_CONNECTION=mysql` e usuário de banco próprio (não `root`) com todos os privilégios nos bancos `erp_estudos_*` (como em `docker/mysql/init/01-permissoes.sql`), para criar e excluir os bancos `erp_estudos_tenant_*`.
   - `FILESYSTEM_DISK=s3` e credenciais AWS.
 - Worker de fila rodando continuamente (ex.: systemd ou Supervisor com `php artisan queue:work --timeout=300`).
 - nginx servindo `frontend/dist` e repassando `/api` ao PHP-FPM, com DNS curinga (`*.dominio`) para os subdomínios das prefeituras.

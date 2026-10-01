@@ -1,6 +1,6 @@
 # Changelog
 
-Todas as mudanças relevantes do STM são registradas aqui.
+Todas as mudanças relevantes do ERP para Estudos são registradas aqui.
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
@@ -26,8 +26,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Menu do usuário (rodapé do menu lateral) com o CPF, "Minha conta" e "Sair" em vermelho. "Minha conta" abre um diálogo com as abas **Meus dados** (nome e e-mail, que valem em todas as prefeituras) e **Senha** (troca conferindo a senha atual, encerrando as outras sessões). Rotas `PUT /api/me` e `PUT /api/me/senha`.
 - Recuperação de senha por e-mail: link "Esqueci minha senha" no login, tela para pedir o link pelo CPF e tela para cadastrar a nova senha. O e-mail sai em fila, com link para o endereço da prefeitura, válido por 60 minutos e de uso único; trocar a senha derruba as sessões abertas. Rotas `POST /api/senha/esqueci` e `POST /api/senha/redefinir`, limitadas a 5 por minuto por CPF + IP.
 - Estrutura inicial do monorepo: API Laravel 13 (`backend/`) e SPA React 19 (`frontend/`).
-- Multi-tenancy com um banco por prefeitura (`stm_tenant_<id>`), identificada pelo subdomínio, com provisionamento em fila.
-- Banco central `stm_central` com prefeituras, domínios, usuários e tokens.
+- Multi-tenancy com um banco por prefeitura (`erp_estudos_tenant_<id>`), identificada pelo subdomínio, com provisionamento em fila.
+- Banco central `erp_estudos_central` com prefeituras, domínios, usuários e tokens.
 - Login por e-mail e senha, com token Sanctum, vínculo usuário ↔ prefeitura (`tenant_user`) e limite de 5 tentativas por minuto.
 - Rotas `POST /api/login`, `GET /api/me`, `POST /api/logout` e `GET /api/tenant`.
 - Tela de login, rotas protegidas e botão Sair no frontend.
@@ -37,7 +37,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Documentação em `docs/`: tutorial, guias, referência, arquitetura (arc42 + C4), ADRs (MADR) e contrato OpenAPI.
 - Skills do Claude Code para shadcn/ui em `.claude/skills/` (versões fixadas em `skills-lock.json`).
 - Skill `criar-pr` do Claude Code: commita as mudanças e abre um Pull Request para a `main`, na branch atual ou numa branch nova.
-- Landing page do STM, exibida no domínio central e em endereços de prefeitura inexistente: cabeçalho com a marca, links para as seções e botão de tema claro/escuro; apresentação com a ilustração de um DAM; seções Como funciona, O sistema e Segurança. Sem campo para escolher a prefeitura: cada uma recebe o seu endereço (subdomínio) e o repassa aos usuários. No endereço de uma prefeitura, quem ainda não entrou vê a landing em `/`, com o botão "Painel" no canto superior direito, que leva ao login dela.
+- Landing page do ERP para Estudos, exibida no domínio central e em endereços de prefeitura inexistente: cabeçalho com a marca, links para as seções e botão de tema claro/escuro; apresentação com a ilustração de um DAM; seções Como funciona, O sistema e Segurança. Sem campo para escolher a prefeitura: cada uma recebe o seu endereço (subdomínio) e o repassa aos usuários. No endereço de uma prefeitura, quem ainda não entrou vê a landing em `/`, com o botão "Painel" no canto superior direito, que leva ao login dela.
 - Layout do sistema no modelo `sidebar-07` do shadcn/ui: seletor de prefeitura, menu de módulos (Início, Parâmetros, Tabelas, Lançamentos, Relatórios, Administração), menu do usuário com tema claro/escuro e breadcrumb. Parâmetros com as telas Empresa, Receitas, Nota Fiscal, Alvará, ITBI, IPTU, Habite-se, Certidão Negativa, Juros e Multa e Base Legal. Tabelas com as telas de cadastro de apoio e o submenu Tomadores de Serviço (o menu aceita submenus aninhados). Lançamentos com Documentos Avulsos, Nota Fiscal, Alvará, ITBI, Habite-se, IPTU, Certidão Negativa e os submenus Imóveis e DAM. Relatórios com rendimentos, receitas, relações de ISS, INSS e IRPF, Imóveis, ITBI, Habite-se, DAMs e os submenus Notas Fiscais, Alvarás e Contribuintes. Telas dos módulos ainda em construção.
 - `GET /api/me` e `POST /api/login` retornam as prefeituras do usuário.
 - Grupos de acesso Parâmetros, Tabelas e Lançamentos em cada prefeitura, com uma permissão por tela do menu (`config/acesso.php`). O menu e as rotas mostram só as telas permitidas; tela sem permissão mostra "Sem acesso". `GET /api/me` traz `grupos`, `permissoes` e `superadmin` ([ADR-0009](docs/adr/0009-grupos-de-acesso-e-empresas.md)).
@@ -51,6 +51,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- O sistema passa a se chamar **ERP para Estudos** (antes STM — Sistema de Tributação Municipal) e o projeto, `erp_estudos`: projeto Compose `erp_estudos` (imagem `erp_estudos-php:dev`), bancos `erp_estudos_central` e `erp_estudos_tenant_<id>`, usuário do banco `erp_estudos`, pacotes `erp_estudos/backend` e `erp_estudos-frontend` e chaves `erp_estudos.*` no `localStorage` (é preciso entrar de novo). Ambientes existentes: faça backup, atualize `APP_NAME`, `DB_DATABASE` e `DB_USERNAME` no `backend/.env`, suba o projeto novo e restaure os dados nos bancos com os nomes novos, ajustando `tenants.data.tenancy_db_name`. A tabela `stm_migrations` e o valor `STMSIAT_WEB` são do legado e não mudaram.
 - Banco de dados trocado de PostgreSQL 17 para **MySQL 8.4** ([ADR-0015](docs/adr/0015-mysql.md)): serviço `db` com a imagem `mysql:8.4` na porta `127.0.0.1:33061` e volume `mysql-data`, `pdo_mysql` na imagem PHP e `DB_CONNECTION=mysql`. Migrations da prefeitura ajustadas (tipos das chaves estrangeiras, `json` no lugar de `jsonb`, índices e `CHECK` do legado reescritos). Ambientes existentes: faça backup, troque `DB_CONNECTION`/`DB_PORT` no `backend/.env` (`mysql`/`3306`), recrie com `docker compose up -d --build` e rode `migrate` e `tenants:migrate`.
 - O módulo **Parâmetros** do menu passou a se chamar **Parâmetros da Empresa** e fica logo abaixo de Relatórios. URLs (`/parametros/...`) e permissões (`parametros.*`) não mudaram.
 - **Tabelas Comuns** (Cidades, Bancos, CNAE, Lista de Serviços, SELIC, Segmentos, Numeração de Notas e Tipos de DAM), que era o submenu Tabelas internas de Tabelas, agora fica em **Administração**, abaixo de Empresas, e é **só do superadmin** na prefeitura administradora ([ADR-0014](docs/adr/0014-tabelas-comuns-so-do-superadmin.md)): os dados são do banco central e valem para todas as prefeituras. As permissões `administracao.tabelas-comuns.*` saem do catálogo de grupos (nem o `Administrador` das prefeituras as tem, e a tela Grupos de acesso não as oferece) e as rotas `/api/administracao/tabelas-comuns/*` exigem o superadmin. Rode `acesso:sincronizar` para apagar as permissões antigas dos grupos.
@@ -58,7 +59,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Tema do sistema trocado para o preset `modern-minimal` do [tweakcn](https://tweakcn.com/): primário azul, superfícies neutras, cantos um pouco menos arredondados (`--radius` 0.375rem) e paleta de gráficos (`--chart-1..5`). As fontes do projeto (Inter e Geist Mono) foram mantidas, e o token `--marca` da landing e do login passou a usar o mesmo matiz do azul primário.
 - `acesso:sincronizar` deixa de reescrever as permissões dos grupos existentes: agora só acerta o catálogo de permissões e cria os grupos padrão que faltarem, para não desfazer o que foi montado na tela de grupos.
 - Parâmetros: removida a tela Empresa. O cadastro de empresas foi para Administração › Empresas.
-- Tela de login em duas colunas, no visual da landing: à esquerda, painel azul-marinho (sempre escuro) com a apresentação do STM e três destaques; à direita, o formulário de CPF e senha com o nome da prefeitura, o botão de tema e o link para voltar à página inicial. No celular, só o formulário.
+- Tela de login em duas colunas, no visual da landing: à esquerda, painel azul-marinho (sempre escuro) com a apresentação do ERP para Estudos e três destaques; à direita, o formulário de CPF e senha com o nome da prefeitura, o botão de tema e o link para voltar à página inicial. No celular, só o formulário.
 - Login por CPF e senha no lugar de e-mail e senha. O campo CPF tem máscara `000.000.000-00`, e os dígitos verificadores são conferidos. O e-mail continua no cadastro. Usuários antigos precisam receber um CPF (`usuarios:criar <email> <nome> --cpf=...`) para entrar ([ADR-0008](docs/adr/0008-login-por-cpf.md)).
 - Banco de dados trocado de MariaDB 11 para PostgreSQL 17 (`DB_CONNECTION=pgsql`, porta `54321` no host, usuário `stm`). Os dados do MariaDB não são migrados; o volume antigo `stm_db-data` fica intacto ([ADR-0007](docs/adr/0007-postgresql.md)).
 - Menu lateral: linha separando cada módulo do menu principal, sem o rótulo "Módulos".
@@ -70,7 +71,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Removido
 
 - Dependências do PostgreSQL: conexão `pgsql`, gerenciador `PostgreSQLDatabaseManager`, extensão `pdo_pgsql`/`libpq-dev` e o SQL próprio do PostgreSQL nas migrations.
-- Coluna `id_empresa` das 38 tabelas herdadas do legado que a tinham, e a tabela `tb_empresa` ([ADR-0013](docs/adr/0013-remove-id-empresa.md)): no legado ela separava as prefeituras num banco só; no STM cada prefeitura já tem o seu. Índices que combinavam `id_empresa` com outras colunas continuam só com as outras (ex.: `tb_servico` único por `codigo_servico`). Migration nova, `2026_09_24_120000_remove_id_empresa_do_legado.php`: rode `tenants:migrate` nos bancos já criados.
+- Coluna `id_empresa` das 38 tabelas herdadas do legado que a tinham, e a tabela `tb_empresa` ([ADR-0013](docs/adr/0013-remove-id-empresa.md)): no legado ela separava as prefeituras num banco só; no ERP para Estudos cada prefeitura já tem o seu. Índices que combinavam `id_empresa` com outras colunas continuam só com as outras (ex.: `tb_servico` único por `codigo_servico`). Migration nova, `2026_09_24_120000_remove_id_empresa_do_legado.php`: rode `tenants:migrate` nos bancos já criados.
 
 ### Corrigido
 

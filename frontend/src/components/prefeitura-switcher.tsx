@@ -44,7 +44,7 @@ export function PrefeituraSwitcher({
                     prefeituras.find((prefeitura) => prefeitura.id === atual) ?? { id: atual },
                   )}
                 </span>
-                <span className="truncate text-xs">STM</span>
+                <span className="truncate text-xs">ERP para Estudos</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
