@@ -82,7 +82,7 @@ class Acesso
         $registrar->forgetCachedPermissions();
     }
 
-    /** A prefeitura atual é a da Lemarq (a única em que o superadmin tem poderes). */
+    /** A prefeitura atual é a administradora (a única em que o superadmin tem poderes). */
     public static function naPrefeituraAdministradora(): bool
     {
         return tenancy()->initialized && tenant('id') === config('acesso.tenant_administrador');

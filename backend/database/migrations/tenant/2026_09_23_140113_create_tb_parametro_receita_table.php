@@ -15,20 +15,20 @@ return new class extends Migration
     {
         Schema::create('tb_parametro_receita', function (Blueprint $table) {
             $table->bigIncrements('id_parametro_receita');
-            $table->integer('id_receita_iss')->nullable();
-            $table->integer('id_receita_taxa')->nullable();
-            $table->integer('id_receita_tll')->nullable();
-            $table->integer('id_receita_irpf')->nullable();
-            $table->integer('id_receita_irpj')->nullable();
-            $table->integer('id_receita_inss')->nullable();
-            $table->integer('id_receita_itbi')->nullable();
-            $table->integer('id_receita_habite')->nullable();
-            $table->integer('id_receita_iptu')->nullable();
-            $table->integer('id_receita_tcl')->nullable();
-            $table->integer('id_receita_tcc')->nullable();
-            $table->integer('id_receita_tip')->nullable();
-            $table->integer('id_receita_tlp')->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_receita_iss')->nullable();
+            $table->unsignedBigInteger('id_receita_taxa')->nullable();
+            $table->unsignedBigInteger('id_receita_tll')->nullable();
+            $table->unsignedBigInteger('id_receita_irpf')->nullable();
+            $table->unsignedBigInteger('id_receita_irpj')->nullable();
+            $table->unsignedBigInteger('id_receita_inss')->nullable();
+            $table->unsignedBigInteger('id_receita_itbi')->nullable();
+            $table->unsignedBigInteger('id_receita_habite')->nullable();
+            $table->unsignedBigInteger('id_receita_iptu')->nullable();
+            $table->unsignedBigInteger('id_receita_tcl')->nullable();
+            $table->unsignedBigInteger('id_receita_tcc')->nullable();
+            $table->unsignedBigInteger('id_receita_tip')->nullable();
+            $table->unsignedBigInteger('id_receita_tlp')->nullable();
+            $table->unsignedBigInteger('id_empresa');
             $table->unique(['id_empresa'], 'tb_parametro_receita_id_empresa_key');
             $table->foreign('id_empresa', 'tb_parametro_receita_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');
             $table->foreign('id_receita_habite', 'tb_parametro_receita_id_receita_habite_fkey')->references('id_receita')->on('tb_receita');

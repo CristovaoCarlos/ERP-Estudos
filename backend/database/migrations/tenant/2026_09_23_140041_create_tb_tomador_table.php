@@ -17,14 +17,14 @@ return new class extends Migration
             $table->increments('id_tomador');
             $table->string('tipo', 1);
             $table->string('nome', 150);
-            $table->integer('id_logradouro')->nullable();
+            $table->unsignedBigInteger('id_logradouro')->nullable();
             $table->string('cpf_cnpj', 14);
             $table->string('email', 100)->nullable();
             $table->string('orgao_publico', 1);
             $table->string('gestor_nome', 100)->nullable();
             $table->string('gestor_cargo', 100)->nullable();
             $table->string('telefone', 20)->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->integer('id_origem')->nullable();
             $table->foreign('id_empresa', 'tb_tomador_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');
             $table->foreign('id_logradouro', 'tb_tomador_id_logradouro_fkey')->references('id_endereco')->on('tb_endereco');

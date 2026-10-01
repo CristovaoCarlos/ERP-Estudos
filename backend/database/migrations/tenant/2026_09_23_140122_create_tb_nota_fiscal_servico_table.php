@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_nota_fiscal_servico', function (Blueprint $table) {
             $table->increments('id_nota_fiscal_servico');
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->string('prestado_no_pais', 1)->default('S');
             $table->string('codigo_municipio', 7)->nullable();
             $table->string('codigo_pais', 4)->nullable();

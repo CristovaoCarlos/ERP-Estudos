@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('tb_dam_doc', function (Blueprint $table) {
             $table->bigIncrements('id_dam_doc');
-            $table->bigInteger('id_dam')->nullable();
-            $table->bigInteger('id_doc')->nullable();
+            $table->unsignedBigInteger('id_dam')->nullable();
+            $table->unsignedBigInteger('id_doc')->nullable();
             $table->index(['id_dam'], 'idx_dam_doc_id_dam');
             $table->index(['id_doc'], 'idx_tb_dam_doc_id_doc');
             $table->foreign('id_dam', 'tb_dam_doc_id_dam_fkey')->references('id_dam')->on('tb_dam');

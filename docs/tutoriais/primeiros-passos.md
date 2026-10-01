@@ -1,6 +1,6 @@
 # Primeiros passos
 
-Neste tutorial você vai subir o STM na sua máquina, criar uma prefeitura, criar um usuário e entrar no sistema. Leva cerca de 15 minutos.
+Neste tutorial você vai subir o ERP para Estudos na sua máquina, criar uma prefeitura, criar um usuário e entrar no sistema. Leva cerca de 15 minutos.
 
 ## O que você precisa
 
@@ -8,7 +8,7 @@ Neste tutorial você vai subir o STM na sua máquina, criar uma prefeitura, cria
 - Node 22 e npm (para o frontend)
 - Git
 
-Não é preciso ter PHP, Composer ou PostgreSQL instalados: eles rodam no Docker.
+Não é preciso ter PHP, Composer ou MySQL instalados: eles rodam no Docker.
 
 ## 1. Configure o backend
 
@@ -44,27 +44,27 @@ Teste a API:
 
 ```bash
 curl http://localhost:8000/api/status
-# {"app":"STM","status":"ok"}
+# {"app":"ERP para Estudos","status":"ok"}
 ```
 
 ## 4. Crie sua primeira prefeitura
 
 ```bash
 docker compose exec app php artisan tinker --execute \
-  'App\Models\Tenant::create(["id" => "lemarq"])->domains()->create(["domain" => "lemarq.localhost"]);'
+  'App\Models\Tenant::create(["id" => "demo"])->domains()->create(["domain" => "demo.localhost"]);'
 ```
 
-O worker cria o banco `stm_tenant_lemarq` em segundo plano. Em alguns segundos:
+O worker cria o banco `erp_estudos_tenant_demo` em segundo plano. Em alguns segundos:
 
 ```bash
-curl -H 'Host: lemarq.localhost' http://127.0.0.1:8000/api/tenant
-# {"id":"lemarq"}
+curl -H 'Host: demo.localhost' http://127.0.0.1:8000/api/tenant
+# {"id":"demo"}
 ```
 
 ## 5. Crie um usuário com acesso a ela
 
 ```bash
-docker compose exec app php artisan usuarios:criar admin@stm.localhost "Administrador" --cpf=529.982.247-25 --tenant=lemarq
+docker compose exec app php artisan usuarios:criar admin@erp-estudos.localhost "Administrador" --cpf=529.982.247-25 --tenant=demo
 ```
 
 O comando pede a senha. Use o seu CPF no lugar do exemplo: é ele que você digita no login.
@@ -79,15 +79,15 @@ npm run dev
 
 ## 7. Entre no sistema
 
-Abra <http://lemarq.localhost:5173>. Você vai cair na tela de login. Entre com o CPF e a senha do passo 5: a página inicial mostra seu nome e a prefeitura `lemarq`.
+Abra <http://demo.localhost:5173>. Você vai cair na tela de login. Entre com o CPF e a senha do passo 5: a página inicial mostra seu nome e a prefeitura `demo`.
 
 Clique em **Sair** para encerrar a sessão.
 
 ## O que aconteceu
 
-- O endereço `lemarq.localhost` identificou a prefeitura; o Vite repassou as chamadas `/api` ao backend mantendo esse endereço.
-- O usuário foi criado no banco central (`stm_central`) e vinculado à prefeitura `lemarq`.
-- Os dados da prefeitura ficam no banco `stm_tenant_lemarq`.
+- O endereço `demo.localhost` identificou a prefeitura; o Vite repassou as chamadas `/api` ao backend mantendo esse endereço.
+- O usuário foi criado no banco central (`erp_estudos_central`) e vinculado à prefeitura `demo`.
+- Os dados da prefeitura ficam no banco `erp_estudos_tenant_demo`.
 
 ## Próximos passos
 

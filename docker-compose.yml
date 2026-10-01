@@ -1,4 +1,4 @@
-name: stm
+name: erp_estudos
 
 x-php: &php
   build:
@@ -7,7 +7,7 @@ x-php: &php
     args:
       UID: ${HOST_UID:-1000}
       GID: ${HOST_GID:-1000}
-  image: stm-php:dev
+  image: erp_estudos-php:dev
   volumes:
     - ./backend:/var/www/html
   depends_on:
@@ -37,20 +37,22 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:17-alpine
+    image: mysql:8.4
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-stm}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
-      POSTGRES_DB: ${DB_DATABASE:-stm_central}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-erp_estudos}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: ${DB_DATABASE:-erp_estudos_central}
     ports:
-      - "127.0.0.1:54321:5432"
+      - "127.0.0.1:33061:3306"
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
     restart: unless-stopped
 
   redis:
@@ -67,5 +69,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  pg-data:
+  mysql-data:
   redis-data:

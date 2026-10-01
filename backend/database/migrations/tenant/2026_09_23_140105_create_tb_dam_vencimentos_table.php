@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('juros_mora', 10, 4);
             $table->decimal('multa_aplicada', 10, 4);
             $table->decimal('valor_novo', 18, 2);
-            $table->bigInteger('id_dam')->nullable();
+            $table->unsignedBigInteger('id_dam')->nullable();
             $table->foreign('id_dam', 'tb_dam_vencimentos_id_dam_fkey')->references('id_dam')->on('tb_dam');
         });
     }

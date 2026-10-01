@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 
 import { api } from '@/lib/api'
 
@@ -31,6 +31,18 @@ export function useCadastrarCidade() {
   return useMutation({
     mutationFn: async (dados: DadosDaCidade) =>
       (await api.post<Cidade>('/administracao/tabelas-comuns/cidades', dados)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE }),
+  })
+}
+
+export type AlteracaoDaCidade = { nome: string; uf: string }
+
+/** Altera nome e UF. O código do IBGE não muda. */
+export function useAlterarCidade(id: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (dados: AlteracaoDaCidade) =>
+      (await api.put<Cidade>(`/administracao/tabelas-comuns/cidades/${id}`, dados)).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE }),
   })
 }

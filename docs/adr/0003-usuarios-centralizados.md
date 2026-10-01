@@ -1,10 +1,10 @@
 ---
 status: aceita
 data: 2026-09-21
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
-# Usuários e tokens centralizados no stm_central
+# Usuários e tokens centralizados no erp_estudos_central
 
 ## Contexto e problema
 
@@ -12,12 +12,12 @@ Com um banco por prefeitura, onde ficam os usuários? Uma mesma pessoa (ex.: um 
 
 ## Opções consideradas
 
-- Usuários e tokens no `stm_central`, com vínculo explícito usuário ↔ prefeitura
+- Usuários e tokens no `erp_estudos_central`, com vínculo explícito usuário ↔ prefeitura
 - Usuários no banco de cada prefeitura
 
 ## Decisão
 
-Opção escolhida: **usuários e tokens no `stm_central`**.
+Opção escolhida: **usuários e tokens no `erp_estudos_central`**.
 
 - As tabelas `users`, `password_reset_tokens`, `sessions` e `personal_access_tokens` **não existem** nos bancos de prefeitura.
 - `User` e `PersonalAccessToken` usam a trait `CentralConnection`, então continuam no banco central mesmo com a prefeitura inicializada.

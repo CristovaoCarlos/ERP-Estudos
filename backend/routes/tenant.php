@@ -72,10 +72,11 @@ Route::middleware([
         });
 
         // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
-        // superadmin, na prefeitura da Lemarq.
+        // superadmin, na prefeitura administradora.
         Route::middleware('can:gerenciar-tabelas-comuns')->prefix('administracao/tabelas-comuns')->group(function () {
             Route::get('/cidades', [CidadeController::class, 'index']);
             Route::post('/cidades', [CidadeController::class, 'store']);
+            Route::put('/cidades/{cidade}', [CidadeController::class, 'update']);
             Route::get('/bancos', [BancoController::class, 'index']);
             Route::post('/bancos', [BancoController::class, 'store']);
             Route::get('/cnae', [CnaeController::class, 'index']);
@@ -94,7 +95,7 @@ Route::middleware([
             Route::post('/tipos-de-dam', [DamTipoController::class, 'store']);
         });
 
-        // Só o superadmin, na prefeitura da Lemarq.
+        // Só o superadmin, na prefeitura administradora.
         Route::middleware('can:gerenciar-empresas')->group(function () {
             Route::get('/empresas', [EmpresaController::class, 'index']);
             Route::post('/empresas', [EmpresaController::class, 'store']);

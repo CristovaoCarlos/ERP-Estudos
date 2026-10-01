@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('bacen_cedente_dv', 1)->nullable();
             $table->string('bacen_carteira', 2)->nullable();
             $table->string('pix', 1);
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->string('descricao', 255)->nullable();
             $table->integer('id_origem')->nullable();
             $table->foreign('id_empresa', 'tb_convenio_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');

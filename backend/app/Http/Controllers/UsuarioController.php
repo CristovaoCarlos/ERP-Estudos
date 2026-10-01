@@ -27,7 +27,7 @@ class UsuarioController extends Controller
         );
     }
 
-    /** Cria o usuário ou, se o CPF/e-mail já existir no STM, vincula o existente a esta prefeitura. */
+    /** Cria o usuário ou, se o CPF/e-mail já existir no ERP para Estudos, vincula o existente a esta prefeitura. */
     public function store(Request $request): JsonResponse
     {
         $request->merge(['cpf' => CpfSupport::digitos((string) $request->input('cpf'))]);
@@ -57,7 +57,7 @@ class UsuarioController extends Controller
         $user->tenants()->syncWithoutDetaching([tenant('id')]);
         $user->syncRoles($dados['grupos'] ?? []);
 
-        // `vinculado`: o usuário já existia no STM e só ganhou acesso a esta prefeitura.
+        // `vinculado`: o usuário já existia no ERP para Estudos e só ganhou acesso a esta prefeitura.
         return response()->json(
             (new UsuarioDaPrefeituraResource($user->fresh()))->resolve($request) + ['vinculado' => (bool) $existente],
             201,
@@ -125,7 +125,7 @@ class UsuarioController extends Controller
         return new UsuarioDaPrefeituraResource($usuario->fresh());
     }
 
-    /** Tira o acesso a esta prefeitura: o usuário continua no STM, nas outras prefeituras. */
+    /** Tira o acesso a esta prefeitura: o usuário continua no ERP para Estudos, nas outras prefeituras. */
     public function destroy(Request $request, User $usuario): Response
     {
         $this->daPrefeitura($usuario);

@@ -29,12 +29,12 @@ class RedefinirSenha extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Redefinir a senha do STM — {$this->prefeitura}")
+            ->subject("Redefinir a senha do ERP para Estudos — {$this->prefeitura}")
             ->greeting("Olá, {$notifiable->name}!")
-            ->line("Recebemos um pedido para redefinir a sua senha do STM em {$this->prefeitura}.")
+            ->line("Recebemos um pedido para redefinir a sua senha do ERP para Estudos em {$this->prefeitura}.")
             ->action('Redefinir senha', $this->url)
             ->line("O link vale por {$this->minutos} minutos e só pode ser usado uma vez.")
             ->line('Se não foi você quem pediu, ignore este e-mail: sua senha continua a mesma.')
-            ->salutation('Atenciosamente, STM — Sistema de Tributação Municipal');
+            ->salutation('Atenciosamente, ERP para Estudos');
     }
 }

@@ -14,8 +14,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_iptu_lancamentos', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
-            $table->integer('id_lote');
+            $table->unsignedBigInteger('id_doc');
+            $table->unsignedInteger('id_lote');
             $table->string('status_usuario', 255);
             $table->text('status_motivo')->nullable();
             $table->integer('sequencial_processamento')->nullable();
@@ -25,16 +25,16 @@ return new class extends Migration
             $table->decimal('vvt_valor', 18, 2)->nullable();
             $table->decimal('vve_valor', 18, 2)->nullable();
             $table->decimal('vvi_valor', 18, 2)->nullable();
-            $table->integer('iptu_id')->nullable();
+            $table->unsignedBigInteger('iptu_id')->nullable();
             $table->decimal('iptu_valor', 18, 2)->nullable();
             $table->decimal('iptu_valor_original', 18, 2)->nullable();
-            $table->integer('tcl_id')->nullable();
+            $table->unsignedBigInteger('tcl_id')->nullable();
             $table->decimal('tcl_valor', 18, 2)->nullable();
-            $table->integer('tcc_id')->nullable();
+            $table->unsignedBigInteger('tcc_id')->nullable();
             $table->decimal('tcc_valor', 18, 2)->nullable();
-            $table->integer('tip_id')->nullable();
+            $table->unsignedBigInteger('tip_id')->nullable();
             $table->decimal('tip_valor', 18, 2)->nullable();
-            $table->integer('tlp_id')->nullable();
+            $table->unsignedBigInteger('tlp_id')->nullable();
             $table->decimal('tlp_valor', 18, 2)->nullable();
             $table->text('vvt_formula')->nullable();
             $table->text('vvt_variaveis')->nullable();
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->text('tip_variaveis')->nullable();
             $table->text('tlp_formula')->nullable();
             $table->text('tlp_variaveis')->nullable();
-            $table->integer('id_imovel');
+            $table->unsignedBigInteger('id_imovel');
             $table->string('status', 1);
             $table->timestamp('processed_in')->nullable();
             $table->integer('id_origem')->nullable();

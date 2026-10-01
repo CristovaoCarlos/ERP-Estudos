@@ -64,7 +64,7 @@ class CriarUsuarioTest extends TestCase
 
     public function test_marca_superadmin_e_da_grupos_na_prefeitura(): void
     {
-        $tenant = Tenant::create(['id' => 'lemarq']);
+        $tenant = Tenant::create(['id' => 'demo']);
 
         try {
             $this->artisan('usuarios:criar', [
@@ -72,7 +72,7 @@ class CriarUsuarioTest extends TestCase
                 'nome' => 'Maria',
                 '--cpf' => '52998224725',
                 '--senha' => 'segredo',
-                '--tenant' => ['lemarq'],
+                '--tenant' => ['demo'],
                 '--grupo' => ['Parâmetros', 'Tabelas'],
                 '--superadmin' => true,
             ])->assertSuccessful();
@@ -90,7 +90,7 @@ class CriarUsuarioTest extends TestCase
 
     public function test_recusa_grupo_inexistente(): void
     {
-        $tenant = Tenant::create(['id' => 'lemarq']);
+        $tenant = Tenant::create(['id' => 'demo']);
 
         try {
             $this->artisan('usuarios:criar', [
@@ -98,7 +98,7 @@ class CriarUsuarioTest extends TestCase
                 'nome' => 'Maria',
                 '--cpf' => '52998224725',
                 '--senha' => 'segredo',
-                '--tenant' => ['lemarq'],
+                '--tenant' => ['demo'],
                 '--grupo' => ['Fiscalização'],
             ])->assertFailed();
         } finally {

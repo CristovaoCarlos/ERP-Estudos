@@ -28,7 +28,7 @@ Antes de qualquer migration. A pasta `backups/` está no `.gitignore`.
 
 ```bash
 mkdir -p backups
-docker compose exec -T db pg_dumpall -U stm > "backups/stm-$(date +%Y%m%d-%H%M%S).sql"
+docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --routines' > "backups/erp_estudos-$(date +%Y%m%d-%H%M%S).sql"
 ```
 
 ## 4. Dependências do backend

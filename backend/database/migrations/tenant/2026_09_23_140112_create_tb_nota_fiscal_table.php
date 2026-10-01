@@ -14,19 +14,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_nota_fiscal', function (Blueprint $table) {
-            $table->bigInteger('id_doc');
+            $table->unsignedBigInteger('id_doc');
             $table->string('codigo_automatico', 50)->nullable();
             $table->string('codigo_impressao', 30)->nullable();
             $table->string('serie_nfse', 3);
             $table->integer('numero_nfse');
             $table->string('orgao_gerador_codigo_municipio', 7);
             $table->string('orgao_gerador_uf', 2);
-            $table->integer('id_tomador')->nullable();
+            $table->unsignedInteger('id_tomador')->nullable();
             $table->string('houve_intermediacao', 1);
             $table->string('intermediario_cpf_cnpj', 14)->nullable();
             $table->string('intermediario_inscricao_municipal', 15)->nullable();
             $table->string('intermediario_nome_razao_social', 150)->nullable();
-            $table->integer('id_servico');
+            $table->unsignedBigInteger('id_servico');
             $table->string('construcao_civil_art', 35)->nullable();
             $table->string('construcao_civil_codigo_obra', 35)->nullable();
             $table->string('iss_retido', 1)->nullable();
@@ -68,7 +68,7 @@ return new class extends Migration
             $table->text('detalhe_calculo_iss')->nullable();
             $table->text('historico')->nullable();
             $table->integer('id_origem')->nullable();
-            $table->bigInteger('id_conta_bancaria')->nullable();
+            $table->unsignedBigInteger('id_conta_bancaria')->nullable();
             $table->bigInteger('id_aliquota_servico_ir')->nullable();
             $table->bigInteger('id_tomador_internacional')->nullable();
             $table->string('tomador_estrangeiro', 1)->default('N');

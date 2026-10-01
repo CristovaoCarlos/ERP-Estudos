@@ -1,6 +1,6 @@
 ---
 name: nova-tela
-description: Cria uma tela do STM (formulário único de parâmetros ou lista com cadastro, com a API) sobre uma tabela do banco da prefeitura, no padrão do projeto. Use sempre que pedirem uma tela, listagem, formulário ou CRUD novo de um item do menu.
+description: Cria uma tela do ERP para Estudos (formulário único de parâmetros ou lista com cadastro, com a API) sobre uma tabela do banco da prefeitura, no padrão do projeto. Use sempre que pedirem uma tela, listagem, formulário ou CRUD novo de um item do menu.
 ---
 
 # Nova tela
@@ -29,10 +29,10 @@ Backend (`docker compose exec app ...`):
 
 Frontend:
 
-- [ ] `src/lib/<modulo>-<tela>.ts` com tipos e hooks
-- [ ] `src/pages/<modulo>/<Tela>.tsx` no layout do tipo escolhido
-- [ ] Página no mapa `paginas` de `src/App.tsx` (e, se a tela for nova no menu, `navegacao.ts` + `config/acesso.php` + `acesso:sincronizar`)
-- [ ] Bloco `describe` em `src/App.test.tsx`
+- [ ] `src/lib/<modulo>-<tela>.ts` com tipos e composables do vue-query
+- [ ] `src/pages/<modulo>/<Tela>.vue` no layout do tipo escolhido (diálogos em `src/pages/<modulo>/<tela>/`)
+- [ ] Página no mapa `paginas` de `src/router.ts` (e, se a tela for nova no menu, `navegacao.ts` + `config/acesso.php` + `acesso:sincronizar`)
+- [ ] Bloco `describe` em `src/App.test.ts`
 
 Documentação:
 

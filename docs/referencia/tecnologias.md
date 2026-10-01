@@ -32,35 +32,32 @@ Baseado no levantamento de tecnologias do projeto. Versões são as faixas do `c
 | `laravel/pail` | ^1.2.5 | Logs em tempo real |
 | `laravel/pao` | ^1.0.6 | Apoio ao desenvolvimento |
 
-## Frontend — React / TypeScript
+## Frontend — Vue / TypeScript
 
 | Pacote | Para quê |
 | --- | --- |
-| `react`, `react-dom` ^19 | Interface |
-| `typescript` ~6.0 | Tipagem |
-| `vite` ^8 + `@vitejs/plugin-react` | Build e servidor de desenvolvimento |
-| `react-router-dom` ^7 | Rotas |
+| `vue` ^3.5 | Interface (SFC com `<script setup lang="ts">`) |
+| `typescript` ~6.0, `vue-tsc` ^3 | Tipagem e checagem dos `.vue` |
+| `vite` ^8 + `@vitejs/plugin-vue` | Build e servidor de desenvolvimento |
+| `vue-router` ^5 | Rotas (`src/router.ts`) |
 | `tailwindcss` ^4 + `@tailwindcss/vite` | Estilos |
-| `radix-ui`, `shadcn` | Componentes (shadcn/ui sobre Radix) |
+| `reka-ui` ^2 + shadcn-vue | Componentes (shadcn-vue sobre Reka UI, em `src/components/ui`) |
 | `class-variance-authority`, `clsx`, `tailwind-merge`, `tw-animate-css` | Composição de classes e animações |
-| `@tanstack/react-query` ^5 | Cache e ciclo de vida das requisições |
-| `@tanstack/react-table` ^8 | Tabelas |
+| `@tanstack/vue-query` ^5 | Cache e ciclo de vida das requisições |
 | `axios` ^1 | Cliente HTTP (`src/lib/api.ts`) |
-| `react-hook-form` ^7, `zod` ^4, `@hookform/resolvers` ^5 | Formulários e validação |
-| `@tiptap/react`, `/starter-kit`, `/pm` ^3 | Editor de texto rico |
+| `vee-validate` ^4, `zod` ^4 | Formulários e validação (adaptador em `src/lib/formularios.ts`) |
 | `pdfjs-dist` ^6 | Visualizador de PDF (worker como módulo ES, `src/lib/pdf.ts`) |
-| `lucide-react` | Ícones |
-| `cmdk` | Busca em campos de escolha |
-| `sonner` | Notificações |
-| `next-themes` | Tema claro/escuro |
+| `@lucide/vue` | Ícones |
+| `vue-sonner` | Notificações |
+| `@vueuse/core` | Utilitários (tema claro/escuro com `useColorMode`, detecção de celular) |
 | `@fontsource-variable/inter`, `/geist-mono` | Fontes |
 
 **Gráficos:** sem biblioteca; SVG próprio em `src/components/graficos/`.
 
 ### Qualidade
 
-- Vitest 4 + jsdom + Testing Library (react, user-event, jest-dom). O jsdom roda no endereço de uma prefeitura (`lemarq.localhost`).
-- ESLint 10 + typescript-eslint + react-hooks + react-refresh + eslint-config-prettier.
+- Vitest 4 + jsdom + Testing Library (vue, user-event, jest-dom). O jsdom roda no endereço de uma prefeitura (`demo.localhost`).
+- ESLint 10 + eslint-plugin-vue + @vue/eslint-config-typescript + @vue/eslint-config-prettier.
 - Prettier 3.
 
 ## Infraestrutura

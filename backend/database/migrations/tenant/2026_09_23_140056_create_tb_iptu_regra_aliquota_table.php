@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('aliquota', 18, 2);
             $table->decimal('valor_venal_minimo', 18, 2);
             $table->decimal('valor_venal_maximo', 18, 2);
-            $table->integer('id_parametro_imovel_iptu');
+            $table->unsignedInteger('id_parametro_imovel_iptu');
             $table->foreign('id_parametro_imovel_iptu', 'tb_iptu_regra_aliquota_id_parametro_imovel_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');
         });
     }

@@ -3,9 +3,9 @@
 Estrutura herdada do sistema legado ([ADR-0012](../adr/0012-schema-do-sistema-legado.md)). Os nomes de
 tabela e coluna são os do legado, inclusive erros de digitação de origem.
 
-- **Banco de cada prefeitura** (`stm_tenant_<id>`): schema `public` do legado — migrations em
+- **Banco de cada prefeitura** (`erp_estudos_tenant_<id>`): schema `public` do legado — migrations em
   `backend/database/migrations/tenant/`.
-- **Banco central** (`stm_central`): schemas `tbcomuns` (`tc_*`) e `tbinternas` (`ti_*`) do legado,
+- **Banco central** (`erp_estudos_central`): schemas `tbcomuns` (`tc_*`) e `tbinternas` (`ti_*`) do legado,
   iguais para todas as prefeituras — migrations em `backend/database/migrations/`.
 - O schema `seguranca` do legado não foi migrado: usuários e tokens ficam no central
   ([ADR-0003](../adr/0003-usuarios-centralizados.md)) e os grupos de acesso são do spatie, no banco
@@ -16,7 +16,7 @@ Chaves estrangeiras **não** atravessam bancos: onde uma tabela de prefeitura ap
 "Observação" abaixo).
 
 A coluna `id_empresa`, que no legado separava as prefeituras dentro de um banco só, e a tabela
-`tb_empresa` foram removidas ([ADR-0013](../adr/0013-remove-id-empresa.md)): no STM o banco já é da
+`tb_empresa` foram removidas ([ADR-0013](../adr/0013-remove-id-empresa.md)): no ERP para Estudos o banco já é da
 prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam, só com as outras.
 
 ## Tabelas da prefeitura (82)
@@ -106,8 +106,9 @@ prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam
 | `tb_ufir` | 4 | `id_ufir` |  |
 | `trigger_log` | 4 | `log_id` |  |
 
-Índices parciais, por expressão ou com `INCLUDE`, e as restrições `CHECK` ficam na migration
-`2026_09_23_142000_adiciona_indices_e_checks_do_legado.php`, em SQL, e só rodam no PostgreSQL.
+Índices por expressão (sobre o JSON de `tb_processing`), os equivalentes dos índices parciais do legado e as
+restrições `CHECK` ficam na migration `2026_09_23_142000_adiciona_indices_e_checks_do_legado.php`, em SQL,
+e só rodam no MySQL ([ADR-0015](../adr/0015-mysql.md)).
 
 ## Tabelas do banco central (25)
 
@@ -146,7 +147,7 @@ LCP 116, países, fatores) é um passo à parte, a partir do dump do legado.
 
 | Item | Situação |
 | --- | --- |
-| Schema `seguranca` (12 tabelas) | Não migrado; o STM tem o seu próprio controle de acesso |
+| Schema `seguranca` (12 tabelas) | Não migrado; o ERP para Estudos tem o seu próprio controle de acesso |
 | Views (`view_uf`, `view_qtd_contribuintes_inconsistentes`) | Não migradas |
 | Funções e extensões (`pg_trgm`, `unaccent`) | Não migradas |
 | Sequências avulsas | Recriadas pelo Laravel junto das colunas `serial`/`bigserial` |

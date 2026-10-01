@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/vue-query'
 import axios from 'axios'
 
 import { api } from '@/lib/api'

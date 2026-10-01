@@ -14,15 +14,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_itbi_imoveis_originados', function (Blueprint $table) {
-            $table->bigInteger('id_itbi');
-            $table->bigInteger('id_imovel_pai');
+            $table->unsignedBigInteger('id_itbi');
+            $table->unsignedBigInteger('id_imovel_pai');
             $table->decimal('area_terreno_original', 18, 2)->nullable();
             $table->decimal('area_unidade_original', 18, 2)->nullable();
             $table->decimal('area_total_edificacao_original', 18, 2)->nullable();
             $table->decimal('area_total_hec_original', 18, 2)->nullable();
             $table->decimal('area_agricultura_original', 18, 2)->nullable();
             $table->decimal('area_preservacao_original', 18, 2)->nullable();
-            $table->bigInteger('id_imovel_filho');
+            $table->unsignedBigInteger('id_imovel_filho');
             $table->primary('id_itbi');
             $table->foreign('id_imovel_filho', 'tb_itbi_imoveis_originados_id_imovel_filho_fkey')->references('id_imovel')->on('tb_imovel');
             $table->foreign('id_imovel_pai', 'tb_itbi_imoveis_originados_id_imovel_pai_fkey')->references('id_imovel')->on('tb_imovel');

@@ -5,7 +5,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 ## Convenções
 
 - **Formato:** JSON. Envie `Accept: application/json`.
-- **Prefeitura:** identificada pelo header `Host` (ex.: `lemarq.localhost`). O frontend não precisa enviar nada além do endereço em que está aberto.
+- **Prefeitura:** identificada pelo header `Host` (ex.: `demo.localhost`). O frontend não precisa enviar nada além do endereço em que está aberto.
 - **Autenticação:** `Authorization: Bearer <token>`, com o token de `POST /api/login`.
 - **Erros de validação:** `422` com `{ "message": "...", "errors": { "campo": ["..."] } }`.
 
@@ -41,6 +41,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `GET` | `/api/parametros/receitas/opcoes` | prefeitura | `parametros.receitas` | Receitas (`tb_receita`) para o formulário |
 | `GET` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
 | `POST` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Inclui uma cidade (código do IBGE único; `id` = maior + 1) |
+| `PUT` | `/api/administracao/tabelas-comuns/cidades/{id}` | prefeitura administradora | superadmin | Altera nome e UF da cidade (o código do IBGE não muda) |
 | `GET` | `/api/administracao/tabelas-comuns/bancos` | prefeitura administradora | superadmin | Bancos do banco central (`tc_banco`), com o código de compensação |
 | `POST` | `/api/administracao/tabelas-comuns/bancos` | prefeitura administradora | superadmin | Inclui um banco (código de compensação de 4 dígitos, único) |
 | `GET` | `/api/administracao/tabelas-comuns/cnae` | prefeitura administradora | superadmin | Atividades da CNAE do banco central (`ti_cnae`), versões 2.2 e 2.3, com nível e código |
@@ -76,13 +77,13 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 
 ```bash
 # login
-curl -s http://lemarq.localhost:8000/api/login \
+curl -s http://demo.localhost:8000/api/login \
   -H 'Accept: application/json' -H 'Content-Type: application/json' \
   -d '{"cpf":"529.982.247-25","password":"<senha>"}'
 
 # usuário atual
-curl -s http://lemarq.localhost:8000/api/me \
+curl -s http://demo.localhost:8000/api/me \
   -H 'Accept: application/json' -H 'Authorization: Bearer <token>'
 ```
 
-Se o sistema não resolver `*.localhost`, envie o domínio pelo header: `curl -H 'Host: lemarq.localhost' http://127.0.0.1:8000/api/tenant`.
+Se o sistema não resolver `*.localhost`, envie o domínio pelo header: `curl -H 'Host: demo.localhost' http://127.0.0.1:8000/api/tenant`.

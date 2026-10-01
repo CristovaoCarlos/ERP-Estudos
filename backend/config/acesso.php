@@ -12,10 +12,10 @@
 return [
 
     /*
-     * Prefeitura (tenant) da Lemarq. Só entrando por ela o superadmin tem acesso total
+     * Prefeitura (tenant) administradora. Só entrando por ela o superadmin tem acesso total
      * e o cadastro de empresas.
      */
-    'tenant_administrador' => env('TENANT_ADMINISTRADOR', 'lemarq'),
+    'tenant_administrador' => env('TENANT_ADMINISTRADOR', 'demo'),
 
     /*
      * Grupos de acesso criados em toda prefeitura: nome do grupo => módulo do menu.

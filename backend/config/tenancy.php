@@ -8,7 +8,7 @@ use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
 use Stancl\Tenancy\UUIDGenerator;
 
@@ -55,7 +55,7 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => 'stm_tenant_',
+        'prefix' => 'erp_estudos_tenant_',
         'suffix' => '',
 
         /**
@@ -63,13 +63,7 @@ return [
          */
         'managers' => [
             'sqlite' => SQLiteDatabaseManager::class,
-            'pgsql' => PostgreSQLDatabaseManager::class,
-
-        /**
-         * Disable the pgsql manager above, and enable the one below if you
-         * want to separate tenant DBs by schemas rather than databases.
-         */
-            // 'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLSchemaManager::class, // Separate by schema instead of database
+            'mysql' => MySQLDatabaseManager::class,
         ],
     ],
 

@@ -34,7 +34,7 @@ class SenhaTest extends TestCase
         return $tenant;
     }
 
-    private function criarUsuario(string $tenant = 'lemarq', bool $ativo = true): User
+    private function criarUsuario(string $tenant = 'demo', bool $ativo = true): User
     {
         $user = User::factory()->create([
             'name' => 'Maria Souza',
@@ -47,7 +47,7 @@ class SenhaTest extends TestCase
         return $user;
     }
 
-    private function pedir(string $cpf = '529.982.247-25', string $tenant = 'lemarq')
+    private function pedir(string $cpf = '529.982.247-25', string $tenant = 'demo')
     {
         $resposta = $this->postJson("http://{$tenant}.localhost/api/senha/esqueci", ['cpf' => $cpf]);
         tenancy()->end();
@@ -58,7 +58,7 @@ class SenhaTest extends TestCase
     public function test_envia_o_email_com_o_link_da_prefeitura(): void
     {
         Notification::fake();
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $user = $this->criarUsuario();
 
         $this->pedir()
@@ -69,16 +69,16 @@ class SenhaTest extends TestCase
             $mail = $aviso->toMail($user);
             $url = $mail->actionUrl;
 
-            return str_starts_with($url, 'http://lemarq.localhost/redefinir-senha?')
+            return str_starts_with($url, 'http://demo.localhost/redefinir-senha?')
                 && str_contains($url, 'cpf=52998224725')
-                && str_contains($mail->subject, 'Prefeitura de lemarq');
+                && str_contains($mail->subject, 'Prefeitura de demo');
         });
     }
 
     public function test_cpf_desconhecido_responde_igual_e_nao_envia_email(): void
     {
         Notification::fake();
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
 
         $this->pedir()->assertOk();
 
@@ -88,7 +88,7 @@ class SenhaTest extends TestCase
     public function test_usuario_de_outra_prefeitura_ou_desativado_nao_recebe_email(): void
     {
         Notification::fake();
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $this->criarTenant('outra');
         $this->criarUsuario('outra');
 
@@ -96,7 +96,7 @@ class SenhaTest extends TestCase
         Notification::assertNothingSent();
 
         User::query()->delete();
-        $this->criarUsuario('lemarq', ativo: false);
+        $this->criarUsuario('demo', ativo: false);
 
         $this->pedir()->assertOk();
         Notification::assertNothingSent();
@@ -104,7 +104,7 @@ class SenhaTest extends TestCase
 
     public function test_cpf_invalido_e_recusado(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
 
         $this->pedir('111.111.111-11')
             ->assertUnprocessable()
@@ -113,12 +113,12 @@ class SenhaTest extends TestCase
 
     public function test_redefine_a_senha_com_o_token_e_derruba_as_sessoes(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $user = $this->criarUsuario();
         $token = Password::createToken($user);
-        $sessao = $user->createToken('web:lemarq')->plainTextToken;
+        $sessao = $user->createToken('web:demo')->plainTextToken;
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', [
+        $this->postJson('http://demo.localhost/api/senha/redefinir', [
             'cpf' => '529.982.247-25',
             'token' => $token,
             'password' => 'senha-nova-forte',
@@ -129,10 +129,10 @@ class SenhaTest extends TestCase
 
         $this->assertTrue(Hash::check('senha-nova-forte', $user->fresh()->password));
         $this->assertSame(0, $user->tokens()->count());
-        $this->withToken($sessao)->getJson('http://lemarq.localhost/api/me')->assertUnauthorized();
+        $this->withToken($sessao)->getJson('http://demo.localhost/api/me')->assertUnauthorized();
         tenancy()->end();
 
-        $this->postJson('http://lemarq.localhost/api/login', [
+        $this->postJson('http://demo.localhost/api/login', [
             'cpf' => '529.982.247-25',
             'password' => 'senha-nova-forte',
         ])->assertOk();
@@ -140,7 +140,7 @@ class SenhaTest extends TestCase
 
     public function test_token_usado_duas_vezes_e_recusado(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $user = $this->criarUsuario();
         $token = Password::createToken($user);
         $dados = [
@@ -150,22 +150,22 @@ class SenhaTest extends TestCase
             'password_confirmation' => 'senha-nova-forte',
         ];
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', $dados)->assertOk();
+        $this->postJson('http://demo.localhost/api/senha/redefinir', $dados)->assertOk();
         tenancy()->end();
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', $dados)
+        $this->postJson('http://demo.localhost/api/senha/redefinir', $dados)
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['token' => 'Link inválido ou expirado. Peça um novo.']);
     }
 
     public function test_token_de_outro_usuario_e_recusado(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $this->criarUsuario();
         $outro = User::factory()->create(['cpf' => Cpf::gerar()]);
-        $outro->tenants()->attach('lemarq');
+        $outro->tenants()->attach('demo');
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', [
+        $this->postJson('http://demo.localhost/api/senha/redefinir', [
             'cpf' => '52998224725',
             'token' => Password::createToken($outro),
             'password' => 'senha-nova-forte',
@@ -175,11 +175,11 @@ class SenhaTest extends TestCase
 
     public function test_senha_curta_ou_sem_confirmacao_e_recusada(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $user = $this->criarUsuario();
         $token = Password::createToken($user);
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', [
+        $this->postJson('http://demo.localhost/api/senha/redefinir', [
             'cpf' => '52998224725',
             'token' => $token,
             'password' => 'curta',
@@ -187,7 +187,7 @@ class SenhaTest extends TestCase
         ])->assertJsonValidationErrors(['password']);
         tenancy()->end();
 
-        $this->postJson('http://lemarq.localhost/api/senha/redefinir', [
+        $this->postJson('http://demo.localhost/api/senha/redefinir', [
             'cpf' => '52998224725',
             'token' => $token,
             'password' => 'senha-nova-forte',
@@ -198,7 +198,7 @@ class SenhaTest extends TestCase
     public function test_pedidos_seguidos_sao_limitados(): void
     {
         Notification::fake();
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $this->criarUsuario();
 
         for ($i = 0; $i < 5; $i++) {

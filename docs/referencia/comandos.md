@@ -6,7 +6,7 @@ Comandos do backend rodam dentro do contêiner: `docker compose exec app <comand
 
 ### `usuarios:criar`
 
-Cria um usuário no `stm_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
+Cria um usuário no `erp_estudos_central` (ou atualiza nome, CPF e senha, se o e-mail já existir) e o vincula às prefeituras informadas. Vínculos existentes são mantidos.
 
 ```
 php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--grupo=GRUPO ...] [--superadmin] [--senha=SENHA]
@@ -19,7 +19,7 @@ php artisan usuarios:criar {email} {nome} [--cpf=CPF] [--tenant=ID ...] [--grupo
 | `--cpf` | CPF usado no login, com ou sem máscara (gravado só com dígitos). Se omitido, mantém o CPF do usuário existente ou é pedido no terminal. Falha se for inválido ou já pertencer a outro usuário. |
 | `--tenant` | Id da prefeitura. Repita para várias. Falha se alguma não existir. |
 | `--grupo` | Grupo de acesso (ex.: `Parâmetros`, `Tabelas`, `Lançamentos`) dado em **cada** prefeitura de `--tenant`. Repita para vários. Grupos que o usuário já tem são mantidos. Exige `--tenant`; falha se o grupo não existir na prefeitura. |
-| `--superadmin` | Marca o usuário como superadmin da Lemarq. Só tem efeito quando ele entra pela prefeitura `TENANT_ADMINISTRADOR`. |
+| `--superadmin` | Marca o usuário como superadmin. Só tem efeito quando ele entra pela prefeitura `TENANT_ADMINISTRADOR`. |
 | `--senha` | Senha. Se omitida, é pedida sem eco no terminal (recomendado). |
 
 ### `acesso:sincronizar`
@@ -40,7 +40,7 @@ php artisan acesso:sincronizar [--tenant=ID ...]
 | --- | --- |
 | `php artisan tenants:list` | Lista prefeituras e domínios. |
 | `php artisan tenants:migrate` | Roda as migrations de `database/migrations/tenant` em todas as prefeituras. |
-| `php artisan tenants:migrate --tenants=lemarq` | Só em uma prefeitura. |
+| `php artisan tenants:migrate --tenants=demo` | Só em uma prefeitura. |
 | `php artisan tenants:rollback` | Desfaz a última migration das prefeituras. |
 | `php artisan tenants:seed` | Roda seeders nas prefeituras. |
 | `php artisan tenants:run <comando>` | Roda um comando artisan no contexto de cada prefeitura. |

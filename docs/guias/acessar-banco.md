@@ -1,49 +1,47 @@
 # Como acessar o banco de dados
 
-O PostgreSQL 17 do Docker fica acessível só na sua máquina.
+O MySQL 8.4 do Docker fica acessível só na sua máquina.
 
 | Campo | Valor |
 | --- | --- |
-| Tipo | PostgreSQL |
+| Tipo | MySQL |
 | Host | `127.0.0.1` |
-| Porta | `54321` |
-| Usuário | `stm` |
+| Porta | `33061` |
+| Usuário | `erp_estudos` |
 | Senha | `secret` |
-| Banco | `stm_central` (ou `stm_tenant_<id>`) |
+| Banco | `erp_estudos_central` (ou `erp_estudos_tenant_<id>`) |
 
-## DBeaver / pgAdmin / HeidiSQL
+## DBeaver / MySQL Workbench / HeidiSQL
 
-1. Nova conexão do tipo *PostgreSQL*.
-2. Preencha os campos da tabela acima. No DBeaver, marque *Show all databases* para ver os bancos das prefeituras.
+1. Nova conexão do tipo *MySQL*.
+2. Preencha os campos da tabela acima. No DBeaver, se aparecer `Public Key Retrieval is not allowed`, ative `allowPublicKeyRetrieval` nas propriedades do driver.
 3. Conectar.
-
-> Feche a conexão com o banco de uma prefeitura antes de excluí-la: o PostgreSQL não apaga um banco com conexões abertas.
 
 ## Linha de comando
 
 ```bash
-docker compose exec db psql -U stm stm_central
+docker compose exec db mysql -uerp_estudos -psecret erp_estudos_central
 ```
 
-Liste os bancos com `\l` e troque de banco com `\c stm_tenant_<id>`.
+Liste os bancos com `SHOW DATABASES;` e troque de banco com `USE erp_estudos_tenant_<id>;`.
 
 ## Bancos
 
 | Banco | Conteúdo |
 | --- | --- |
-| `stm_central` | Prefeituras (`tenants`, `domains`), usuários, vínculos (`tenant_user`), tokens. |
-| `stm_tenant_<id>` | Dados de uma prefeitura. |
+| `erp_estudos_central` | Prefeituras (`tenants`, `domains`), usuários, vínculos (`tenant_user`), tokens. |
+| `erp_estudos_tenant_<id>` | Dados de uma prefeitura. |
 
-> **Cuidado:** não rode `php artisan test` apontando para este banco, nem apague tabelas do `stm_central` à mão — a tabela `tenants` guarda o nome do banco de cada prefeitura.
+> **Cuidado:** não rode `php artisan test` apontando para este banco, nem apague tabelas do `erp_estudos_central` à mão — a tabela `tenants` guarda o nome do banco de cada prefeitura.
 
 ## Backup
 
 ```bash
-docker compose exec db pg_dumpall -U stm > backup.sql
+docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --routines' > backup.sql
 ```
 
-Para restaurar num banco vazio:
+Para restaurar:
 
 ```bash
-docker compose exec -T db psql -U stm -d postgres < backup.sql
+docker compose exec -T db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < backup.sql
 ```

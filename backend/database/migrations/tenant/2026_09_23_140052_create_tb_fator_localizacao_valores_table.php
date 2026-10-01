@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('tb_fator_localizacao_valores', function (Blueprint $table) {
             $table->bigIncrements('id_fator_localizacao_valores');
             $table->decimal('valor', 18, 2)->nullable();
-            $table->integer('id_fator_localizacao')->nullable();
-            $table->integer('id_parametro_imovel_iptu');
+            $table->unsignedBigInteger('id_fator_localizacao')->nullable();
+            $table->unsignedInteger('id_parametro_imovel_iptu');
             $table->unique(['id_parametro_imovel_iptu', 'id_fator_localizacao'], 'tb_fator_localizacao_valores_id_parametro_imovel_iptu_id_fa_key');
             $table->foreign('id_fator_localizacao', 'tb_fator_localizacao_valores_id_fator_localizacao_fkey')->references('id_fator_localizacao')->on('tb_fator_localizacao');
             $table->foreign('id_parametro_imovel_iptu', 'tb_fator_localizacao_valores_id_parametro_imovel_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');

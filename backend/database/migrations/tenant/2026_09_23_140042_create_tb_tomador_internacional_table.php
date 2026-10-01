@@ -20,7 +20,7 @@ return new class extends Migration
             $table->bigInteger('id_pais_origem');
             $table->string('email', 255);
             $table->string('numero_identificacao_fiscal', 9)->nullable();
-            $table->bigInteger('id_empresa')->nullable();
+            $table->unsignedBigInteger('id_empresa')->nullable();
             $table->string('endereco_postal', 50)->nullable();
             $table->string('cidade', 255)->nullable();
             $table->string('estado_provincia', 255)->nullable();

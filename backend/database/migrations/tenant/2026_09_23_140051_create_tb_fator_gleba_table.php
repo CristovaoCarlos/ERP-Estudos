@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('area_terreno_minimo', 18, 2);
             $table->decimal('area_terreno_maximo', 18, 2);
             $table->decimal('valor_fator', 18, 4);
-            $table->integer('id_parametro_imovel_iptu');
+            $table->unsignedInteger('id_parametro_imovel_iptu');
             $table->foreign('id_parametro_imovel_iptu', 'tb_fator_gleba_id_parametro_imovel_iptu_fkey')->references('id_parametro_imovel_iptu')->on('tb_parametros_imovel_iptu');
         });
     }

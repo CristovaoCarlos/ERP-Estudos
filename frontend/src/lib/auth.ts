@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { api, getToken, setToken } from '@/lib/api'
 
@@ -17,7 +18,7 @@ export type Usuario = {
   email: string
   /** Endereço da foto (`/api/fotos/...`) ou `null`. */
   foto: string | null
-  /** Superadmin da Lemarq com efeito nesta prefeitura (só na prefeitura administradora). */
+  /** Superadmin com efeito nesta prefeitura (só na prefeitura administradora). */
   superadmin: boolean
   /** Grupos de acesso nesta prefeitura. */
   grupos: string[]
@@ -44,7 +45,7 @@ export function useUsuario() {
   return useQuery({
     queryKey: ['me'],
     queryFn: async () => (await api.get<Usuario>('/me')).data,
-    enabled: getToken() !== null,
+    enabled: computed(() => getToken() !== null),
     retry: false,
     staleTime: Infinity,
   })
@@ -64,13 +65,13 @@ export function useLogin() {
 
 export function useLogout() {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
+  const router = useRouter()
   return useMutation({
     mutationFn: () => api.post('/logout'),
     onSettled: () => {
       setToken(null)
       queryClient.clear()
-      navigate('/login', { replace: true })
+      router.replace('/login')
     },
   })
 }

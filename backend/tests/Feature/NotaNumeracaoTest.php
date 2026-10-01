@@ -22,7 +22,7 @@ class NotaNumeracaoTest extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -30,13 +30,13 @@ class NotaNumeracaoTest extends TestCase
         return $tenant;
     }
 
-    /** Token do superadmin entrando pela Lemarq: as Tabelas Comuns são só dele. */
+    /** Token do superadmin entrando pela Demo: as Tabelas Comuns são só dele. */
     private function entrar(): string
     {
         $user = User::factory()->create(['password' => 'senha', 'superadmin' => true]);
-        $user->tenants()->attach('lemarq');
+        $user->tenants()->attach('demo');
 
-        $token = $this->postJson('http://lemarq.localhost/api/login', [
+        $token = $this->postJson('http://demo.localhost/api/login', [
             'cpf' => $user->cpf,
             'password' => 'senha',
         ])->assertOk()->json('token');
@@ -46,9 +46,9 @@ class NotaNumeracaoTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -65,7 +65,7 @@ class NotaNumeracaoTest extends TestCase
         ]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'get', '/api/administracao/tabelas-comuns/numeracao-de-notas')
+        $this->emDemo($token, 'get', '/api/administracao/tabelas-comuns/numeracao-de-notas')
             ->assertOk()
             ->assertJsonPath('data.*.codigo', ['A', 'D', 'N'])
             ->assertJsonPath('data.0', ['codigo' => 'A', 'descricao' => 'AUTOMÁTICO']);
@@ -76,7 +76,7 @@ class NotaNumeracaoTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'S', 'descricao' => 'POR SÉRIE'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'S', 'descricao' => 'POR SÉRIE'])
             ->assertCreated()
             ->assertJsonPath('codigo', 'S');
 
@@ -89,13 +89,13 @@ class NotaNumeracaoTest extends TestCase
         NotaNumeracao::insert([['cod_numeracao' => 'A', 'descricao' => 'AUTOMÁTICO']]);
         $token = $this->entrar();
 
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'A', 'descricao' => str_repeat('X', 21)])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'A', 'descricao' => str_repeat('X', 21)])
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
                 'codigo' => 'Já existe uma numeração com este código.',
                 'descricao' => 'Use no máximo 20 caracteres.',
             ]);
-        $this->emLemarq($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'a', 'descricao' => 'X'])
+        $this->emDemo($token, 'post', '/api/administracao/tabelas-comuns/numeracao-de-notas', ['codigo' => 'a', 'descricao' => 'X'])
             ->assertJsonValidationErrors(['codigo' => 'O código é uma letra maiúscula.']);
     }
 }

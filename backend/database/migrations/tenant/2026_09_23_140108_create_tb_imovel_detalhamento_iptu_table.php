@@ -40,7 +40,7 @@ return new class extends Migration
             $table->integer('fator_estrutura')->nullable();
             $table->integer('fator_estado_conservacao')->nullable();
             $table->integer('fator_instalacao_eletrica')->nullable();
-            $table->integer('id_isencao')->nullable();
+            $table->unsignedInteger('id_isencao')->nullable();
             $table->string('su_calcamento', 1);
             $table->string('su_calcamento_tipo', 30)->nullable();
             $table->decimal('su_calcamento_testada', 18, 2)->nullable();
@@ -62,7 +62,7 @@ return new class extends Migration
             $table->integer('foro_proprietario_tipo')->nullable();
             $table->string('gleba', 1)->default('N');
             $table->integer('fator_posicao_fachada')->nullable();
-            $table->integer('id_imovel');
+            $table->unsignedBigInteger('id_imovel');
             $table->timestamp('data')->useCurrent();
             $table->index(['id_imovel'], 'idx_tb_imovel_detalhamento_iptu_id_imovel');
             $table->foreign('id_imovel', 'tb_imovel_detalhamento_iptu_id_imovel_fkey')->references('id_imovel')->on('tb_imovel');

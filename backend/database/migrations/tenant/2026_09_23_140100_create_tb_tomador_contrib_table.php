@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('tb_tomador_contrib', function (Blueprint $table) {
             $table->bigIncrements('id_tomador_contrib');
-            $table->integer('id_contribuinte');
-            $table->integer('id_tomador');
+            $table->unsignedBigInteger('id_contribuinte');
+            $table->unsignedInteger('id_tomador');
             $table->foreign('id_contribuinte', 'tb_tomador_contrib_id_contribuinte_fkey')->references('id_contribuinte')->on('tb_contribuinte');
             $table->foreign('id_tomador', 'tb_tomador_contrib_id_tomador_fkey')->references('id_tomador')->on('tb_tomador');
         });

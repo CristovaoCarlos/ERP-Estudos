@@ -21,7 +21,7 @@ use Stancl\Tenancy\Database\Models\Domain;
 class EmpresaController extends Controller
 {
     /** Subdomínios que não podem virar prefeitura. */
-    private const RESERVADOS = ['www', 'api', 'admin', 'app', 'mail', 'stm'];
+    private const RESERVADOS = ['www', 'api', 'admin', 'app', 'mail', 'erp-estudos'];
 
     public function index(): AnonymousResourceCollection
     {
@@ -56,7 +56,7 @@ class EmpresaController extends Controller
             'subdominio.not_in' => 'Este endereço é reservado.',
         ]);
 
-        // O id do tenant dá nome ao banco (stm_tenant_<id>); hostnames usam hífen, ids usam "_".
+        // O id do tenant dá nome ao banco (erp_estudos_tenant_<id>); hostnames usam hífen, ids usam "_".
         $id = str_replace('-', '_', $dados['subdominio']);
         $dominio = $dados['subdominio'].'.'.Arr::first(config('tenancy.central_domains'));
 
@@ -85,7 +85,7 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Administrador da prefeitura, no padrão `admin_<subdominio>`. Se o CPF já existir no STM,
+     * Administrador da prefeitura, no padrão `admin_<subdominio>`. Se o CPF já existir no ERP para Estudos,
      * o usuário existente é aproveitado (nome e senha dele são mantidos).
      */
     private function administrador(array $dados, string $subdominio): User

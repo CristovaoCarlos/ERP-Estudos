@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamp('end_processing')->nullable();
             $table->string('status', 24)->nullable();
             $table->integer('id_empresa')->nullable();
-            $table->jsonb('parametros')->nullable();
+            $table->json('parametros')->nullable();
             $table->bigInteger('iptu_lote_id')->nullable();
             $table->primary('id');
             $table->index(['id_empresa', 'iptu_lote_id', 'id'], 'idx_tb_processing_iptu_lote');

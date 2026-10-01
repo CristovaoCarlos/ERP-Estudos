@@ -1,20 +1,20 @@
 ---
 status: aceita (a parte de `id_empresa` e `tb_empresa` foi substituída por [0013](0013-remove-id-empresa.md))
 data: 2026-09-23
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Estrutura do banco herdada do sistema legado
 
 ## Contexto e problema
 
-O STM substitui um sistema já em produção, cujo banco PostgreSQL tem três schemas relevantes:
+O ERP para Estudos substitui um sistema já em produção, cujo banco PostgreSQL tem três schemas relevantes:
 
 - `public` — dados de cada prefeitura (contribuintes, imóveis, notas fiscais, DAMs, parâmetros): 83 tabelas;
 - `tbcomuns` e `tbinternas` — tabelas de apoio iguais para todas as prefeituras (cidades, bancos, SELIC, CNAE, lista de serviços da LCP 116, países, fatores do IPTU): 25 tabelas;
 - `seguranca` — usuários e grupos do sistema antigo.
 
-No legado, tudo convive em um banco só, e a separação entre prefeituras é feita pela coluna `id_empresa`. No STM, cada prefeitura tem o seu banco ([ADR-0002](0002-multi-tenancy-banco-por-prefeitura.md)). Como trazer essa estrutura?
+No legado, tudo convive em um banco só, e a separação entre prefeituras é feita pela coluna `id_empresa`. No ERP para Estudos, cada prefeitura tem o seu banco ([ADR-0002](0002-multi-tenancy-banco-por-prefeitura.md)). Como trazer essa estrutura?
 
 ## Opções consideradas
 
@@ -27,7 +27,7 @@ No legado, tudo convive em um banco só, e a separação entre prefeituras é fe
 Opção escolhida: **migrations do Laravel geradas a partir do DDL**, com esta divisão:
 
 - `public` → `database/migrations/tenant/`, uma migration por tabela, no banco de cada prefeitura;
-- `tbcomuns` + `tbinternas` → `database/migrations/`, no banco central `stm_central`, sem os prefixos de schema (os nomes `tc_*` e `ti_*` já distinguem as duas origens);
+- `tbcomuns` + `tbinternas` → `database/migrations/`, no banco central `erp_estudos_central`, sem os prefixos de schema (os nomes `tc_*` e `ti_*` já distinguem as duas origens);
 - `seguranca` **não** é migrado: usuários, tokens e sessões já ficam no central ([ADR-0003](0003-usuarios-centralizados.md)) e os grupos de acesso são do spatie, no banco da prefeitura ([ADR-0009](0009-grupos-de-acesso-e-empresas.md)).
 
 O SQL puro foi descartado porque os testes rodam em SQLite ([ADR-0006](0006-testes-em-sqlite.md)): DDL específico do PostgreSQL não roda lá. Redesenhar o modelo foi descartado por ora: a migração dos dados das prefeituras exige a mesma estrutura.

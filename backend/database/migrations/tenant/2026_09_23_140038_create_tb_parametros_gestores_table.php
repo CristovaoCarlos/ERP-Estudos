@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_parametros_gestores', function (Blueprint $table) {
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->integer('id_user');
             $table->string('cargo_descricao', 255)->nullable();
             $table->string('responsavel', 255)->nullable();

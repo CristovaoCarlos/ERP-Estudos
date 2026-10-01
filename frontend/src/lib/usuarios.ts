@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 
 import { api } from '@/lib/api'
 
@@ -76,7 +76,7 @@ export function useAlterarStatus() {
   })
 }
 
-/** Tira o acesso do usuário a esta prefeitura; ele continua no STM. */
+/** Tira o acesso do usuário a esta prefeitura; ele continua no ERP para Estudos. */
 export function useRemoverUsuario() {
   const invalidar = useInvalidarUsuarios()
   return useMutation({

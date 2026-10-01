@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tb_habite_impressao', function (Blueprint $table) {
-            $table->integer('id_habite');
+            $table->unsignedBigInteger('id_habite');
             $table->date('data_lancamento')->nullable();
             $table->integer('id_contribuinte')->nullable();
             $table->string('nome_contribuinte', 150)->nullable();

@@ -46,7 +46,7 @@ class EmpresasTest extends TestCase
         return $token;
     }
 
-    private function cadastrar(string $token, array $dados, string $tenant = 'lemarq')
+    private function cadastrar(string $token, array $dados, string $tenant = 'demo')
     {
         $resposta = $this->withToken($token)->postJson("http://{$tenant}.localhost/api/empresas", $dados + [
             'nome' => 'Prefeitura de Nova Esperança',
@@ -65,8 +65,8 @@ class EmpresasTest extends TestCase
 
     public function test_superadmin_cadastra_empresa_e_provisiona_a_prefeitura(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
 
         $this->cadastrar($token, [])
             ->assertCreated()
@@ -95,32 +95,32 @@ class EmpresasTest extends TestCase
 
     public function test_superadmin_lista_as_empresas(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $this->criarTenant('outra');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $token = $this->entrar('demo', superadmin: true);
 
-        $this->withToken($token)->getJson('http://lemarq.localhost/api/empresas')
+        $this->withToken($token)->getJson('http://demo.localhost/api/empresas')
             ->assertOk()
             ->assertJsonCount(2, 'data')
-            ->assertJsonPath('data.0.id', 'lemarq')
-            ->assertJsonPath('data.0.dominio', 'lemarq.localhost')
+            ->assertJsonPath('data.0.id', 'demo')
+            ->assertJsonPath('data.0.dominio', 'demo.localhost')
             ->assertJsonPath('data.0.situacao', 'ativa');
     }
 
     public function test_usuario_comum_nao_acessa_empresas(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: false);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: false);
 
-        $this->withToken($token)->getJson('http://lemarq.localhost/api/empresas')->assertForbidden();
+        $this->withToken($token)->getJson('http://demo.localhost/api/empresas')->assertForbidden();
         tenancy()->end();
         $this->cadastrar($token, [])->assertForbidden();
         $this->assertNull(Tenant::find('nova_esperanca'));
     }
 
-    public function test_superadmin_fora_da_lemarq_nao_acessa_empresas(): void
+    public function test_superadmin_fora_da_administradora_nao_acessa_empresas(): void
     {
-        $this->criarTenant('lemarq');
+        $this->criarTenant('demo');
         $this->criarTenant('outra');
         $token = $this->entrar('outra', superadmin: true);
 
@@ -129,8 +129,8 @@ class EmpresasTest extends TestCase
 
     public function test_valida_cnpj_e_subdominio(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
 
         $this->cadastrar($token, ['cnpj' => '11.222.333/0001-82', 'subdominio' => 'Nova Esperança!'])
             ->assertUnprocessable()
@@ -145,8 +145,8 @@ class EmpresasTest extends TestCase
 
     public function test_aceita_cnpj_alfanumerico(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
 
         $this->cadastrar($token, ['cnpj' => '12.abc.345/01de-35'])
             ->assertCreated()
@@ -155,8 +155,8 @@ class EmpresasTest extends TestCase
 
     public function test_recusa_endereco_e_cnpj_ja_usados(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
         $this->cadastrar($token, [])->assertCreated();
 
         $this->cadastrar($token, ['cnpj' => '12ABC34501DE35'])
@@ -165,14 +165,14 @@ class EmpresasTest extends TestCase
         $this->cadastrar($token, ['subdominio' => 'outro-municipio'])
             ->assertJsonValidationErrors(['cnpj' => 'Já existe uma empresa com este CNPJ.']);
 
-        $this->cadastrar($token, ['cnpj' => '12ABC34501DE35', 'subdominio' => 'lemarq'])
+        $this->cadastrar($token, ['cnpj' => '12ABC34501DE35', 'subdominio' => 'demo'])
             ->assertJsonValidationErrors(['subdominio' => 'Este endereço já está em uso.']);
     }
 
     public function test_administrador_da_prefeitura_entra_e_ve_tudo(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
         $this->cadastrar($token, [])->assertCreated();
         tenancy()->end();
         $this->app['auth']->forgetGuards();
@@ -186,7 +186,7 @@ class EmpresasTest extends TestCase
 
         $acesso->assertJsonPath('usuario.grupos', [Acesso::ADMINISTRADOR]);
         $this->assertEqualsCanonicalizing(Acesso::permissoes(), $acesso->json('usuario.permissoes'));
-        // Superadmin é só da Lemarq: o administrador da prefeitura não cadastra empresas.
+        // Superadmin é só da Demo: o administrador da prefeitura não cadastra empresas.
         $this->withToken($acesso->json('token'))
             ->getJson('http://nova-esperanca.localhost/api/empresas')
             ->assertForbidden();
@@ -194,10 +194,10 @@ class EmpresasTest extends TestCase
 
     public function test_exige_os_dados_do_administrador(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
 
-        $this->withToken($token)->postJson('http://lemarq.localhost/api/empresas', [
+        $this->withToken($token)->postJson('http://demo.localhost/api/empresas', [
             'nome' => 'Prefeitura de Nova Esperança',
             'cnpj' => '11.222.333/0001-81',
             'subdominio' => 'nova-esperanca',
@@ -224,8 +224,8 @@ class EmpresasTest extends TestCase
 
     public function test_cpf_ja_cadastrado_vira_administrador_da_nova_prefeitura(): void
     {
-        $this->criarTenant('lemarq');
-        $token = $this->entrar('lemarq', superadmin: true);
+        $this->criarTenant('demo');
+        $token = $this->entrar('demo', superadmin: true);
         $maria = User::factory()->create(['name' => 'Maria', 'cpf' => '52998224725']);
 
         $this->cadastrar($token, [])->assertCreated();

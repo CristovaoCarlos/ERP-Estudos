@@ -1,14 +1,14 @@
 ---
 status: aceita
 data: 2026-09-21
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Multi-tenancy com um banco por prefeitura, identificada pelo subdomínio
 
 ## Contexto e problema
 
-O STM atende várias prefeituras. Os dados tributários de uma prefeitura não podem vazar para outra. Como isolar os dados de cada cliente?
+O ERP para Estudos atende várias prefeituras. Os dados tributários de uma prefeitura não podem vazar para outra. Como isolar os dados de cada cliente?
 
 ## Fatores de decisão
 
@@ -26,7 +26,7 @@ O STM atende várias prefeituras. Os dados tributários de uma prefeitura não p
 
 Opção escolhida: **um banco por prefeitura, identificada pelo subdomínio**, com `stancl/tenancy`.
 
-- Nome do banco: `stm_tenant_<id>` (prefixo em `config/tenancy.php`).
+- Nome do banco: `erp_estudos_tenant_<id>` (prefixo em `config/tenancy.php`).
 - O banco é criado e migrado **em fila** pelo worker, para não travar quem cria a prefeitura.
 - O frontend e o proxy do Vite preservam o header `Host`, que é o que identifica a prefeitura.
 

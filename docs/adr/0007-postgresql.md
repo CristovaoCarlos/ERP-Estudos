@@ -1,7 +1,7 @@
 ---
-status: aceita
+status: substituída por [0015](0015-mysql.md)
 data: 2026-09-22
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # PostgreSQL 17 como banco de dados

@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('simples_nacional', 1)->nullable()->default('N');
             $table->string('autonomo_com_tll', 1)->nullable()->default('N');
             $table->text('observacao')->nullable();
-            $table->integer('id_logradouro')->nullable();
+            $table->unsignedBigInteger('id_logradouro')->nullable();
             $table->decimal('tll_area_comercial', 18, 2)->nullable();
             $table->decimal('tll_numero_empregados', 18, 0)->nullable();
             $table->decimal('tll_hoteis_numero_quartos', 18, 0)->nullable();
@@ -41,7 +41,7 @@ return new class extends Migration
             $table->decimal('tll_jogos_numero_mesas', 18, 0)->nullable();
             $table->decimal('tll_jogos_numero_pistas', 18, 0)->nullable();
             $table->decimal('tll_jogos_numero_aparelhos', 18, 0)->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->integer('id_user')->nullable();
             $table->string('first_phone', 20)->nullable();
             $table->string('second_phone', 20)->nullable();

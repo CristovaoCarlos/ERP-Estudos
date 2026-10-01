@@ -24,7 +24,7 @@ class ParametroReceitaTest extends TestCase
         parent::tearDown();
     }
 
-    private function criarTenant(string $id = 'lemarq'): Tenant
+    private function criarTenant(string $id = 'demo'): Tenant
     {
         $tenant = Tenant::create(['id' => $id, 'nome' => "Prefeitura {$id}"]);
         $tenant->domains()->create(['domain' => "{$id}.localhost"]);
@@ -33,7 +33,7 @@ class ParametroReceitaTest extends TestCase
     }
 
     /** Token de um usuário com as permissões de tela informadas. */
-    private function entrar(array $permissoes, string $tenant = 'lemarq'): string
+    private function entrar(array $permissoes, string $tenant = 'demo'): string
     {
         $user = User::factory()->create(['password' => 'senha']);
         $user->tenants()->attach($tenant);
@@ -49,9 +49,9 @@ class ParametroReceitaTest extends TestCase
         return $token;
     }
 
-    private function emLemarq(string $token, string $metodo, string $url, array $dados = [])
+    private function emDemo(string $token, string $metodo, string $url, array $dados = [])
     {
-        $resposta = $this->withToken($token)->json($metodo, "http://lemarq.localhost{$url}", $dados);
+        $resposta = $this->withToken($token)->json($metodo, "http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -65,7 +65,7 @@ class ParametroReceitaTest extends TestCase
      */
     private function criarReceitas(): array
     {
-        return Tenant::find('lemarq')->run(function () {
+        return Tenant::find('demo')->run(function () {
             $receita = fn (string $descricao) => Receita::create([
                 'descricao' => $descricao,
                 'possui_teto' => 'N',
@@ -80,15 +80,15 @@ class ParametroReceitaTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar(['parametros.alvara']);
 
-        $this->emLemarq($token, 'get', '/api/parametros/receitas')->assertForbidden();
-        $this->emLemarq($token, 'put', '/api/parametros/receitas')->assertForbidden();
+        $this->emDemo($token, 'get', '/api/parametros/receitas')->assertForbidden();
+        $this->emDemo($token, 'put', '/api/parametros/receitas')->assertForbidden();
     }
 
     public function test_banco_da_prefeitura_nao_tem_mais_empresa(): void
     {
         $this->criarTenant();
 
-        Tenant::find('lemarq')->run(function () {
+        Tenant::find('demo')->run(function () {
             $this->assertFalse(Schema::hasTable('tb_empresa'));
             foreach (['tb_parametro_receita', 'tb_receita', 'tb_contribuinte', 'tb_imovel', 'tb_processing'] as $tabela) {
                 $this->assertFalse(Schema::hasColumn($tabela, 'id_empresa'), $tabela);
@@ -102,7 +102,7 @@ class ParametroReceitaTest extends TestCase
         $this->criarReceitas();
         $token = $this->entrar(['parametros.receitas']);
 
-        $this->emLemarq($token, 'get', '/api/parametros/receitas/opcoes')
+        $this->emDemo($token, 'get', '/api/parametros/receitas/opcoes')
             ->assertOk()
             ->assertJsonCount(2, 'receitas')
             ->assertJsonPath('receitas.0.descricao', 'IPTU');
@@ -113,7 +113,7 @@ class ParametroReceitaTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar(['parametros.receitas']);
 
-        $this->emLemarq($token, 'get', '/api/parametros/receitas')
+        $this->emDemo($token, 'get', '/api/parametros/receitas')
             ->assertOk()
             ->assertJsonCount(13, 'receitas')
             ->assertJsonPath('receitas.iss', null);
@@ -125,18 +125,18 @@ class ParametroReceitaTest extends TestCase
         $ids = $this->criarReceitas();
         $token = $this->entrar(['parametros.receitas']);
 
-        $this->emLemarq($token, 'put', '/api/parametros/receitas', ['receitas' => ['iss' => $ids['iss']]])
+        $this->emDemo($token, 'put', '/api/parametros/receitas', ['receitas' => ['iss' => $ids['iss']]])
             ->assertOk()
             ->assertJsonPath('receitas.iss', $ids['iss'])
             ->assertJsonPath('receitas.iptu', null);
 
-        $this->emLemarq($token, 'put', '/api/parametros/receitas', ['receitas' => ['iptu' => $ids['iptu']]])
+        $this->emDemo($token, 'put', '/api/parametros/receitas', ['receitas' => ['iptu' => $ids['iptu']]])
             ->assertOk()
             ->assertJsonPath('receitas.iss', null)
             ->assertJsonPath('receitas.iptu', $ids['iptu']);
 
-        $this->emLemarq($token, 'get', '/api/parametros/receitas')->assertJsonPath('receitas.iptu', $ids['iptu']);
-        Tenant::find('lemarq')->run(fn () => $this->assertSame(1, ParametroReceita::count()));
+        $this->emDemo($token, 'get', '/api/parametros/receitas')->assertJsonPath('receitas.iptu', $ids['iptu']);
+        Tenant::find('demo')->run(fn () => $this->assertSame(1, ParametroReceita::count()));
     }
 
     public function test_recusa_receita_inexistente(): void
@@ -144,7 +144,7 @@ class ParametroReceitaTest extends TestCase
         $this->criarTenant();
         $token = $this->entrar(['parametros.receitas']);
 
-        $this->emLemarq($token, 'put', '/api/parametros/receitas', ['receitas' => ['iss' => 999]])
+        $this->emDemo($token, 'put', '/api/parametros/receitas', ['receitas' => ['iss' => 999]])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['receitas.iss' => 'Receita não encontrada.']);
     }

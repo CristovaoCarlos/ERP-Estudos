@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup } from '@testing-library/vue'
 import { afterEach, vi } from 'vitest'
 
-// APIs de navegador que o jsdom não implementa e que o sidebar e os menus Radix usam.
+// APIs de navegador que o jsdom não implementa e que o sidebar e os menus do reka-ui usam.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn((query: string) => ({

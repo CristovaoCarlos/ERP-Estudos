@@ -1,7 +1,7 @@
 ---
 status: aceita
 data: 2026-09-21
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Autenticação por token do Sanctum com vínculo usuário ↔ prefeitura

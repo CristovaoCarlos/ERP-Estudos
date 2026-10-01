@@ -45,7 +45,7 @@ class User extends Authenticatable
         return (bool) $this->tenants()->whereKey($tenantId)->value('ativo');
     }
 
-    /** Superadmin com efeito: só na prefeitura da Lemarq (`config('acesso.tenant_administrador')`). */
+    /** Superadmin com efeito: só na prefeitura administradora (`config('acesso.tenant_administrador')`). */
     public function ehSuperadmin(): bool
     {
         return $this->superadmin && Acesso::naPrefeituraAdministradora();

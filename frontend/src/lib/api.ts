@@ -1,6 +1,10 @@
 import axios from 'axios'
+import { ref } from 'vue'
 
-const TOKEN_KEY = 'stm.token'
+const TOKEN_KEY = 'erp_estudos.token'
+
+/** Token da sessão. Reativo: telas e consultas reagem ao login e ao logout. */
+const token = ref(localStorage.getItem(TOKEN_KEY))
 
 export const api = axios.create({
   baseURL: '/api',
@@ -8,17 +12,18 @@ export const api = axios.create({
 })
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return token.value
 }
 
-export function setToken(token: string | null) {
-  if (token) localStorage.setItem(TOKEN_KEY, token)
+export function setToken(novo: string | null) {
+  token.value = novo
+  if (novo) localStorage.setItem(TOKEN_KEY, novo)
   else localStorage.removeItem(TOKEN_KEY)
 }
 
 api.interceptors.request.use((config) => {
-  const token = getToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  const atual = getToken()
+  if (atual) config.headers.Authorization = `Bearer ${atual}`
   return config
 })
 

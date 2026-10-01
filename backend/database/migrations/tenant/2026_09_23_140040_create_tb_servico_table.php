@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('taxa_cobranca', 1);
             $table->decimal('reducao_base_calculo', 18, 2);
             $table->text('observacao')->nullable();
-            $table->integer('id_empresa');
+            $table->unsignedBigInteger('id_empresa');
             $table->unique(['codigo_servico', 'id_empresa'], 'tb_servico_codigo_servico_id_empresa_key');
             $table->foreign('id_empresa', 'tb_servico_id_empresa_fkey')->references('id_empresa')->on('tb_empresa');
         });

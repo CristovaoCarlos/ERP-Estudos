@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('stm_migrations', function (Blueprint $table) {
             $table->increments('id');
-            $table->text('filename');
+            $table->string('filename', 255);
             $table->timestamp('applied_at')->useCurrent();
             $table->text('checksum')->nullable();
             $table->unique(['filename'], 'stm_migrations_filename_key');

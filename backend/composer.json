@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "lemarq/stm-backend",
+    "name": "erp_estudos/backend",
     "type": "project",
-    "description": "STM — Sistema de Tributação Municipal (API)",
+    "description": "ERP para Estudos (API)",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {

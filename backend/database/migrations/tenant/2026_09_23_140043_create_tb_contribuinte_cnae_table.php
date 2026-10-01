@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_contribuinte_cnae', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('id_contribuinte');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->integer('codigo_cnae');
             $table->string('principal', 1)->nullable()->comment('S- Sim, N- Não');
             $table->unique(['id_contribuinte', 'codigo_cnae'], 'tb_contribuinte_cnae_id_contribuinte_codigo_cnae_key');

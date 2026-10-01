@@ -1,7 +1,7 @@
 ---
-status: aceita
+status: aceita; SPA React substituída por Vue em [0016](0016-frontend-em-vue.md)
 data: 2026-09-21
-decisores: equipe STM
+decisores: equipe ERP para Estudos
 ---
 
 # Monorepo com API Laravel e SPA React

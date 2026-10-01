@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('tb_contribuinte_documento', function (Blueprint $table) {
             $table->bigIncrements('id_contribuinte_documento');
-            $table->integer('id_contribuinte');
+            $table->unsignedBigInteger('id_contribuinte');
             $table->integer('id_tipo_documento');
             $table->string('numero_doc', 30);
             $table->unique(['id_contribuinte', 'id_tipo_documento', 'numero_doc'], 'tb_contribuinte_documento_id_contribuinte_id_tipo_documento_key');
