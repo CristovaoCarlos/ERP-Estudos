@@ -63,19 +63,19 @@ class GruposTest extends TestCase
         $token = $this->entrar(['administracao.grupos']);
         $maria = User::factory()->create();
         $maria->tenants()->attach('demo');
-        Tenant::find('demo')->run(fn () => $maria->assignRole('Tabelas'));
+        Tenant::find('demo')->run(fn () => $maria->assignRole('cadastros'));
 
         $resposta = $this->emDemo($token, 'get', '/api/grupos')
             ->assertOk()
-            ->assertJsonCount(4, 'data')
+            ->assertJsonCount(3, 'data')
             ->assertJsonPath('data.0.nome', 'Administrador')
             ->assertJsonPath('data.0.sistema', true)
             ->assertJsonPath('data.1.nome', 'Lançamentos')
             ->assertJsonPath('data.1.sistema', false);
 
-        $tabelas = collect($resposta->json('data'))->firstWhere('nome', 'Tabelas');
-        $this->assertSame(1, $tabelas['usuarios']);
-        $this->assertContains('tabelas.ufm', $tabelas['telas']);
+        $cadastros = collect($resposta->json('data'))->firstWhere('nome', 'cadastros');
+        $this->assertSame(1, $cadastros['usuarios']);
+        $this->assertContains('cadastros.clientes', $cadastros['telas']);
     }
 
     public function test_cria_grupo_personalizado_com_telas_de_modulos_diferentes(): void
@@ -85,7 +85,7 @@ class GruposTest extends TestCase
 
         $this->emDemo($token, 'post', '/api/grupos', [
             'nome' => 'Fiscalização',
-            'telas' => ['parametros.alvara', 'lancamentos.alvara', 'relatorios.alvaras.listagem'],
+            'telas' => ['cadastros.clientes', 'lancamentos.vendas', 'relatorios.vendas_periodo'],
         ])
             ->assertCreated()
             ->assertJsonPath('nome', 'Fiscalização')
@@ -95,7 +95,7 @@ class GruposTest extends TestCase
         Tenant::find('demo')->run(function () {
             $grupo = Role::findByName('Fiscalização', 'web');
             $this->assertEqualsCanonicalizing(
-                ['parametros.alvara', 'lancamentos.alvara', 'relatorios.alvaras.listagem'],
+                ['cadastros.clientes', 'lancamentos.vendas', 'relatorios.vendas_periodo'],
                 $grupo->permissions->pluck('name')->all(),
             );
         });
@@ -105,16 +105,16 @@ class GruposTest extends TestCase
     {
         $this->criarTenant('demo');
         $token = $this->entrar(['administracao.grupos']);
-        $id = $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Fiscal', 'telas' => ['parametros.alvara']])
+        $id = $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Fiscal', 'telas' => ['cadastros.produtos']])
             ->json('id');
 
         $this->emDemo($token, 'put', "/api/grupos/{$id}", [
-            'nome' => 'Fiscalização de obras',
-            'telas' => ['lancamentos.habite-se'],
+            'nome' => 'Fiscalização de vendas',
+            'telas' => ['lancamentos.vendas'],
         ])
             ->assertOk()
-            ->assertJsonPath('nome', 'Fiscalização de obras')
-            ->assertJsonPath('telas', ['lancamentos.habite-se']);
+            ->assertJsonPath('nome', 'Fiscalização de vendas')
+            ->assertJsonPath('telas', ['lancamentos.vendas']);
     }
 
     public function test_usuario_do_grupo_passa_a_enxergar_as_telas_dele(): void
@@ -123,7 +123,7 @@ class GruposTest extends TestCase
         $token = $this->entrar(['administracao.grupos']);
         $this->emDemo($token, 'post', '/api/grupos', [
             'nome' => 'Fiscalização',
-            'telas' => ['parametros.alvara', 'lancamentos.alvara'],
+            'telas' => ['lancamentos.vendas', 'cadastros.clientes'],
         ])->assertCreated();
 
         $maria = User::factory()->create(['password' => 'senha']);
@@ -138,7 +138,7 @@ class GruposTest extends TestCase
 
         $this->emDemo($dela, 'get', '/api/me')
             ->assertJsonPath('grupos', ['Fiscalização'])
-            ->assertJsonPath('permissoes', ['lancamentos.alvara', 'parametros.alvara']);
+            ->assertJsonPath('permissoes', ['cadastros.clientes', 'lancamentos.vendas']);
     }
 
     public function test_recusa_nome_repetido_e_tela_desconhecida(): void
@@ -146,11 +146,11 @@ class GruposTest extends TestCase
         $this->criarTenant('demo');
         $token = $this->entrar(['administracao.grupos']);
 
-        $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Tabelas'])
+        $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Lançamentos'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['nome' => 'Já existe um grupo com este nome.']);
 
-        $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Outro', 'telas' => ['parametros.inexistente']])
+        $this->emDemo($token, 'post', '/api/grupos', ['nome' => 'Outro', 'telas' => ['cadastros.inexistente']])
             ->assertJsonValidationErrors(['telas.0' => 'Tela desconhecida.']);
     }
 
@@ -175,9 +175,9 @@ class GruposTest extends TestCase
         $maria = User::factory()->create();
         $maria->tenants()->attach('demo');
         $emUso = Tenant::find('demo')->run(function () use ($maria) {
-            $maria->assignRole('Tabelas');
+            $maria->assignRole('cadastros');
 
-            return Role::findByName('Tabelas', 'web')->id;
+            return Role::findByName('cadastros', 'web')->id;
         });
 
         $this->emDemo($token, 'delete', "/api/grupos/{$emUso}")
@@ -197,7 +197,7 @@ class GruposTest extends TestCase
     public function test_sem_permissao_nao_ve_os_grupos(): void
     {
         $this->criarTenant('demo');
-        $token = $this->entrar(['tabelas.ufm']);
+        $token = $this->entrar(['cadastros.clientes']);
 
         $this->emDemo($token, 'get', '/api/grupos')->assertForbidden();
         $this->emDemo($token, 'delete', '/api/grupos/1')->assertForbidden();
@@ -240,14 +240,14 @@ class GruposTest extends TestCase
         $tenant = $this->criarTenant('demo');
         $token = $this->entrar(['administracao.grupos']);
         $id = collect($this->emDemo($token, 'get', '/api/grupos')->json('data'))
-            ->firstWhere('nome', 'Tabelas')['id'];
-        $this->emDemo($token, 'put', "/api/grupos/{$id}", ['nome' => 'Tabelas', 'telas' => ['tabelas.ufm']]);
+            ->firstWhere('nome', 'Lançamentos')['id'];
+        $this->emDemo($token, 'put', "/api/grupos/{$id}", ['nome' => 'Lançamentos', 'telas' => ['relatorios.vendas_periodo']]);
 
         $this->artisan('acesso:sincronizar')->assertSuccessful();
 
         $tenant->run(fn () => $this->assertSame(
-            ['tabelas.ufm'],
-            Role::findByName('Tabelas', 'web')->permissions->pluck('name')->all(),
+            ['relatorios.vendas_periodo'],
+            Role::findByName('Lançamentos', 'web')->permissions->pluck('name')->all(),
         ));
     }
 }
