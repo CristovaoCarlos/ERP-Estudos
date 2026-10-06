@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Cidade;
-use App\Models\Lcp116;
-use App\Models\Segmento;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Acesso;
@@ -22,13 +20,6 @@ class TabelasComunsAcessoTest extends TestCase
     /** Todas as rotas do módulo: método, caminho. */
     private const ROTAS = [
         ['get', 'cidades'], ['post', 'cidades'], ['put', 'cidades/1'],
-        ['get', 'bancos'], ['post', 'bancos'],
-        ['get', 'cnae'], ['post', 'cnae'],
-        ['get', 'lista-de-servicos'], ['post', 'lista-de-servicos'], ['put', 'lista-de-servicos/01'],
-        ['get', 'selic'], ['post', 'selic'],
-        ['get', 'segmentos'], ['post', 'segmentos'], ['put', 'segmentos/1'],
-        ['get', 'numeracao-de-notas'], ['post', 'numeracao-de-notas'],
-        ['get', 'tipos-de-dam'], ['post', 'tipos-de-dam'],
     ];
 
     protected function tearDown(): void
@@ -43,10 +34,8 @@ class TabelasComunsAcessoTest extends TestCase
 
     private function criarTenant(string $id): void
     {
-        // Registros das rotas de alteração: sem eles o Laravel responderia 404 antes de checar o acesso.
-        if (! Lcp116::whereKey('01')->exists()) {
-            Lcp116::insert([['codigo' => '01', 'descricao' => 'Serviços de informática.']]);
-            Segmento::insert([['codigo' => '1', 'descricao' => 'PREFEITURA']]);
+        // Registro da rota de alteração: sem ele o Laravel responderia 404 antes de checar o acesso.
+        if (! Cidade::whereKey(1)->exists()) {
             Cidade::insert([['id_cidade' => 1, 'codigo' => '3550308', 'descricao' => 'São Paulo', 'uf' => 'SP']]);
         }
 

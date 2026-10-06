@@ -26,7 +26,6 @@ prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam
 | `check_pix_api` | 9 | `id` |  |
 | `mq_messages` | 10 | `id` |  |
 | `mq_queues` | 2 | `id` |  |
-| `stm_migrations` | 4 | `id` |  |
 | `tb_alvara` | 23 | `id_doc` |  |
 | `tb_alvara_cnae` | 5 | `id` | referências sem FK: `tbinternas.ti_cnae` |
 | `tb_alvara_impressao` | 27 | `id_doc` |  |
@@ -80,7 +79,7 @@ prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam
 | `tb_modelo_certidao_negativa` | 4 | `id_modelo_certidao` |  |
 | `tb_natureza_itbi` | 5 | `id_natureza_itbi` |  |
 | `tb_negociacao` | 6 | `id_negociacao` | referências sem FK: `seguranca.sec_users` |
-| `tb_nota_fiscal` | 119 | `id_doc` | referências sem FK: `tbcomuns.tc_cidade`, `tbinternas.ti_aliquota_servico_ir`, `tbinternas.ti_nfse_lcp116_detalhamento`, `tbinternas.ti_nfse_nbs` |
+| `tb_nota_fiscal` | 118 | `id_doc` | referências sem FK: `tbcomuns.tc_cidade`, `tbinternas.ti_nfse_lcp116_detalhamento`, `tbinternas.ti_nfse_nbs` |
 | `tb_nota_fiscal_impressao` | 52 | `id_doc` |  |
 | `tb_nota_fiscal_servico` | 17 | `id_nota_fiscal_servico` |  |
 | `tb_parametro_alvara` | 13 | `id_parametro_alvara` |  |
@@ -110,14 +109,13 @@ prefeitura. Os índices que combinavam `id_empresa` com outras colunas continuam
 restrições `CHECK` ficam na migration `2026_09_23_142000_adiciona_indices_e_checks_do_legado.php`, em SQL,
 e só rodam no MySQL ([ADR-0015](../adr/0015-mysql.md)).
 
-## Tabelas do banco central (25)
+## Tabelas do banco central (24)
 
 | Tabela | Colunas | Chave primária | Observação |
 | --- | --- | --- | --- |
 | `tc_banco` | 3 | `id_banco` |  |
 | `tc_cidade` | 4 | `id_cidade` |  |
 | `tc_selic` | 4 | `id` |  |
-| `ti_aliquota_servico_ir` | 6 | `id_aliquota_ir` |  |
 | `ti_cnae` | 10 | `codigo` |  |
 | `ti_dam_tipo` | 2 | `cod_dam_tipo` |  |
 | `ti_fator` | 3 | `fator` |  |

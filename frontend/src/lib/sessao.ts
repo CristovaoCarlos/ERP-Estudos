@@ -51,10 +51,16 @@ export function useControleDeSessao(minutos: MaybeRefOrGetter<number>, aoExpirar
 
   function encerrar() {
     const token = getToken()
+    // O servidor conta o prazo desde a última requisição, que vem antes da última atividade:
+    // quase sempre ele já recusou e apagou o token, e o /logout só daria 401. Só revoga se o token
+    // ainda pode estar vivo (outra aba que fez requisições depois expira junto e revoga).
+    const tokenAindaVivo = Date.now() - getUltimaRequisicao() < prazo()
     aoExpirar()
     setToken(null)
-    // O token já saiu do estado: o header vai explícito e um 401 aqui não redireciona de novo.
-    api.post('/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+    if (tokenAindaVivo) {
+      // O token já saiu do estado: o header vai explícito e um 401 aqui não redireciona de novo.
+      api.post('/logout', null, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+    }
     queryClient.clear()
   }
 
