@@ -113,7 +113,7 @@ flowchart TB
 | `EmpresaController` | `app/Http/Controllers` | Lista e cadastra empresas (prefeituras clientes) com o administrador de cada uma; só superadmin. |
 | `GrupoController` | `app/Http/Controllers` | Grupos de acesso da prefeitura: cria, altera as telas e exclui. |
 | `UsuarioController` | `app/Http/Controllers` | Usuários da prefeitura: lista, cadastra ou vincula, altera grupos e tira o acesso. |
-| Relatórios | `app/Relatorios/` | Camada própria de relatórios (PDF via mPDF). *A construir.* |
+| Relatórios | `app/Relatorios/` | Relatórios (`VendasNoPeriodo`) e a fachada de PDF `Pdf\Pdf`, com o mPDF como motor ([ADR-0020](../adr/0020-fachada-de-pdf-com-mpdf.md)); views em `resources/views/relatorios/` |
 
 ### Blocos do frontend
 

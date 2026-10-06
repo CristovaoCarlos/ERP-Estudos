@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ProdutoResource;
 use App\Models\Produto;
 use App\Models\Unidade;
+use App\Models\VendaItem;
 use App\Rules\Gtin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Cadastros › Produtos: lista, inclui, altera e exclui os produtos da prefeitura.
@@ -40,8 +42,15 @@ class ProdutoController extends Controller
         return new ProdutoResource($produto->refresh());
     }
 
+    /** Quem já está numa venda não sai do cadastro: o histórico precisa dele. */
     public function destroy(Produto $produto): Response
     {
+        if (VendaItem::where('id_produto', $produto->id_produto)->exists()) {
+            throw ValidationException::withMessages([
+                'produto' => 'Este produto já foi vendido e fica no histórico das vendas: marque-o como inativo em vez de excluir.',
+            ]);
+        }
+
         $produto->delete();
 
         return response()->noContent();

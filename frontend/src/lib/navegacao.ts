@@ -10,6 +10,7 @@ import {
   ReceiptText,
   Ruler,
   Settings2,
+  ShoppingCart,
   TrendingUp,
   UserCog,
   type LucideIcon,
@@ -66,9 +67,9 @@ export const menu: Modulo[] = [
   },
   {
     titulo: 'Lançamentos',
-    url: '/lançamentos',
+    url: '/lancamentos',
     icone: Receipt,
-    paginas: [{ titulo: 'Vendas', url: '/lancamentos/vendas', icone: FilePlus }],
+    paginas: [{ titulo: 'Vendas', url: '/lancamentos/vendas', icone: ShoppingCart }],
   },
   {
     titulo: 'Relatórios',

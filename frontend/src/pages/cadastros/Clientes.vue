@@ -17,6 +17,7 @@ import {
   type Cliente,
   type TipoPessoa,
 } from '@/lib/cadastros-clientes'
+import { errosDosCampos } from '@/lib/empresas'
 import { useSelecao, type Coluna } from '@/lib/listagem'
 import FormularioDeCliente from '@/pages/cadastros/clientes/FormularioDeCliente.vue'
 
@@ -107,7 +108,9 @@ function excluir() {
       toast.success(`Cliente ${cliente.nome} excluído.`)
       excluindo.value = null
     },
-    onError: () => toast.error('Não foi possível excluir o cliente.'),
+    // Quem já está numa venda não sai do cadastro: o servidor explica.
+    onError: (erro) =>
+      toast.error(errosDosCampos(erro)?.cliente ?? 'Não foi possível excluir o cliente.'),
   })
 }
 </script>

@@ -5,8 +5,21 @@ import type { z } from 'zod'
 import { errosDosCampos } from '@/lib/empresas'
 
 /**
+ * Caminho do campo como o vee-validate grava os erros: índices de lista entre colchetes
+ * (`itens[0].quantidade`). Com ponto (`itens.0.quantidade`), o erro seria apagado na validação
+ * seguinte, que confere a chave com colchetes.
+ */
+function caminhoDoCampo(partes: PropertyKey[]): string {
+  return partes
+    .map((parte, posicao) =>
+      typeof parte === 'number' ? `[${parte}]` : `${posicao ? '.' : ''}${String(parte)}`,
+    )
+    .join('')
+}
+
+/**
  * Adapta um schema do zod 4 ao vee-validate: o adaptador oficial (`@vee-validate/zod`) só aceita
- * o zod 3. Cada erro vai para o caminho do campo (`receitas.iss`, `administrador.cpf`).
+ * o zod 3. Cada erro vai para o caminho do campo (`receitas.iss`, `itens[0].quantidade`).
  */
 export function esquemaZod<T extends z.ZodType>(esquema: T): TypedSchema<z.input<T>, z.output<T>> {
   return {
@@ -17,7 +30,7 @@ export function esquemaZod<T extends z.ZodType>(esquema: T): TypedSchema<z.input
 
       const porCampo = new Map<string, string[]>()
       for (const problema of resultado.error.issues) {
-        const caminho = problema.path.join('.')
+        const caminho = caminhoDoCampo(problema.path)
         porCampo.set(caminho, [...(porCampo.get(caminho) ?? []), problema.message])
       }
       return { errors: [...porCampo].map(([path, errors]) => ({ path, errors })) }

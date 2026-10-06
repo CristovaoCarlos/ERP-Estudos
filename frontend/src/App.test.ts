@@ -12,6 +12,7 @@ import { permissaoDaTela, telas } from '@/lib/navegacao'
 import { subdominioDaPrefeitura } from '@/lib/prefeitura'
 import { ATIVIDADE_KEY } from '@/lib/sessao'
 import Landing from '@/pages/Landing.vue'
+import { hoje } from '@/pages/lancamentos/vendas/esquema'
 import { criarRouter } from '@/router'
 
 const usuario = {
@@ -2242,5 +2243,505 @@ describe('minha conta', () => {
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Remover' }))
 
     await esperarChamada(remover, '/me/foto')
+  })
+})
+
+describe('lançamentos › vendas', () => {
+  const arroz = {
+    id: 1,
+    codigo: 'ARZ-5',
+    descricao: 'Arroz 5 kg',
+    codigo_barras: '7891000315507',
+    unidade: 'UN',
+    preco_venda: '10.50',
+    controla_estoque: true,
+    estoque_atual: '10.000',
+  }
+  const feijao = {
+    ...arroz,
+    id: 2,
+    codigo: 'FEI-1',
+    descricao: 'Feijão 1 kg',
+    codigo_barras: null,
+    estoque_atual: '0.000',
+  }
+  const instalacao = {
+    ...arroz,
+    id: 3,
+    codigo: 'SRV-1',
+    descricao: 'Instalação',
+    codigo_barras: null,
+    preco_venda: '25.00',
+    controla_estoque: false,
+    estoque_atual: '0.000',
+  }
+  const opcoes = {
+    formas_de_pagamento: [
+      { valor: 'dinheiro', descricao: 'Dinheiro' },
+      { valor: 'pix', descricao: 'Pix' },
+    ],
+    clientes: [{ id: 7, nome: 'Maria Silva', tipo_pessoa: 'F', cpf_cnpj: '52998224725' }],
+    vendedores: [{ id: 3, nome: 'João Pereira' }],
+    produtos: [arroz, feijao, instalacao],
+  }
+  const itemDeArroz = {
+    id: 1,
+    produto: 1,
+    codigo: 'ARZ-5',
+    descricao: 'Arroz 5 kg',
+    unidade: 'UN',
+    quantidade: '2.000',
+    preco_unitario: '10.50',
+    desconto: '0.00',
+    total: '21.00',
+    baixou_estoque: true,
+  }
+  const vendaFinalizada = {
+    id: 1,
+    data: '2026-10-05',
+    cliente: { id: 7, nome: 'Maria Silva', tipo_pessoa: 'F', cpf_cnpj: '52998224725' },
+    vendedor: { id: 3, nome: 'João Pereira' },
+    forma_pagamento: 'pix',
+    subtotal: '21.00',
+    desconto: '0.00',
+    total: '21.00',
+    observacoes: null,
+    situacao: 'finalizada',
+    registrada_em: '2026-10-05T14:30:00-03:00',
+    cancelada_em: null,
+    itens: [itemDeArroz],
+  }
+  const vendaCancelada = {
+    ...vendaFinalizada,
+    id: 2,
+    data: '2026-10-04',
+    cliente: { id: 8, nome: 'José Souza', tipo_pessoa: 'F', cpf_cnpj: '11144477735' },
+    vendedor: { id: 4, nome: 'Ana Costa' },
+    forma_pagamento: 'dinheiro',
+    subtotal: '25.00',
+    total: '25.00',
+    situacao: 'cancelada',
+    cancelada_em: '2026-10-04T16:00:00-03:00',
+    itens: [{ ...itemDeArroz, id: 2, quantidade: '1.000', total: '25.00' }],
+  }
+
+  async function abrirVendas() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/lancamentos/vendas': { data: [vendaFinalizada, vendaCancelada] },
+      '/lancamentos/vendas/opcoes': opcoes,
+    })
+    await renderizar(App, '/lancamentos/vendas')
+  }
+
+  async function novaVenda() {
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova venda' }))
+    const dialogo = await screen.findByRole('dialog')
+    await within(dialogo).findByRole('combobox', { name: 'Produtos' })
+    return dialogo
+  }
+
+  /** Cliente e vendedor pela busca, e a forma de pagamento. */
+  async function preencherCabecalho(dialogo: HTMLElement, pagamento = 'Pix') {
+    await userEvent.type(within(dialogo).getByRole('combobox', { name: 'Cliente' }), 'maria')
+    await userEvent.click(await screen.findByRole('option', { name: /Maria Silva/ }))
+    await userEvent.type(within(dialogo).getByRole('combobox', { name: 'Vendedor' }), 'joao')
+    await userEvent.click(await screen.findByRole('option', { name: 'João Pereira' }))
+    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'Forma de pagamento' }))
+    await userEvent.click(await screen.findByRole('option', { name: pagamento }))
+  }
+
+  async function adicionarProduto(dialogo: HTMLElement, busca: string, nome: RegExp) {
+    const campo = within(dialogo).getByRole('combobox', { name: 'Produtos' })
+    await userEvent.clear(campo)
+    await userEvent.type(campo, busca)
+    await userEvent.click(await screen.findByRole('option', { name: nome }))
+  }
+
+  it('fica em Lançamentos › Vendas e lista as vendas com total e situação', async () => {
+    await abrirVendas()
+
+    expect(await screen.findByRole('heading', { name: 'Vendas' })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'breadcrumb' })).toHaveTextContent('Lançamentos')
+    const linha = (await screen.findByRole('cell', { name: '000001' })).closest('tr')!
+    expect(linha).toHaveTextContent('05/10/2026')
+    expect(linha).toHaveTextContent('Maria Silva')
+    expect(linha).toHaveTextContent('João Pereira')
+    expect(linha).toHaveTextContent('Pix')
+    expect(linha).toHaveTextContent('R$ 21,00')
+    expect(linha).toHaveTextContent('Finalizada')
+
+    const cancelada = screen.getByRole('cell', { name: '000002' }).closest('tr')!
+    expect(cancelada).toHaveTextContent('José Souza')
+    expect(cancelada).toHaveTextContent('Cancelada')
+    expect(
+      within(cancelada).getByRole('button', { name: 'Cancelar a venda 000002' }),
+    ).toBeDisabled()
+    // O total vendido conta só as finalizadas.
+    expect(screen.getByTestId('total-vendido')).toHaveTextContent('R$ 21,00')
+  })
+
+  it('filtra as canceladas pelo menu Filtros', async () => {
+    await abrirVendas()
+    await screen.findByRole('cell', { name: '000001' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Canceladas' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: '000002' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: '000001' })).not.toBeInTheDocument()
+  })
+
+  it('registra uma venda com cliente, vendedor e itens, calculando o total', async () => {
+    await abrirVendas()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { ...vendaFinalizada, id: 3 } })
+    const dialogo = await novaVenda()
+
+    // Cliente e vendedor pela busca de texto (sem acento).
+    await preencherCabecalho(dialogo)
+
+    // Pelo código de barras e pela descrição (sem acento).
+    await adicionarProduto(dialogo, '789100', /Arroz 5 kg/)
+    await adicionarProduto(dialogo, 'instalacao', /Instalação/)
+    const quantidade = within(dialogo).getByLabelText('Quantidade de Arroz 5 kg')
+    await userEvent.clear(quantidade)
+    await userEvent.type(quantidade, '2')
+    expect(within(dialogo).getByText('Disponível: 10 UN', { exact: false })).toBeInTheDocument()
+
+    // 2 × 10,50 + 1 × 25,00 = 46,00; com 1,00 de desconto, 45,00.
+    expect(within(dialogo).getByTestId('venda-subtotal')).toHaveTextContent('R$ 46,00')
+    await userEvent.type(within(dialogo).getByLabelText('Desconto (R$)'), '1,00')
+    expect(within(dialogo).getByTestId('venda-total')).toHaveTextContent('R$ 45,00')
+
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar venda' }))
+
+    await esperarChamada(post, '/lancamentos/vendas', {
+      data: hoje(),
+      cliente: 7,
+      vendedor: 3,
+      forma_pagamento: 'pix',
+      desconto: 1,
+      observacoes: null,
+      itens: [
+        { produto: 1, quantidade: 2, preco_unitario: 10.5, desconto: 0 },
+        { produto: 3, quantidade: 1, preco_unitario: 25, desconto: 0 },
+      ],
+    })
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('escolher de novo o mesmo produto soma 1 à quantidade', async () => {
+    await abrirVendas()
+    const dialogo = await novaVenda()
+
+    await adicionarProduto(dialogo, 'arroz', /Arroz 5 kg/)
+    await adicionarProduto(dialogo, 'arroz', /Arroz 5 kg/)
+
+    expect(within(dialogo).getAllByLabelText(/^Quantidade de/)).toHaveLength(1)
+    expect(within(dialogo).getByLabelText('Quantidade de Arroz 5 kg')).toHaveValue('2')
+  })
+
+  it('produto sem estoque aparece bloqueado e não entra na venda', async () => {
+    await abrirVendas()
+    const dialogo = await novaVenda()
+
+    await userEvent.type(within(dialogo).getByRole('combobox', { name: 'Produtos' }), 'feijao')
+    const opcao = await screen.findByRole('option', { name: /Feijão 1 kg/ })
+    expect(opcao).toHaveAttribute('data-disabled')
+    expect(opcao).toHaveTextContent('Sem estoque')
+    await userEvent.click(opcao)
+
+    expect(within(dialogo).queryByLabelText('Quantidade de Feijão 1 kg')).not.toBeInTheDocument()
+  })
+
+  it('não deixa vender mais que o estoque nem registrar sem produtos', async () => {
+    await abrirVendas()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novaVenda()
+
+    // Cliente, vendedor, pagamento e produtos são obrigatórios.
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar venda' }))
+    expect(await within(dialogo).findByText('Inclua ao menos um produto.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Escolha o cliente.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Escolha o vendedor.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Escolha a forma de pagamento.')).toBeInTheDocument()
+    await preencherCabecalho(dialogo, 'Dinheiro')
+
+    await adicionarProduto(dialogo, 'arroz', /Arroz 5 kg/)
+    const quantidade = within(dialogo).getByLabelText('Quantidade de Arroz 5 kg')
+    await userEvent.clear(quantidade)
+    await userEvent.type(quantidade, '11')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar venda' }))
+
+    expect(
+      await within(dialogo).findByText('Estoque insuficiente: há 10 UN de Arroz 5 kg.'),
+    ).toBeInTheDocument()
+    expect(within(dialogo).getByLabelText('Quantidade de Arroz 5 kg')).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
+
+    // Produto sem controle de estoque não tem limite.
+    await userEvent.clear(quantidade)
+    await userEvent.type(quantidade, '10')
+    await adicionarProduto(dialogo, 'instal', /Instalação/)
+    const servico = within(dialogo).getByLabelText('Quantidade de Instalação')
+    await userEvent.clear(servico)
+    await userEvent.type(servico, '500')
+    await vi.waitFor(() =>
+      expect(within(dialogo).queryByText(/Estoque insuficiente/)).not.toBeInTheDocument(),
+    )
+    expect(post).not.toHaveBeenCalledWith('/lancamentos/vendas', expect.anything())
+  })
+
+  it('avisa na hora quando o desconto passa do subtotal', async () => {
+    await abrirVendas()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novaVenda()
+    await preencherCabecalho(dialogo)
+    await adicionarProduto(dialogo, 'arroz', /Arroz 5 kg/)
+
+    await userEvent.type(within(dialogo).getByLabelText('Desconto (R$)'), '10,51')
+
+    expect(within(dialogo).getByText('O desconto não pode passar do subtotal.')).toBeInTheDocument()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar venda' }))
+    await vi.waitFor(() =>
+      expect(within(dialogo).getByLabelText('Desconto (R$)')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      ),
+    )
+    expect(post).not.toHaveBeenCalledWith('/lancamentos/vendas', expect.anything())
+  })
+
+  it('mostra na linha do item o estoque recusado pelo servidor', async () => {
+    await abrirVendas()
+    vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, {
+        message: 'Estoque insuficiente.',
+        errors: { 'itens.0.quantidade': ['Estoque insuficiente: há 1 UN de Arroz 5 kg.'] },
+      }),
+    )
+    const dialogo = await novaVenda()
+    await preencherCabecalho(dialogo)
+    await adicionarProduto(dialogo, 'arroz', /Arroz 5 kg/)
+
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar venda' }))
+
+    expect(
+      await within(dialogo).findByText('Estoque insuficiente: há 1 UN de Arroz 5 kg.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('mostra a venda e a cancela depois de confirmar', async () => {
+    await abrirVendas()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({
+      data: { ...vendaFinalizada, situacao: 'cancelada' },
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'Ver a venda 000001' }))
+
+    const detalhes = await screen.findByRole('dialog', { name: /Venda nº 000001/ })
+    expect(detalhes).toHaveTextContent('Maria Silva')
+    expect(detalhes).toHaveTextContent('2 UN')
+    expect(detalhes).toHaveTextContent('R$ 21,00')
+
+    await userEvent.click(within(detalhes).getByRole('button', { name: 'Cancelar venda' }))
+    const confirmacao = await screen.findByRole('dialog', { name: 'Cancelar venda' })
+    expect(confirmacao).toHaveTextContent('os produtos voltam ao estoque')
+    await userEvent.click(within(confirmacao).getByRole('button', { name: 'Cancelar venda' }))
+
+    await esperarChamada(post, '/lancamentos/vendas/1/cancelar')
+  })
+})
+
+describe('relatórios › vendas no período', () => {
+  const relatorio = {
+    filtros: {
+      inicio: '2026-09-01',
+      fim: '2026-09-30',
+      vendedor: null,
+      cliente: null,
+      forma_pagamento: null,
+      incluir_canceladas: false,
+    },
+    resumo: {
+      quantidade: 3,
+      subtotal: '350.00',
+      descontos: '20.00',
+      total: '330.00',
+      ticket_medio: '110.00',
+      canceladas: { quantidade: 1, total: '70.00' },
+    },
+    por_pagamento: [
+      { forma_pagamento: 'dinheiro', descricao: 'Dinheiro', quantidade: 1, total: '180.00' },
+      { forma_pagamento: 'pix', descricao: 'Pix', quantidade: 2, total: '150.00' },
+    ],
+    por_vendedor: [
+      {
+        id: 3,
+        nome: 'Ana Lima',
+        quantidade: 2,
+        total: '280.00',
+        comissao_percentual: '5.00',
+        comissao: '14.00',
+      },
+    ],
+    vendas: [
+      {
+        id: 12,
+        data: '2026-09-10',
+        cliente: { id: 7, nome: 'Maria Silva', tipo_pessoa: 'F', cpf_cnpj: '52998224725' },
+        vendedor: { id: 3, nome: 'Ana Lima' },
+        forma_pagamento: 'dinheiro',
+        itens: 2,
+        subtotal: '200.00',
+        desconto: '20.00',
+        total: '180.00',
+        situacao: 'finalizada',
+      },
+    ],
+  }
+  const opcoes = {
+    formas_de_pagamento: [
+      { valor: 'dinheiro', descricao: 'Dinheiro' },
+      { valor: 'pix', descricao: 'Pix' },
+    ],
+    clientes: [{ id: 7, nome: 'Maria Silva', tipo_pessoa: 'F', cpf_cnpj: '52998224725' }],
+    vendedores: [
+      { id: 3, nome: 'Ana Lima' },
+      { id: 4, nome: 'Beto Souza' },
+    ],
+  }
+
+  async function abrirRelatorio(pdf: unknown = new Blob(['%PDF-'], { type: 'application/pdf' })) {
+    setToken('tok-123')
+    const get = mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/relatorios/vendas-periodo/opcoes': opcoes,
+      '/relatorios/vendas-periodo': relatorio,
+      '/relatorios/vendas-periodo/pdf': pdf,
+    })
+    await renderizar(App, '/relatorios/vendas_periodo')
+    await screen.findByRole('heading', { name: 'Vendas no período' })
+    return get
+  }
+
+  async function escolherPeriodo(inicio: string, fim: string) {
+    const campoInicio = screen.getByLabelText(/^Data inicial/)
+    await userEvent.clear(campoInicio)
+    await userEvent.type(campoInicio, inicio)
+    const campoFim = screen.getByLabelText(/^Data final/)
+    await userEvent.clear(campoFim)
+    await userEvent.type(campoFim, fim)
+  }
+
+  it('abre pelo menu com o mês corrente e espera o Gerar', async () => {
+    const get = await abrirRelatorio()
+
+    expect(screen.getByRole('navigation', { name: 'breadcrumb' })).toHaveTextContent('Relatórios')
+    expect(screen.getByLabelText(/^Data inicial/)).toHaveValue(`${hoje().slice(0, 8)}01`)
+    expect(screen.getByLabelText(/^Data final/)).toHaveValue(hoje())
+    expect(screen.getByText(/clique em/)).toBeInTheDocument()
+    expect(get).not.toHaveBeenCalledWith('/relatorios/vendas-periodo', expect.anything())
+  })
+
+  it('não gera com a data final antes da inicial', async () => {
+    const get = await abrirRelatorio()
+    await escolherPeriodo('2026-09-30', '2026-09-01')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gerar' }))
+
+    expect(
+      await screen.findByText('A data final não pode ser antes da inicial.'),
+    ).toBeInTheDocument()
+    expect(get).not.toHaveBeenCalledWith('/relatorios/vendas-periodo', expect.anything())
+  })
+
+  it('gera o relatório com os filtros e mostra totais, resumos e vendas', async () => {
+    const get = await abrirRelatorio()
+    await escolherPeriodo('2026-09-01', '2026-09-30')
+    await userEvent.type(screen.getByRole('combobox', { name: 'Vendedor' }), 'ana')
+    await userEvent.click(await screen.findByRole('option', { name: 'Ana Lima' }))
+    await userEvent.click(screen.getByRole('combobox', { name: 'Pagamento' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Dinheiro' }))
+    await userEvent.click(screen.getByRole('checkbox'))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gerar' }))
+
+    await esperarChamada(get, '/relatorios/vendas-periodo', {
+      params: {
+        inicio: '2026-09-01',
+        fim: '2026-09-30',
+        vendedor: 3,
+        forma_pagamento: 'dinheiro',
+        incluir_canceladas: 1,
+      },
+    })
+    const resumo = await screen.findByRole('region', { name: 'Resumo' })
+    expect(resumo).toHaveTextContent('Total vendido')
+    expect(resumo).toHaveTextContent('R$ 330,00')
+    expect(resumo).toHaveTextContent('R$ 110,00')
+    expect(screen.getByText(/1 venda\(s\) cancelada\(s\)/)).toHaveTextContent('R$ 70,00')
+    // O formato de moeda usa espaço não separável: confere pelo texto da linha.
+    const pix = within(screen.getByRole('region', { name: 'Por forma de pagamento' }))
+      .getByRole('cell', { name: 'Pix' })
+      .closest('tr')!
+    expect(pix).toHaveTextContent('R$ 150,00')
+    const ana = within(screen.getByRole('region', { name: 'Por vendedor' }))
+      .getByRole('cell', { name: 'Ana Lima' })
+      .closest('tr')!
+    expect(ana).toHaveTextContent('R$ 280,00')
+    expect(ana).toHaveTextContent('R$ 14,00 (5%)')
+    const venda = screen.getByRole('cell', { name: '000012' }).closest('tr')!
+    expect(venda).toHaveTextContent('10/09/2026')
+    expect(venda).toHaveTextContent('Maria Silva')
+    expect(venda).toHaveTextContent('R$ 180,00')
+  })
+
+  it('exporta o PDF com os filtros, baixando o arquivo', async () => {
+    const get = await abrirRelatorio()
+    const criarEndereco = vi.fn(() => 'blob:relatorio')
+    vi.stubGlobal(
+      'URL',
+      Object.assign(URL, { createObjectURL: criarEndereco, revokeObjectURL: vi.fn() }),
+    )
+    const clique = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    await escolherPeriodo('2026-09-01', '2026-09-30')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }))
+
+    await esperarChamada(get, '/relatorios/vendas-periodo/pdf', {
+      params: { inicio: '2026-09-01', fim: '2026-09-30', incluir_canceladas: 0 },
+      responseType: 'blob',
+    })
+    await vi.waitFor(() => expect(clique).toHaveBeenCalled())
+    expect(criarEndereco).toHaveBeenCalledWith(expect.any(Blob))
+    const link = clique.mock.contexts[0] as HTMLAnchorElement
+    expect(link.download).toBe('vendas-2026-09-01-a-2026-09-30.pdf')
+    expect(link.href).toBe('blob:relatorio')
+    vi.unstubAllGlobals()
+  })
+
+  it('mostra no campo o erro do PDF recusado pelo servidor', async () => {
+    const erro = erroHttp(422, {})
+    erro.response!.data = new Blob(
+      [
+        JSON.stringify({
+          message: 'Erro.',
+          errors: { fim: ['Data final recusada pelo servidor.'] },
+        }),
+      ],
+      { type: 'application/json' },
+    )
+    await abrirRelatorio(erro)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }))
+
+    expect(await screen.findByText('Data final recusada pelo servidor.')).toBeInTheDocument()
   })
 })

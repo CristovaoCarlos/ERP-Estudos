@@ -4,19 +4,25 @@ namespace App\Providers;
 
 use App\Models\PersonalAccessToken;
 use App\Models\User;
+use App\Relatorios\Pdf\MotorDePdf;
 use App\Support\Cpf;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Biblioteca de PDF por trás da fachada App\Relatorios\Pdf\Pdf (ADR-0020).
+        $this->app->bind(MotorDePdf::class, fn () => $this->app->make(
+            config('relatorios.motores_pdf')[config('relatorios.motor_pdf')]
+                ?? throw new InvalidArgumentException('Motor de PDF desconhecido: '.config('relatorios.motor_pdf').'.'),
+        ));
     }
 
     public function boot(): void

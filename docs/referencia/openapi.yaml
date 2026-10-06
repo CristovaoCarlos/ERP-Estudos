@@ -37,6 +37,10 @@ tags:
     description: Grupos da prefeitura e as telas de cada um
   - name: Cadastros
     description: Cadastros da prefeitura (permissão da tela, ex. `cadastros.clientes`)
+  - name: Lançamentos
+    description: Lançamentos da prefeitura (permissão da tela, ex. `lancamentos.vendas`)
+  - name: Relatórios
+    description: Relatórios da prefeitura, em JSON e em PDF (permissão da tela, ex. `relatorios.vendas_periodo`)
   - name: Tabelas Comuns
     description: Tabelas de apoio do banco central, iguais para todas as prefeituras (Administração › Tabelas Comuns). Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`); os demais recebem 403
   - name: Empresas
@@ -943,6 +947,12 @@ paths:
           $ref: '#/components/responses/SemAcesso'
         '404':
           description: Cliente inexistente
+        '422':
+          description: 'O cliente tem vendas: marque-o como inativo (erro em `cliente`)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
   /api/cadastros/produtos:
     get:
       tags: [Cadastros]
@@ -1101,6 +1111,12 @@ paths:
           $ref: '#/components/responses/SemAcesso'
         '404':
           description: Produto inexistente
+        '422':
+          description: 'O produto já foi vendido: marque-o como inativo (erro em `produto`)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
   /api/cadastros/vendedores:
     get:
       tags: [Cadastros]
@@ -1234,6 +1250,275 @@ paths:
           $ref: '#/components/responses/SemAcesso'
         '404':
           description: Vendedor inexistente
+        '422':
+          description: 'O vendedor tem vendas: marque-o como inativo (erro em `vendedor`)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/lancamentos/vendas:
+    get:
+      tags: [Lançamentos]
+      summary: Listar vendas
+      description: Todas as vendas da prefeitura, da mais recente para a mais antiga, com cliente, vendedor e itens. Permissão `lancamentos.vendas`.
+      operationId: listarVendas
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Venda'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Lançamentos]
+      summary: Registrar venda
+      description: >-
+        Registra a venda e dá baixa no estoque dos produtos que o controlam, numa transação com os
+        produtos travados. Pedido acima do saldo (somando itens do mesmo produto) é recusado em
+        `itens.N.quantidade`, sem gravar nada. Subtotal e total são calculados pelo servidor.
+        Veja o ADR-0019.
+      operationId: registrarVenda
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDaVenda'
+      responses:
+        '201':
+          description: Venda registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Venda'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: >-
+            Estoque insuficiente, cliente, vendedor ou produto inativo, data futura, sem itens,
+            desconto acima do item ou do subtotal etc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+              example:
+                message: Estoque insuficiente.
+                errors:
+                  itens.0.quantidade: ['Estoque insuficiente: há 3 UN de Café 500 g.']
+  /api/lancamentos/vendas/opcoes:
+    get:
+      tags: [Lançamentos]
+      summary: Listas do formulário de venda
+      description: >-
+        Formas de pagamento e os clientes, vendedores e produtos ativos, com o saldo de estoque.
+        Vêm por aqui porque quem vende pode não ter acesso às telas de cadastro.
+      operationId: opcoesDaVenda
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpcoesDaVenda'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  '/api/lancamentos/vendas/{id}/cancelar':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [Lançamentos]
+      summary: Cancelar venda
+      description: Cancela a venda e devolve ao estoque os itens que saíram dele. A venda não se altera nem se exclui.
+      operationId: cancelarVenda
+      security:
+        - token: []
+      responses:
+        '200':
+          description: Venda cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Venda'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Venda inexistente
+        '422':
+          description: A venda já está cancelada (erro em `venda`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/relatorios/vendas-periodo:
+    get:
+      tags: [Relatórios]
+      summary: Vendas no período (JSON)
+      description: Resumo das vendas finalizadas, totais por forma de pagamento e por vendedor (com a comissão estimada) e a lista das vendas, em ordem de data.
+      operationId: relatorioDeVendas
+      security:
+        - token: []
+      parameters:
+        - name: inicio
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: fim
+          in: query
+          required: true
+          description: Igual ou depois de `inicio`, em até 366 dias.
+          schema: {type: string, format: date}
+        - name: vendedor
+          in: query
+          schema: {type: integer}
+        - name: cliente
+          in: query
+          schema: {type: integer}
+        - name: forma_pagamento
+          in: query
+          schema:
+            type: string
+            enum: [dinheiro, pix, cartao_debito, cartao_credito, boleto, crediario]
+        - name: incluir_canceladas
+          in: query
+          description: Lista também as canceladas (que ficam fora dos totais).
+          schema: {type: string, enum: ['0', '1', 'true', 'false']}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatorioDeVendas'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Datas ausentes ou inválidas, final antes da inicial, período acima de 366 dias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/relatorios/vendas-periodo/pdf:
+    get:
+      tags: [Relatórios]
+      summary: Vendas no período (PDF)
+      description: O mesmo relatório em PDF (A4 paisagem), gerado pela fachada de PDF com o mPDF (ADR-0020). Nome do arquivo `vendas-<inicio>-a-<fim>.pdf`.
+      operationId: relatorioDeVendasEmPdf
+      security:
+        - token: []
+      parameters:
+        - name: inicio
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: fim
+          in: query
+          required: true
+          description: Igual ou depois de `inicio`, em até 366 dias.
+          schema: {type: string, format: date}
+        - name: vendedor
+          in: query
+          schema: {type: integer}
+        - name: cliente
+          in: query
+          schema: {type: integer}
+        - name: forma_pagamento
+          in: query
+          schema:
+            type: string
+            enum: [dinheiro, pix, cartao_debito, cartao_credito, boleto, crediario]
+        - name: incluir_canceladas
+          in: query
+          description: Lista também as canceladas (que ficam fora dos totais).
+          schema: {type: string, enum: ['0', '1', 'true', 'false']}
+      responses:
+        '200':
+          description: 'PDF para download (`Content-Disposition: attachment`)'
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Mesmas regras da versão em JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/relatorios/vendas-periodo/opcoes:
+    get:
+      tags: [Relatórios]
+      summary: Listas dos filtros do relatório
+      description: Vendedores e clientes (inclusive inativos, que podem ter vendas antigas) e formas de pagamento.
+      operationId: opcoesDoRelatorioDeVendas
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  formas_de_pagamento:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        valor: {type: string}
+                        descricao: {type: string}
+                  clientes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: integer}
+                        nome: {type: string}
+                        tipo_pessoa: {type: string}
+                        cpf_cnpj: {type: string}
+                  vendedores:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: integer}
+                        nome: {type: string}
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
   /api/administracao/tabelas-comuns/cidades:
     get:
       tags: [Tabelas Comuns]
@@ -2026,6 +2311,263 @@ components:
           properties:
             id:
               type: integer
+    DadosDaVenda:
+      type: object
+      required: [data, cliente, vendedor, forma_pagamento, itens]
+      properties:
+        data:
+          type: string
+          format: date
+          description: Não pode ser futura.
+        cliente:
+          type: integer
+          description: Id de um cliente ativo.
+        vendedor:
+          type: integer
+          description: Id de um vendedor ativo.
+        forma_pagamento:
+          type: string
+          enum: [dinheiro, pix, cartao_debito, cartao_credito, boleto, crediario]
+        desconto:
+          type: [number, 'null']
+          minimum: 0
+          description: Desconto sobre o subtotal (até 2 casas); não passa do subtotal.
+        observacoes:
+          type: [string, 'null']
+          maxLength: 5000
+        itens:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            type: object
+            required: [produto, quantidade, preco_unitario]
+            properties:
+              produto:
+                type: integer
+                description: Id de um produto ativo.
+              quantidade:
+                type: number
+                exclusiveMinimum: 0
+                description: Até 3 casas decimais.
+              preco_unitario:
+                type: number
+                minimum: 0
+              desconto:
+                type: [number, 'null']
+                minimum: 0
+                description: Não passa de quantidade × preço.
+    Venda:
+      type: object
+      required: [id, data, cliente, vendedor, forma_pagamento, subtotal, desconto, total, situacao, itens]
+      description: Decimais em texto (`"21.00"`, quantidade `"1.255"`).
+      properties:
+        id:
+          type: integer
+        data:
+          type: string
+          format: date
+        cliente:
+          type: object
+          properties:
+            id:
+              type: integer
+            nome:
+              type: string
+            tipo_pessoa:
+              type: string
+              enum: [F, J]
+            cpf_cnpj:
+              type: string
+        vendedor:
+          type: object
+          properties:
+            id:
+              type: integer
+            nome:
+              type: string
+        forma_pagamento:
+          type: string
+        subtotal:
+          type: string
+        desconto:
+          type: string
+        total:
+          type: string
+        observacoes:
+          type: [string, 'null']
+        situacao:
+          type: string
+          enum: [finalizada, cancelada]
+        registrada_em:
+          type: string
+          format: date-time
+        cancelada_em:
+          type: [string, 'null']
+          format: date-time
+        itens:
+          type: array
+          items:
+            type: object
+            description: Código, descrição, unidade e preço do produto na data da venda.
+            properties:
+              id:
+                type: integer
+              produto:
+                type: integer
+              codigo:
+                type: string
+              descricao:
+                type: string
+              unidade:
+                type: string
+              quantidade:
+                type: string
+              preco_unitario:
+                type: string
+              desconto:
+                type: string
+              total:
+                type: string
+              baixou_estoque:
+                type: boolean
+                description: Saiu do estoque na venda (e volta no cancelamento).
+    OpcoesDaVenda:
+      type: object
+      properties:
+        formas_de_pagamento:
+          type: array
+          items:
+            type: object
+            properties:
+              valor:
+                type: string
+              descricao:
+                type: string
+        clientes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nome:
+                type: string
+              tipo_pessoa:
+                type: string
+              cpf_cnpj:
+                type: string
+        vendedores:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nome:
+                type: string
+        produtos:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              codigo:
+                type: string
+              descricao:
+                type: string
+              codigo_barras:
+                type: [string, 'null']
+              unidade:
+                type: string
+              preco_venda:
+                type: string
+              controla_estoque:
+                type: boolean
+              estoque_atual:
+                type: string
+    RelatorioDeVendas:
+      type: object
+      description: Valores em texto com 2 casas (`"330.00"`). Os totais contam só as finalizadas.
+      properties:
+        filtros:
+          type: object
+          properties:
+            inicio: {type: string, format: date}
+            fim: {type: string, format: date}
+            vendedor:
+              type: [object, 'null']
+              properties:
+                id: {type: integer}
+                nome: {type: string}
+            cliente:
+              type: [object, 'null']
+              properties:
+                id: {type: integer}
+                nome: {type: string}
+            forma_pagamento: {type: [string, 'null']}
+            incluir_canceladas: {type: boolean}
+        resumo:
+          type: object
+          properties:
+            quantidade: {type: integer}
+            subtotal: {type: string}
+            descontos: {type: string}
+            total: {type: string}
+            ticket_medio: {type: string}
+            canceladas:
+              type: object
+              properties:
+                quantidade: {type: integer}
+                total: {type: string}
+        por_pagamento:
+          type: array
+          items:
+            type: object
+            properties:
+              forma_pagamento: {type: string}
+              descricao: {type: string}
+              quantidade: {type: integer}
+              total: {type: string}
+        por_vendedor:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: integer}
+              nome: {type: string}
+              quantidade: {type: integer}
+              total: {type: string}
+              comissao_percentual: {type: string}
+              comissao:
+                type: string
+                description: Estimativa (total × percentual do vendedor).
+        vendas:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: integer}
+              data: {type: string, format: date}
+              cliente:
+                type: object
+                properties:
+                  id: {type: integer}
+                  nome: {type: string}
+                  tipo_pessoa: {type: string}
+                  cpf_cnpj: {type: string}
+              vendedor:
+                type: object
+                properties:
+                  id: {type: integer}
+                  nome: {type: string}
+              forma_pagamento: {type: string}
+              itens: {type: integer}
+              subtotal: {type: string}
+              desconto: {type: string}
+              total: {type: string}
+              situacao: {type: string, enum: [finalizada, cancelada]}
     ErroDeValidacao:
       type: object
       required: [message, errors]

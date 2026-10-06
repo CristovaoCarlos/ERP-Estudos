@@ -9,9 +9,11 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\ProdutoController;
+use App\Http\Controllers\RelatorioDeVendasController;
 use App\Http\Controllers\SenhaController;
 use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\VendaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
 use Illuminate\Support\Facades\Route;
@@ -86,6 +88,21 @@ Route::middleware([
             Route::get('/regioes', [VendedorController::class, 'regioes']);
             Route::put('/{vendedor}', [VendedorController::class, 'update']);
             Route::delete('/{vendedor}', [VendedorController::class, 'destroy']);
+        });
+
+        // Lançamentos › Vendas. A venda não se altera nem se exclui: só se cancela, e o estoque volta.
+        Route::middleware('can:lancamentos.vendas')->prefix('lancamentos/vendas')->group(function () {
+            Route::get('/', [VendaController::class, 'index']);
+            Route::post('/', [VendaController::class, 'store']);
+            Route::get('/opcoes', [VendaController::class, 'opcoes']);
+            Route::post('/{venda}/cancelar', [VendaController::class, 'cancelar']);
+        });
+
+        // Relatórios › Vendas no período: prévia (JSON), PDF e as listas dos filtros.
+        Route::middleware('can:relatorios.vendas_periodo')->prefix('relatorios/vendas-periodo')->group(function () {
+            Route::get('/', [RelatorioDeVendasController::class, 'index']);
+            Route::get('/pdf', [RelatorioDeVendasController::class, 'pdf']);
+            Route::get('/opcoes', [RelatorioDeVendasController::class, 'opcoes']);
         });
 
         // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
