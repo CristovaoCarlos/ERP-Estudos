@@ -8,7 +8,10 @@ import { telas } from '@/lib/navegacao'
 import Empresas from '@/pages/administracao/Empresas.vue'
 import Grupos from '@/pages/administracao/Grupos.vue'
 import Cidades from '@/pages/administracao/tabelas-comuns/Cidades.vue'
+import Unidades from '@/pages/administracao/tabelas-comuns/Unidades.vue'
 import Clientes from '@/pages/cadastros/Clientes.vue'
+import Produtos from '@/pages/cadastros/Produtos.vue'
+import Vendedores from '@/pages/cadastros/Vendedores.vue'
 import Usuarios from '@/pages/administracao/Usuarios.vue'
 import EmConstrucao from '@/pages/EmConstrucao.vue'
 import EsqueciSenha from '@/pages/EsqueciSenha.vue'
@@ -21,8 +24,11 @@ const paginas: Record<string, Component> = {
   '/administracao/empresas': Empresas,
   '/administracao/grupos': Grupos,
   '/administracao/tabelas-comuns/cidades': Cidades,
+  '/administracao/tabelas-comuns/unidades': Unidades,
   '/administracao/usuarios': Usuarios,
   '/cadastros/clientes': Clientes,
+  '/cadastros/produtos': Produtos,
+  '/cadastros/vendedores': Vendedores,
 }
 
 export const rotas: RouteRecordRaw[] = [

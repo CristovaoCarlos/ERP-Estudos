@@ -8,6 +8,7 @@ import {
   MapPinned,
   Receipt,
   ReceiptText,
+  Ruler,
   Settings2,
   TrendingUp,
   UserCog,
@@ -95,6 +96,7 @@ export const menu: Modulo[] = [
         icone: Database,
         paginas: [
           { titulo: 'Cidades', url: '/administracao/tabelas-comuns/cidades', icone: MapPinned },
+          { titulo: 'Unidades', url: '/administracao/tabelas-comuns/unidades', icone: Ruler },
         ],
       },
     ],
