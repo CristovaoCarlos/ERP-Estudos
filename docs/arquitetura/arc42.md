@@ -63,6 +63,7 @@ flowchart LR
 | Várias prefeituras, dados isolados | Multi-tenancy com **um banco por prefeitura**, identificada pelo subdomínio (`stancl/tenancy`) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
 | Mesmo usuário em várias prefeituras | Usuários e tokens **centralizados** no `erp_estudos_central`, com vínculo explícito usuário ↔ prefeitura | [ADR-0003](../adr/0003-usuarios-centralizados.md) |
 | Autenticação da SPA | **Tokens de API do Sanctum** (Bearer) | [ADR-0004](../adr/0004-autenticacao-por-token.md) |
+| Sessão esquecida aberta | **Logout por inatividade** (5 min) no frontend e no backend | [ADR-0017](../adr/0017-logout-por-inatividade.md) |
 | Separar front e back | **Monorepo** com API Laravel e SPA Vue | [ADR-0001](../adr/0001-monorepo-laravel-react.md), [ADR-0016](../adr/0016-frontend-em-vue.md) |
 | Criar banco do tenant sem travar a requisição | Provisionamento **assíncrono** em fila (Redis + worker) | [ADR-0002](../adr/0002-multi-tenancy-banco-por-prefeitura.md) |
 | Testes rápidos e seguros | Testes em **SQLite**, com trava contra rodar no banco real | [ADR-0006](../adr/0006-testes-em-sqlite.md) |
@@ -126,7 +127,7 @@ flowchart TB
 | `Listagem` | `src/components/Listagem.vue` | Padrão das telas de listagem: busca rápida, Filtros, Colunas (lembradas no navegador), tabela e paginação no rodapé. Células ricas pelo slot `#coluna-<id>`. |
 | Formulários | `src/lib/formularios.ts` | `useFormulario` (vee-validate com schema zod 4) e `mostrarErrosDoServidor` (422 nos campos). |
 | `AppLayout` | `src/components` | Layout do sistema no modelo `sidebar-07` do shadcn: seletor de prefeitura, menu de módulos, menu do usuário, breadcrumb. |
-| `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida (em `/`, mostra a landing da prefeitura). |
+| `RotaProtegida` | `src/components` | Redireciona para `/login` sem sessão válida (em `/`, mostra a landing da prefeitura). Liga o logout por inatividade (`src/lib/sessao.ts`). |
 | Recuperação de senha | `src/pages/EsqueciSenha.vue`, `RedefinirSenha.vue` | Pede o link por CPF e troca a senha com o token do e-mail. |
 | Páginas | `src/pages` | `Landing`, `Login`, `Inicio`, `administracao/Empresas`, `administracao/Usuarios`, `administracao/Grupos`, `EmConstrucao` (telas do menu ainda não implementadas). |
 | Componentes de UI | `src/components/ui` | shadcn-vue sobre Reka UI, gerados pelo CLI ([ADR-0016](../adr/0016-frontend-em-vue.md)). Tema (cores, raio e sombras) em `src/index.css`, no preset `modern-minimal` do tweakcn, com o token extra `--marca` da landing e do login. |

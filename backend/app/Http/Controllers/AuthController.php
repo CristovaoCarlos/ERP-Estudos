@@ -86,6 +86,12 @@ class AuthController extends Controller
         return response()->json(['message' => 'Senha alterada.']);
     }
 
+    /** Sinal de "estou ativo" do frontend: o auth:sanctum já atualizou o last_used_at do token. */
+    public function renovar(): Response
+    {
+        return response()->noContent();
+    }
+
     public function logout(Request $request): Response
     {
         $request->user()->currentAccessToken()->delete();

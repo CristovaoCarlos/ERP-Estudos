@@ -23,6 +23,20 @@ class AppServiceProvider extends ServiceProvider
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
+        // Token sem uso há mais que o prazo de inatividade é recusado e apagado. O Sanctum chama
+        // este callback antes de gravar o novo last_used_at, então ele enxerga o uso anterior.
+        Sanctum::authenticateAccessTokensUsing(function (PersonalAccessToken $token, bool $valido) {
+            $limite = now()->subMinutes(config('sessao.inatividade_minutos'));
+
+            if ($valido && ($token->last_used_at ?? $token->created_at)->lt($limite)) {
+                $token->delete();
+
+                return false;
+            }
+
+            return $valido;
+        });
+
         // Superadmin, na prefeitura administradora, pode tudo; os demais dependem dos grupos de acesso.
         Gate::before(fn (User $user) => $user->ehSuperadmin() ? true : null);
         Gate::define('gerenciar-empresas', fn (User $user) => $user->ehSuperadmin());

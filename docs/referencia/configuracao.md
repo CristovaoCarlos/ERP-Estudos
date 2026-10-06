@@ -34,6 +34,7 @@ Os bancos das prefeituras usam as mesmas credenciais, com nome `erp_estudos_tena
 | --- | --- | --- |
 | `CACHE_STORE` | `redis` | Também usado pelo limite de tentativas de login. |
 | `SESSION_DRIVER` | `redis` | |
+| `SESSAO_INATIVIDADE_MINUTOS` | `5` | Minutos sem uso até o logout automático. O frontend recebe o valor em `/api/login` e `/api/me` e desloga sozinho; o backend recusa o token ocioso ([ADR-0017](../adr/0017-logout-por-inatividade.md)). |
 | `QUEUE_CONNECTION` | `redis` | Fila do provisionamento de prefeituras. |
 | `REDIS_HOST` / `REDIS_PORT` | `redis` / `6379` | |
 

@@ -382,6 +382,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
+  /api/sessao/renovar:
+    post:
+      tags: [Autenticação]
+      summary: Manter a sessão ativa
+      description: |
+        Sinal de atividade do frontend: o usuário está usando o sistema, mas não houve requisição
+        recente. Atualiza o último uso do token, que expira depois de `inatividade_minutos` sem uso
+        ([ADR-0017](../adr/0017-logout-por-inatividade.md)).
+      operationId: renovarSessao
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Último uso do token atualizado
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
   /api/logout:
     post:
       tags: [Autenticação]
@@ -1619,7 +1637,7 @@ components:
   schemas:
     Usuario:
       type: object
-      required: [id, name, cpf, email, superadmin, grupos, permissoes, prefeituras]
+      required: [id, name, cpf, email, superadmin, grupos, permissoes, prefeituras, inatividade_minutos]
       properties:
         id:
           type: integer
@@ -1671,6 +1689,12 @@ components:
               dominio:
                 type: [string, 'null']
                 examples: [demo.localhost]
+        inatividade_minutos:
+          type: integer
+          description: |
+            Minutos sem uso até o logout automático (`SESSAO_INATIVIDADE_MINUTOS`). Depois disso o
+            frontend desloga e o backend recusa o token.
+          examples: [5]
     Grupo:
       type: object
       required: [id, nome, telas, usuarios, sistema]
@@ -1949,7 +1973,7 @@ components:
           example:
             message: Prefeitura não encontrada.
     NaoAutenticado:
-      description: Token ausente, inválido ou revogado
+      description: Token ausente, inválido, revogado ou expirado por inatividade
       content:
         application/json:
           schema:

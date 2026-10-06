@@ -25,6 +25,7 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `DELETE` | `/api/me/foto` | prefeitura | token + vínculo | Remove a foto |
 | `GET` | `/api/fotos/{arquivo}` | prefeitura | — | Serve a foto; o nome aleatório do arquivo é o segredo |
 | `GET` | `/api/me` | prefeitura | token + vínculo | Usuário atual: grupos e permissões nesta prefeitura, se é superadmin e as prefeituras a que tem acesso |
+| `POST` | `/api/sessao/renovar` | prefeitura | token + vínculo | Mantém a sessão ativa: atualiza o último uso do token (logout por inatividade) |
 | `POST` | `/api/logout` | prefeitura | token + vínculo | Revoga o token atual |
 | `GET` | `/api/usuarios` | prefeitura | `administracao.usuarios` | Usuários com acesso à prefeitura, com os grupos |
 | `POST` | `/api/usuarios` | prefeitura | `administracao.usuarios` | Cadastra o usuário ou vincula um já existente (CPF) à prefeitura |
@@ -66,8 +67,8 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | Código | Quando |
 | --- | --- |
 | `200` | Sucesso |
-| `204` | Sucesso sem corpo (logout) |
-| `401` | Token ausente, inválido ou revogado |
+| `204` | Sucesso sem corpo (logout, renovação da sessão) |
+| `401` | Token ausente, inválido, revogado ou sem uso há mais de `SESSAO_INATIVIDADE_MINUTOS` (padrão 5) |
 | `403` | Usuário autenticado sem vínculo com a prefeitura, ou sem permissão (ex.: `/api/empresas` para quem não é superadmin na prefeitura administradora) |
 | `404` | Domínio não pertence a nenhuma prefeitura (`{"message": "Prefeitura não encontrada."}`), ou rota inexistente |
 | `422` | Dados inválidos ou credenciais erradas |
