@@ -3,13 +3,8 @@ import { ref } from 'vue'
 
 import MeusDados from '@/components/minha-conta/MeusDados.vue'
 import TrocaDeSenha from '@/components/minha-conta/TrocaDeSenha.vue'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Usuario } from '@/lib/auth'
 
@@ -22,7 +17,7 @@ const aba = ref('dados')
 
 <template>
   <Dialog :open="true" @update:open="(abrir) => !abrir && emit('fechar')">
-    <DialogContent>
+    <ConteudoDoFormulario chave="minha-conta">
       <DialogHeader>
         <DialogTitle>Minha conta</DialogTitle>
         <DialogDescription>
@@ -41,6 +36,6 @@ const aba = ref('dados')
           <TrocaDeSenha @fechar="emit('fechar')" />
         </TabsContent>
       </Tabs>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>

@@ -35,6 +35,8 @@ tags:
     description: Usuários da prefeitura (permissão `administracao.usuarios`)
   - name: Grupos de acesso
     description: Grupos da prefeitura e as telas de cada um
+  - name: Cadastros
+    description: Cadastros da prefeitura (permissão da tela, ex. `cadastros.clientes`)
   - name: Tabelas Comuns
     description: Tabelas de apoio do banco central, iguais para todas as prefeituras (Administração › Tabelas Comuns). Só o superadmin, na prefeitura administradora (`TENANT_ADMINISTRADOR`); os demais recebem 403
   - name: Empresas
@@ -782,6 +784,165 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
+  /api/cadastros/clientes:
+    get:
+      tags: [Cadastros]
+      summary: Listar clientes
+      description: Todos os clientes da prefeitura, em ordem de nome. Permissão `cadastros.clientes`.
+      operationId: listarClientes
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cliente'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Cadastros]
+      summary: Cadastrar cliente
+      description: |
+        CPF/CNPJ, CEP e telefones podem vir com máscara: são gravados sem ela. Campos que não valem
+        para o tipo de pessoa (RG e nascimento em PJ, nome fantasia em PF) e a IE de quem não é
+        contribuinte do ICMS são descartados.
+      operationId: cadastrarCliente
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoCliente'
+      responses:
+        '201':
+          description: Cliente cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Documento inválido ou repetido, IE ausente para contribuinte, cidade inexistente etc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/cadastros/clientes/cidades:
+    get:
+      tags: [Cadastros]
+      summary: Cidades de uma UF
+      description: Cidades do banco central para o endereço do cliente. O código do IBGE acha a cidade devolvida pelo ViaCEP.
+      operationId: listarCidadesDoCliente
+      security:
+        - token: []
+      parameters:
+        - name: uf
+          in: query
+          required: true
+          schema:
+            type: string
+            examples: [SP]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, codigo_ibge, nome]
+                      properties:
+                        id:
+                          type: integer
+                        codigo_ibge:
+                          type: string
+                          examples: ['3509502']
+                        nome:
+                          type: string
+                          examples: [Campinas]
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: UF ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/cadastros/clientes/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Cadastros]
+      summary: Alterar cliente
+      operationId: alterarCliente
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoCliente'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Cliente inexistente
+        '422':
+          description: Mesmas regras do cadastro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Cadastros]
+      summary: Excluir cliente
+      operationId: excluirCliente
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Cliente excluído
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Cliente inexistente
   /api/administracao/tabelas-comuns/cidades:
     get:
       tags: [Tabelas Comuns]
@@ -1159,6 +1320,124 @@ components:
         uf:
           type: string
           examples: [SP]
+    DadosDoCliente:
+      type: object
+      required: [tipo_pessoa, cpf_cnpj, nome, endereco, contato, fiscal, ativo]
+      properties:
+        tipo_pessoa:
+          type: string
+          enum: [F, J]
+        cpf_cnpj:
+          type: string
+          description: CPF (pessoa física) ou CNPJ (jurídica, aceita o alfanumérico), com ou sem máscara.
+          examples: ['529.982.247-25']
+        nome:
+          type: string
+          maxLength: 150
+          description: Nome (PF) ou razão social (PJ).
+        nome_fantasia:
+          type: [string, 'null']
+          maxLength: 150
+        rg:
+          type: [string, 'null']
+          maxLength: 20
+        data_nascimento:
+          type: [string, 'null']
+          format: date
+        endereco:
+          type: object
+          required: [cep, logradouro, numero, bairro, cidade]
+          description: Todos obrigatórios, menos o complemento.
+          properties:
+            cep:
+              type: [string, 'null']
+              examples: ['13010-100']
+            logradouro:
+              type: [string, 'null']
+            numero:
+              type: [string, 'null']
+            complemento:
+              type: [string, 'null']
+            bairro:
+              type: [string, 'null']
+            cidade:
+              type: [integer, 'null']
+              description: Id da cidade (`/api/cadastros/clientes/cidades`).
+            latitude:
+              type: [number, 'null']
+              minimum: -90
+              maximum: 90
+              description: Localização no padrão do Google Maps, em graus decimais. Opcional, mas vem junto com a longitude.
+              examples: [-22.9056]
+            longitude:
+              type: [number, 'null']
+              minimum: -180
+              maximum: 180
+              examples: [-47.0608]
+        contato:
+          type: object
+          required: [celular]
+          description: Celular obrigatório; e-mail e telefone, não.
+          properties:
+            email:
+              type: [string, 'null']
+              format: email
+            telefone:
+              type: [string, 'null']
+              description: Com DDD, 10 ou 11 dígitos.
+            celular:
+              type: [string, 'null']
+              description: Com DDD, 11 dígitos.
+        fiscal:
+          type: object
+          required: [indicador_ie, consumidor_final]
+          properties:
+            indicador_ie:
+              type: integer
+              enum: [1, 2, 9]
+              description: Indicador da IE do destinatário na NF-e (1 contribuinte do ICMS, 2 isento, 9 não contribuinte).
+            inscricao_estadual:
+              type: [string, 'null']
+              description: Obrigatória para contribuinte (1); descartada nos outros casos.
+            inscricao_municipal:
+              type: [string, 'null']
+            consumidor_final:
+              type: boolean
+        limite_credito:
+          type: [number, 'null']
+          minimum: 0
+          description: Vazio é sem limite.
+        observacoes:
+          type: [string, 'null']
+          maxLength: 5000
+        ativo:
+          type: boolean
+    Cliente:
+      allOf:
+        - $ref: '#/components/schemas/DadosDoCliente'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: integer
+            cpf_cnpj:
+              description: Sem máscara.
+              examples: ['52998224725']
+            limite_credito:
+              type: [string, 'null']
+              description: Decimal em texto, com 2 casas.
+              examples: ['1500.50']
+            endereco:
+              properties:
+                cidade:
+                  type: [object, 'null']
+                  properties:
+                    id:
+                      type: integer
+                    nome:
+                      type: string
+                    uf:
+                      type: string
     ErroDeValidacao:
       type: object
       required: [message, errors]

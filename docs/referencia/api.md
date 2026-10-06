@@ -37,6 +37,11 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `POST` | `/api/grupos` | prefeitura | `administracao.grupos` | Cria um grupo com as telas escolhidas |
 | `PUT` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Altera nome e telas do grupo |
 | `DELETE` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Exclui o grupo (recusa se houver usuários nele) |
+| `GET` | `/api/cadastros/clientes` | prefeitura | `cadastros.clientes` | Clientes da prefeitura, em ordem de nome |
+| `POST` | `/api/cadastros/clientes` | prefeitura | `cadastros.clientes` | Cadastra um cliente (PF ou PJ, com endereço, contatos e dados fiscais) |
+| `GET` | `/api/cadastros/clientes/cidades?uf=SP` | prefeitura | `cadastros.clientes` | Cidades da UF, com o código do IBGE, para o endereço do cliente |
+| `PUT` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Altera o cliente |
+| `DELETE` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Exclui o cliente |
 | `GET` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
 | `POST` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Inclui uma cidade (código do IBGE único; `id` = maior + 1) |
 | `PUT` | `/api/administracao/tabelas-comuns/cidades/{id}` | prefeitura administradora | superadmin | Altera nome e UF da cidade (o código do IBGE não muda) |

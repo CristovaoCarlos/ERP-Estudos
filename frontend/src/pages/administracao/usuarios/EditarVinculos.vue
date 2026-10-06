@@ -2,11 +2,11 @@
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -43,7 +43,7 @@ function confirmar() {
 
 <template>
   <Dialog :open="true" @update:open="(abrir) => !abrir && emit('fechar')">
-    <DialogContent>
+    <ConteudoDoFormulario chave="vinculos">
       <DialogHeader>
         <DialogTitle>Editar vínculos</DialogTitle>
         <DialogDescription>
@@ -80,6 +80,6 @@ function confirmar() {
           Salvar
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>

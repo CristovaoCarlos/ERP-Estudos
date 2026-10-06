@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CidadeController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
@@ -56,6 +57,15 @@ Route::middleware([
         });
         // A lista serve às duas telas: a permissão é conferida no controller.
         Route::get('/grupos', [GrupoController::class, 'index']);
+
+        // Cadastros › Clientes. A rota `cidades` vem antes de `{cliente}`.
+        Route::middleware('can:cadastros.clientes')->prefix('cadastros/clientes')->group(function () {
+            Route::get('/', [ClienteController::class, 'index']);
+            Route::post('/', [ClienteController::class, 'store']);
+            Route::get('/cidades', [ClienteController::class, 'cidades']);
+            Route::put('/{cliente}', [ClienteController::class, 'update']);
+            Route::delete('/{cliente}', [ClienteController::class, 'destroy']);
+        });
 
         // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
         // superadmin, na prefeitura administradora.

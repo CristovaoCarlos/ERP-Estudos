@@ -3,11 +3,11 @@ import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
 
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -80,7 +80,7 @@ const salvar = handleSubmit(({ nome }) =>
 
 <template>
   <Dialog :open="true" @update:open="(abrir) => !abrir && emit('fechar')">
-    <DialogContent class="max-h-[90svh] overflow-y-auto sm:max-w-2xl">
+    <ConteudoDoFormulario chave="grupo" largura="sm:w-2xl">
       <DialogHeader>
         <DialogTitle>{{ grupo ? 'Alterar grupo' : 'Novo grupo' }}</DialogTitle>
         <DialogDescription>
@@ -157,6 +157,6 @@ const salvar = handleSubmit(({ nome }) =>
           {{ grupo ? 'Salvar' : 'Cadastrar' }}
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>

@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ## [Não lançado]
 
 ### Adicionado
+
+- Tela **Cadastros › Clientes**: lista com busca rápida (nome, fantasia, CPF/CNPJ com ou sem máscara, cidade, e-mail) e filtros por tipo de pessoa e situação; cadastro, alteração e exclusão em formulário com as abas Identificação, Endereço e contato, Fiscal e comercial e Observações. Pessoa física ou jurídica (CNPJ alfanumérico aceito), endereço com cidade do banco central, indicador da IE para a NF-e (IE obrigatória para contribuinte do ICMS), consumidor final, limite de crédito e situação. CEP, logradouro, número, bairro, UF, cidade e celular são obrigatórios; o telefone fica à direita do celular; os obrigatórios têm um `*` vermelho no rótulo. Campo opcional **Localização** no padrão do Google Maps (`latitude, longitude` em graus decimais), com link "Ver no Google Maps". Tabela `tb_cliente` na prefeitura; rotas `/api/cadastros/clientes`.
+- Endereço do cliente preenchido pelo CEP com o ViaCEP, consultado pelo navegador sem o token do ERP; a cidade é achada pelo código do IBGE ([ADR-0018](docs/adr/0018-viacep-no-navegador.md)).
+- Formulários em diálogo redimensionáveis pelo canto inferior direito; o tamanho escolhido fica guardado no navegador, por formulário, e volta na próxima abertura (componente `ConteudoDoFormulario`).
+- Seeder `ClienteSeeder` com 25 clientes de exemplo.
 - Removendo indices do Menu e corrigindo acessos.
 - Logout automático por inatividade: depois de 5 minutos sem mouse, teclado, toque ou rolagem (em qualquer aba aberta), o sistema encerra a sessão e volta ao login com o aviso "Sua sessão foi encerrada por inatividade."; ao entrar de novo, abre a tela em que o usuário estava. O backend também recusa o token sem uso há mais que o prazo. Prazo em `SESSAO_INATIVIDADE_MINUTOS`; rota `POST /api/sessao/renovar` ([ADR-0017](docs/adr/0017-logout-por-inatividade.md)).
 - Alteração de cidades em **Administração › Tabelas Comuns › Cidades**: lápis em cada linha abre o formulário com nome e UF; o código do IBGE aparece só para leitura. Rota `PUT /api/administracao/tabelas-comuns/cidades/{id}`, só para o superadmin.

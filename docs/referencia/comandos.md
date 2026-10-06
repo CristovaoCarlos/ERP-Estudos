@@ -43,6 +43,7 @@ php artisan acesso:sincronizar [--tenant=ID ...]
 | `php artisan tenants:migrate --tenants=demo` | Só em uma prefeitura. |
 | `php artisan tenants:rollback` | Desfaz a última migration das prefeituras. |
 | `php artisan tenants:seed` | Roda seeders nas prefeituras. |
+| `php artisan tenants:seed --tenants=demo --class="Database\Seeders\ClienteSeeder"` | Cria 25 clientes de exemplo (15 PF e 10 PJ, 3 inativos) na prefeitura. |
 | `php artisan tenants:run <comando>` | Roda um comando artisan no contexto de cada prefeitura. |
 
 ## Comandos gerais do backend

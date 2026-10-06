@@ -4,11 +4,11 @@ import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
 
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -117,7 +117,7 @@ const salvar = handleSubmit((dados) =>
         Nova empresa
       </Button>
     </DialogTrigger>
-    <DialogContent>
+    <ConteudoDoFormulario chave="empresa">
       <DialogHeader>
         <DialogTitle>Nova empresa</DialogTitle>
         <DialogDescription>
@@ -234,6 +234,6 @@ const salvar = handleSubmit((dados) =>
           Cadastrar
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>

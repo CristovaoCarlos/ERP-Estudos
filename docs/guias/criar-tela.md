@@ -110,7 +110,8 @@ Sempre um cabeçalho com `h1` (o título do menu) e uma frase que diz para que a
 - À direita do cabeçalho, o botão `Novo…` com o ícone `Plus`.
 - `Listagem` (`@/components/Listagem.vue`) com `colunas: Coluna<T>[]` (`@/lib/listagem`): `valor` para o texto da célula, `busca` quando a coluna entra na busca rápida, `ocultaPorPadrao` nas secundárias, `fixa` na coluna `acoes`. Célula com badge ou botões vem do slot `#coluna-<id>="{ item }"`: em Ações, `Pencil` (`aria-label="Alterar <nome>"`) e `Trash2` (`aria-label="Excluir <nome>"`). `vazio` com título, texto e o componente do ícone do menu.
 - Filtros no slot `#filtros`, com `ItemDeFiltro` e os valores marcados em `useSelecao()`; `:filtros-ativos` e `@limpar-filtros` ligam o contador e o "Limpar filtros".
-- Formulário num componente da tela (`grupos/FormularioDeGrupo.vue`), em `Dialog` (`max-h-[90svh] overflow-y-auto`) ou na moldura `DialogoDeCadastro`: sem registro cadastra, com registro altera; botão `Cadastrar` ou `Salvar`.
+- Formulário num componente da tela (`grupos/FormularioDeGrupo.vue`), em `Dialog` ou na moldura `DialogoDeCadastro`: sem registro cadastra, com registro altera; botão `Cadastrar` ou `Salvar`.
+- **Todo diálogo de formulário usa `ConteudoDoFormulario`** (`components/ConteudoDoFormulario.vue`) no lugar do `DialogContent`, com uma `chave` própria (ex.: `chave="cliente" largura="sm:w-3xl"`). O usuário redimensiona o diálogo pelo canto, e o tamanho fica guardado no navegador (`erp_estudos.dialogo.<chave>`) e volta na próxima abertura. O `DialogoDeCadastro` já faz isso, usando o `id` do formulário como chave. Diálogos de confirmação continuam com `DialogContent`.
 - Exclusão com `DialogoDeConfirmacao` (`Cancelar` e `Excluir` destrutivo), dizendo o que acontece no slot.
 
 **Nos dois**
