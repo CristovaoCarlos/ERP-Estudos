@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('reference', 255)->nullable();
             $table->integer('deliveries')->nullable();
             $table->integer('priority')->nullable()->default(0);
+            $table->index(['queue_id', 'status', 'priority'], 'ix_mqmessages_priority');
         });
     }
 

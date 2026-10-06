@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -33,7 +33,7 @@ const emit = defineEmits<{ enviar: [evento: Event]; fechar: [] }>()
 
 <template>
   <Dialog :open="true" @update:open="(abrir) => !abrir && emit('fechar')">
-    <DialogContent :class="largo ? 'max-h-[90svh] overflow-y-auto sm:max-w-2xl' : undefined">
+    <ConteudoDoFormulario :chave="id" :largura="largo ? 'sm:w-2xl' : undefined">
       <DialogHeader>
         <DialogTitle>{{ titulo }}</DialogTitle>
         <DialogDescription>{{ descricao }}</DialogDescription>
@@ -50,6 +50,6 @@ const emit = defineEmits<{ enviar: [evento: Event]; fechar: [] }>()
           {{ rotuloDoBotao }}
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>

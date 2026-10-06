@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Obrigatorio from '@/components/Obrigatorio.vue'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import {
   Select,
@@ -9,7 +10,7 @@ import {
 } from '@/components/ui/select'
 
 /** UF numa lista de seleção, usada na inclusão e na alteração. */
-defineProps<{ id: string; erro?: string }>()
+defineProps<{ id: string; erro?: string; obrigatorio?: boolean }>()
 const uf = defineModel<string>({ required: true })
 
 const UFS = [
@@ -45,7 +46,7 @@ const UFS = [
 
 <template>
   <Field :data-invalid="erro ? true : undefined">
-    <FieldLabel :for="id">UF</FieldLabel>
+    <FieldLabel :for="id">UF <Obrigatorio v-if="obrigatorio" /></FieldLabel>
     <Select v-model="uf">
       <SelectTrigger :id="id" class="w-28" :aria-invalid="erro ? true : undefined">
         <SelectValue placeholder="UF" />

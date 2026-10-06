@@ -22,6 +22,7 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0015](0015-mysql.md) | MySQL 8.4 como banco de dados | Aceita |
 | [0016](0016-frontend-em-vue.md) | Frontend em Vue 3 com shadcn-vue | Aceita |
 | [0017](0017-logout-por-inatividade.md) | Logout automático por inatividade | Aceita |
+| [0018](0018-viacep-no-navegador.md) | Endereço pelo CEP com o ViaCEP, consultado pelo navegador | Aceita |
 
 ## Como criar um ADR
 

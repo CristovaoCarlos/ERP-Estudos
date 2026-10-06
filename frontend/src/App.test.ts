@@ -559,6 +559,28 @@ describe('empresas', () => {
     return dialogo
   }
 
+  it('Nova empresa volta ao tamanho guardado também ao reabrir', async () => {
+    localStorage.setItem(
+      'erp_estudos.dialogo.empresa',
+      JSON.stringify({ largura: 820, altura: 600 }),
+    )
+    try {
+      await abrirEmpresas()
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Nova empresa' }))
+      expect((await screen.findByRole('dialog')).style.width).toBe('820px')
+      await userEvent.keyboard('{Escape}')
+      await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+      await userEvent.click(screen.getByRole('button', { name: 'Nova empresa' }))
+      const reaberto = await screen.findByRole('dialog')
+      expect(reaberto.style.width).toBe('820px')
+      expect(reaberto.style.height).toBe('600px')
+    } finally {
+      localStorage.removeItem('erp_estudos.dialogo.empresa')
+    }
+  })
+
   it('lista as empresas com CNPJ, endereço e situação', async () => {
     await abrirEmpresas()
 
@@ -1100,6 +1122,442 @@ describe('administração › tabelas comuns › cidades', () => {
       nome: 'Campinas (SP)',
       uf: 'MG',
     })
+  })
+})
+
+describe('cadastros › clientes', () => {
+  const maria = {
+    id: 1,
+    tipo_pessoa: 'F',
+    cpf_cnpj: '52998224725',
+    nome: 'Maria Souza',
+    nome_fantasia: null,
+    rg: '123456789',
+    data_nascimento: '1990-05-20',
+    endereco: {
+      cep: '13010100',
+      logradouro: 'Rua Barão de Jaguara',
+      numero: '100',
+      complemento: null,
+      bairro: 'Centro',
+      latitude: -22.9056,
+      longitude: -47.0608,
+      cidade: { id: 2, nome: 'Campinas', uf: 'SP' },
+    },
+    contato: { email: 'maria@exemplo.com', telefone: null, celular: '11988887777' },
+    fiscal: {
+      indicador_ie: 9,
+      inscricao_estadual: null,
+      inscricao_municipal: null,
+      consumidor_final: true,
+    },
+    limite_credito: '1500.50',
+    observacoes: null,
+    ativo: true,
+  }
+  const loja = {
+    ...maria,
+    id: 2,
+    tipo_pessoa: 'J',
+    cpf_cnpj: '12ABC34501DE35',
+    nome: 'Comércio Exemplo Ltda',
+    nome_fantasia: 'Loja Exemplo',
+    rg: null,
+    data_nascimento: null,
+    endereco: { ...maria.endereco, cidade: null },
+    ativo: false,
+  }
+
+  async function abrirClientes() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/cadastros/clientes': { data: [loja, maria] },
+      '/cadastros/clientes/cidades': {
+        data: [
+          { id: 2, codigo_ibge: '3509502', nome: 'Campinas' },
+          { id: 1, codigo_ibge: '3550308', nome: 'São Paulo' },
+        ],
+      },
+    })
+    await renderizar(App, '/cadastros/clientes')
+  }
+
+  /** Resposta do ViaCEP para o `fetch`. */
+  function respostaDoViaCep(dados: unknown) {
+    return { ok: true, status: 200, json: async () => dados } as Response
+  }
+
+  async function novoCliente() {
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo cliente' }))
+    return await screen.findByRole('dialog')
+  }
+
+  /** Preenche os campos obrigatórios de endereço (pelo ViaCEP simulado) e o celular. */
+  async function preencherEnderecoECelular(dialogo: HTMLElement) {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      respostaDoViaCep({
+        logradouro: 'Rua Barão de Jaguara',
+        complemento: '',
+        bairro: 'Centro',
+        uf: 'SP',
+        ibge: '3509502',
+      }),
+    )
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+    await userEvent.type(await within(dialogo).findByRole('textbox', { name: 'CEP' }), '13010100')
+    await vi.waitFor(() =>
+      expect(within(dialogo).getByRole('combobox', { name: 'Cidade' })).toHaveTextContent(
+        'Campinas',
+      ),
+    )
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Número' }), '100')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Celular' }), '11988887777')
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Identificação' }))
+  }
+
+  it('lista os clientes com documento, cidade e situação', async () => {
+    await abrirClientes()
+
+    const linha = (await screen.findByText('Maria Souza')).closest('tr')!
+    expect(linha).toHaveTextContent('529.982.247-25')
+    expect(linha).toHaveTextContent('Campinas/SP')
+    expect(linha).toHaveTextContent('(11) 98888-7777')
+    expect(linha).toHaveTextContent('Ativo')
+
+    const empresa = screen.getByText('Comércio Exemplo Ltda').closest('tr')!
+    expect(empresa).toHaveTextContent('Loja Exemplo')
+    expect(empresa).toHaveTextContent('12.ABC.345/01DE-35')
+    expect(empresa).toHaveTextContent('Inativo')
+  })
+
+  it('a busca rápida acha pelo CPF sem máscara e pelo nome fantasia', async () => {
+    await abrirClientes()
+    await screen.findByText('Maria Souza')
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '52998224725')
+    expect(screen.getByText('Maria Souza')).toBeInTheDocument()
+    expect(screen.queryByText('Comércio Exemplo Ltda')).not.toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText('Busca rápida'))
+    await userEvent.type(screen.getByLabelText('Busca rápida'), 'loja exemplo')
+    expect(screen.getByText('Comércio Exemplo Ltda')).toBeInTheDocument()
+    expect(screen.queryByText('Maria Souza')).not.toBeInTheDocument()
+  })
+
+  it('filtra por tipo de pessoa', async () => {
+    await abrirClientes()
+    await screen.findByText('Maria Souza')
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Pessoa jurídica' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByText('Comércio Exemplo Ltda')).toBeInTheDocument()
+    expect(screen.queryByText('Maria Souza')).not.toBeInTheDocument()
+  })
+
+  it('cadastra uma pessoa física com endereço, enviando documentos sem máscara', async () => {
+    await abrirClientes()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { ...maria, id: 3 } })
+    const dialogo = await novoCliente()
+
+    const cpf = within(dialogo).getByRole('textbox', { name: 'CPF' })
+    await userEvent.type(cpf, '52998224725')
+    expect(cpf).toHaveValue('529.982.247-25')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'Maria Souza')
+    await preencherEnderecoECelular(dialogo)
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+    await userEvent.type(
+      await within(dialogo).findByLabelText('Localização'),
+      '-22.905600, -47.060800',
+    )
+
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    await esperarChamada(
+      post,
+      '/cadastros/clientes',
+      expect.objectContaining({
+        tipo_pessoa: 'F',
+        cpf_cnpj: '52998224725',
+        nome: 'Maria Souza',
+        nome_fantasia: null,
+        endereco: {
+          cep: '13010100',
+          logradouro: 'Rua Barão de Jaguara',
+          numero: '100',
+          complemento: null,
+          bairro: 'Centro',
+          latitude: -22.9056,
+          longitude: -47.0608,
+          cidade: 2,
+        },
+        contato: { email: null, telefone: null, celular: '11988887777' },
+        fiscal: {
+          indicador_ie: 9,
+          inscricao_estadual: null,
+          inscricao_municipal: null,
+          consumidor_final: true,
+        },
+        limite_credito: null,
+        ativo: true,
+      }),
+    )
+  })
+
+  it('pessoa jurídica pede CNPJ (aceita o alfanumérico), razão social e nome fantasia', async () => {
+    await abrirClientes()
+    const dialogo = await novoCliente()
+
+    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'Tipo de pessoa' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Pessoa jurídica' }))
+
+    const cnpj = await within(dialogo).findByRole('textbox', { name: 'CNPJ' })
+    await userEvent.type(cnpj, '12abc34501de35')
+    expect(cnpj).toHaveValue('12.ABC.345/01DE-35')
+    expect(within(dialogo).getByRole('textbox', { name: 'Razão social' })).toBeInTheDocument()
+    expect(within(dialogo).getByLabelText('Nome fantasia')).toBeInTheDocument()
+    expect(within(dialogo).queryByLabelText('RG')).not.toBeInTheDocument()
+  })
+
+  it('exige a inscrição estadual do contribuinte do ICMS e abre a aba com o erro', async () => {
+    await abrirClientes()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novoCliente()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'CPF' }), '52998224725')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'Maria Souza')
+    await preencherEnderecoECelular(dialogo)
+
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Fiscal e comercial' }))
+    await userEvent.click(
+      await within(dialogo).findByRole('combobox', { name: 'Indicador da inscrição estadual' }),
+    )
+    await userEvent.click(await screen.findByRole('option', { name: 'Contribuinte do ICMS' }))
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Identificação' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText('Informe a inscrição estadual do contribuinte.'),
+    ).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('exige CEP, logradouro, número, bairro, UF, cidade e celular', async () => {
+    await abrirClientes()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novoCliente()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'CPF' }), '52998224725')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'Maria Souza')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    // O erro está na aba de endereço, que se abre sozinha.
+    for (const mensagem of [
+      'Informe o CEP.',
+      'Informe o logradouro.',
+      'Informe o número (ou S/N).',
+      'Informe o bairro.',
+      'Escolha a UF.',
+      'Informe o celular.',
+    ]) {
+      expect(await within(dialogo).findByText(mensagem)).toBeInTheDocument()
+    }
+    expect(within(dialogo).queryByText('Informe o telefone com DDD.')).not.toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('marca com asterisco os campos obrigatórios', async () => {
+    await abrirClientes()
+    const dialogo = await novoCliente()
+    const rotulo = (id: string) => dialogo.querySelector(`label[for="${id}"]`)!
+
+    for (const id of ['cliente-tipo', 'cliente-documento', 'cliente-nome']) {
+      expect(rotulo(id)).toHaveTextContent('*')
+    }
+    expect(rotulo('cliente-rg')).not.toHaveTextContent('*')
+
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+    await within(dialogo).findByRole('textbox', { name: 'CEP' })
+    for (const id of ['cliente-cep', 'cliente-logradouro', 'cliente-numero', 'cliente-bairro']) {
+      expect(rotulo(id)).toHaveTextContent('*')
+    }
+    for (const id of ['cliente-uf', 'cliente-cidade', 'cliente-celular']) {
+      expect(rotulo(id)).toHaveTextContent('*')
+    }
+    for (const id of ['cliente-complemento', 'cliente-email', 'cliente-telefone']) {
+      expect(rotulo(id)).not.toHaveTextContent('*')
+    }
+
+    // A inscrição estadual só é obrigatória para contribuinte do ICMS.
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Fiscal e comercial' }))
+    await within(dialogo).findByRole('combobox', { name: 'Indicador da inscrição estadual' })
+    expect(rotulo('cliente-ie')).not.toHaveTextContent('*')
+    await userEvent.click(
+      within(dialogo).getByRole('combobox', { name: 'Indicador da inscrição estadual' }),
+    )
+    await userEvent.click(await screen.findByRole('option', { name: 'Contribuinte do ICMS' }))
+    expect(rotulo('cliente-ie')).toHaveTextContent('*')
+  })
+
+  it('localização fora do padrão do Google Maps é recusada', async () => {
+    await abrirClientes()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novoCliente()
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+    await userEvent.type(await within(dialogo).findByLabelText('Localização'), '22°54′S 47°03′W')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText(
+        'Use o formato do Google Maps: latitude, longitude (ex.: -22.905600, -47.060800).',
+      ),
+    ).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('na alteração, mostra a localização e o link para o Google Maps', async () => {
+    await abrirClientes()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Maria Souza' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+
+    expect(await within(dialogo).findByLabelText('Localização')).toHaveValue('-22.9056, -47.0608')
+    expect(within(dialogo).getByRole('link', { name: 'Ver no Google Maps' })).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps?q=-22.9056,-47.0608',
+    )
+  })
+
+  it('celular vem antes do telefone, que fica à direita', async () => {
+    await abrirClientes()
+    const dialogo = await novoCliente()
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+
+    const celular = await within(dialogo).findByRole('textbox', { name: 'Celular' })
+    const telefone = within(dialogo).getByLabelText('Telefone')
+    expect(
+      celular.compareDocumentPosition(telefone) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('mostra no campo o CPF repetido recusado pelo servidor', async () => {
+    await abrirClientes()
+    vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, { errors: { cpf_cnpj: ['Já existe um cliente com este CPF/CNPJ.'] } }),
+    )
+    const dialogo = await novoCliente()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'CPF' }), '52998224725')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'Maria Souza')
+    await preencherEnderecoECelular(dialogo)
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText('Já existe um cliente com este CPF/CNPJ.'),
+    ).toBeInTheDocument()
+  })
+
+  it('altera um cliente com os dados atuais no formulário', async () => {
+    await abrirClientes()
+    const put = vi.spyOn(api, 'put').mockResolvedValue({ data: maria })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Maria Souza' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByRole('textbox', { name: 'CPF' })).toHaveValue('529.982.247-25')
+    const nome = within(dialogo).getByRole('textbox', { name: 'Nome' })
+    expect(nome).toHaveValue('Maria Souza')
+    await userEvent.clear(nome)
+    await userEvent.type(nome, 'Maria Souza Lima')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    await esperarChamada(
+      put,
+      '/cadastros/clientes/1',
+      expect.objectContaining({
+        nome: 'Maria Souza Lima',
+        endereco: expect.objectContaining({ cidade: 2 }),
+        limite_credito: 1500.5,
+      }),
+    )
+  })
+
+  it('exclui um cliente depois de confirmar', async () => {
+    await abrirClientes()
+    const remover = vi.spyOn(api, 'delete').mockResolvedValue({ data: null })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir Maria Souza' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
+
+    await esperarChamada(remover, '/cadastros/clientes/1')
+  })
+
+  it('preenche o endereço pelo CEP com o ViaCEP, achando a cidade pelo código do IBGE', async () => {
+    await abrirClientes()
+    const consulta = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      respostaDoViaCep({
+        cep: '13010-100',
+        logradouro: 'Rua Barão de Jaguara',
+        complemento: '',
+        bairro: 'Centro',
+        localidade: 'Campinas',
+        uf: 'SP',
+        ibge: '3509502',
+      }),
+    )
+    const dialogo = await novoCliente()
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+
+    await userEvent.type(await within(dialogo).findByRole('textbox', { name: 'CEP' }), '13010100')
+
+    expect(consulta).toHaveBeenCalledWith('https://viacep.com.br/ws/13010100/json/')
+    await vi.waitFor(() =>
+      expect(within(dialogo).getByRole('textbox', { name: 'Logradouro' })).toHaveValue(
+        'Rua Barão de Jaguara',
+      ),
+    )
+    expect(within(dialogo).getByRole('textbox', { name: 'Bairro' })).toHaveValue('Centro')
+    expect(within(dialogo).getByRole('combobox', { name: 'UF' })).toHaveTextContent('SP')
+    await vi.waitFor(() =>
+      expect(within(dialogo).getByRole('combobox', { name: 'Cidade' })).toHaveTextContent(
+        'Campinas',
+      ),
+    )
+    // O token do ERP não vai para o ViaCEP.
+    expect(consulta.mock.calls[0]).toHaveLength(1)
+  })
+
+  it('avisa no campo quando o CEP não existe', async () => {
+    await abrirClientes()
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(respostaDoViaCep({ erro: 'true' }))
+    const dialogo = await novoCliente()
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Endereço e contato' }))
+
+    await userEvent.type(await within(dialogo).findByRole('textbox', { name: 'CEP' }), '99999999')
+
+    expect(
+      await within(dialogo).findByText(
+        'CEP não encontrado. Confira o número ou preencha o endereço.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(dialogo).getByRole('textbox', { name: 'Logradouro' })).toHaveValue('')
+  })
+
+  it('abre o formulário no tamanho deixado da última vez', async () => {
+    localStorage.setItem(
+      'erp_estudos.dialogo.cliente',
+      JSON.stringify({ largura: 900, altura: 640 }),
+    )
+    try {
+      await abrirClientes()
+      const dialogo = await novoCliente()
+
+      expect(dialogo.style.width).toBe('900px')
+      expect(dialogo.style.height).toBe('640px')
+    } finally {
+      localStorage.removeItem('erp_estudos.dialogo.cliente')
+    }
   })
 })
 

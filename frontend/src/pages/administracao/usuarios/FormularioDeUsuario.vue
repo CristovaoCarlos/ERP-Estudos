@@ -3,11 +3,11 @@ import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
 
+import ConteudoDoFormulario from '@/components/ConteudoDoFormulario.vue'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -116,7 +116,7 @@ const salvar = handleSubmit((dados) => {
 
 <template>
   <Dialog :open="true" @update:open="(abrir) => !abrir && emit('fechar')">
-    <DialogContent>
+    <ConteudoDoFormulario chave="usuario">
       <DialogHeader>
         <DialogTitle>{{ usuario ? 'Alterar usuário' : 'Novo usuário' }}</DialogTitle>
         <DialogDescription>
@@ -216,6 +216,6 @@ const salvar = handleSubmit((dados) => {
           {{ usuario ? 'Salvar' : 'Cadastrar' }}
         </Button>
       </DialogFooter>
-    </DialogContent>
+    </ConteudoDoFormulario>
   </Dialog>
 </template>
