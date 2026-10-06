@@ -20,7 +20,6 @@ import EmConstrucao from '@/pages/EmConstrucao.vue'
 import EsqueciSenha from '@/pages/EsqueciSenha.vue'
 import Inicio from '@/pages/Inicio.vue'
 import Login from '@/pages/Login.vue'
-import ReceitasParametros from '@/pages/parametros/Receitas.vue'
 import RedefinirSenha from '@/pages/RedefinirSenha.vue'
 
 /** Telas já implementadas; as demais do menu abrem `EmConstrucao`. */
@@ -36,7 +35,6 @@ const paginas: Record<string, Component> = {
   '/administracao/tabelas-comuns/selic': Selic,
   '/administracao/tabelas-comuns/tipos-de-dam': TiposDeDam,
   '/administracao/usuarios': Usuarios,
-  '/parametros/receitas': ReceitasParametros,
 }
 
 export const rotas: RouteRecordRaw[] = [
