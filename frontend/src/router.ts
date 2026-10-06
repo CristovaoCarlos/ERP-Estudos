@@ -12,6 +12,8 @@ import Unidades from '@/pages/administracao/tabelas-comuns/Unidades.vue'
 import Clientes from '@/pages/cadastros/Clientes.vue'
 import Produtos from '@/pages/cadastros/Produtos.vue'
 import Vendedores from '@/pages/cadastros/Vendedores.vue'
+import Vendas from '@/pages/lancamentos/Vendas.vue'
+import VendasNoPeriodo from '@/pages/relatorios/VendasNoPeriodo.vue'
 import Usuarios from '@/pages/administracao/Usuarios.vue'
 import EmConstrucao from '@/pages/EmConstrucao.vue'
 import EsqueciSenha from '@/pages/EsqueciSenha.vue'
@@ -29,6 +31,8 @@ const paginas: Record<string, Component> = {
   '/cadastros/clientes': Clientes,
   '/cadastros/produtos': Produtos,
   '/cadastros/vendedores': Vendedores,
+  '/lancamentos/vendas': Vendas,
+  '/relatorios/vendas_periodo': VendasNoPeriodo,
 }
 
 export const rotas: RouteRecordRaw[] = [

@@ -28,6 +28,8 @@ Além das tabelas de grupos e permissões do spatie (`roles`, `permissions` e as
 | `check_pix_api` | legado | `id` |  |
 | `mq_messages` | legado | `id` | índice `ix_mqmessages_priority` (`queue_id`, `status`, `priority`) |
 | `mq_queues` | legado | `id` |  |
+| `tb_venda` | ERP | `id_venda` | Lançamentos › Vendas; FK para `tb_cliente` e `tb_vendedor` (obrigatórios) |
+| `tb_venda_item` | ERP | `id_venda_item` | Itens da venda; FK para `tb_venda` (apaga junto) e `tb_produto` |
 | `tb_vendedor` | ERP | `id_vendedor` | Cadastros › Vendedores: nome, CPF (único), admissão, contatos, comissão (%), meta mensal e região |
 | `tb_produto` | ERP | `id_produto` | Cadastros › Produtos; `unidade` é a sigla de `tc_unidade` do central, sem FK |
 | `tb_cliente` | ERP | `id_cliente` | Cadastros › Clientes; `id_cidade` aponta, sem FK, para `tc_cidade` do central |
@@ -64,6 +66,19 @@ Dados de exemplo: `php artisan tenants:seed --tenants=<id> --class="Database\See
 | Outros | `observacoes`, `ativo`, `created_at`, `updated_at` |
 
 Dados de exemplo: `php artisan tenants:seed --tenants=<id> --class="Database\Seeders\ProdutoSeeder"`, que cria 25 produtos.
+
+### `tb_venda` e `tb_venda_item`
+
+Uma venda registrada não se altera: fica `finalizada` ou é `cancelada`. O registro dá baixa no estoque dos produtos que o controlam, e o cancelamento devolve ([ADR-0019](../adr/0019-baixa-de-estoque-na-venda.md)).
+
+| Tabela | Colunas |
+| --- | --- |
+| `tb_venda` | `data_venda`, `id_cliente`, `id_vendedor`, `forma_pagamento` (`dinheiro`, `pix`, `cartao_debito`, `cartao_credito`, `boleto`, `crediario`), `subtotal` (soma dos itens), `desconto`, `total`, `observacoes`, `situacao` (`finalizada` ou `cancelada`), `cancelada_em`, `created_at`, `updated_at` |
+| `tb_venda_item` | `id_venda`, `id_produto`, `codigo`, `descricao` e `unidade` (do produto na data da venda), `quantidade` (3 casas), `preco_unitario`, `desconto`, `total` (quantidade × preço − desconto), `baixou_estoque` |
+
+As FKs de `tb_venda` e de `tb_venda_item.id_produto` são `restrict`: cliente, vendedor e produto que aparecem numa venda não são excluídos. A API recusa com 422 e sugere marcá-los como inativos.
+
+Dados de exemplo: `php artisan tenants:seed --tenants=<id> --class="Database\Seeders\VendaSeeder"`, que registra até 20 vendas (2 canceladas) com os clientes, vendedores e produtos ativos.
 
 ## Tabelas do banco central
 

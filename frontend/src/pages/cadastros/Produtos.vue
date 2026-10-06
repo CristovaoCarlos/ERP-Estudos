@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { formatarNcm, useProdutos, useRemoverProduto, type Produto } from '@/lib/cadastros-produtos'
+import { errosDosCampos } from '@/lib/empresas'
 import { useSelecao, type Coluna } from '@/lib/listagem'
 import { formatarMoeda, formatarQuantidade } from '@/lib/numeros'
 import FormularioDeProduto from '@/pages/cadastros/produtos/FormularioDeProduto.vue'
@@ -110,7 +111,9 @@ function excluir() {
       toast.success(`Produto ${produto.descricao} excluído.`)
       excluindo.value = null
     },
-    onError: () => toast.error('Não foi possível excluir o produto.'),
+    // Quem já está numa venda não sai do cadastro: o servidor explica.
+    onError: (erro) =>
+      toast.error(errosDosCampos(erro)?.produto ?? 'Não foi possível excluir o produto.'),
   })
 }
 </script>

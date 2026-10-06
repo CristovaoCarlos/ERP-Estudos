@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\VendedorResource;
+use App\Models\Venda;
 use App\Models\Vendedor;
 use App\Rules\Cpf;
 use App\Support\Cpf as CpfSupport;
@@ -13,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Cadastros › Vendedores: lista, inclui, altera e exclui os vendedores da prefeitura.
@@ -39,8 +41,15 @@ class VendedorController extends Controller
         return new VendedorResource($vendedor->refresh());
     }
 
+    /** Quem já está numa venda não sai do cadastro: o histórico precisa dele. */
     public function destroy(Vendedor $vendedor): Response
     {
+        if (Venda::where('id_vendedor', $vendedor->id_vendedor)->exists()) {
+            throw ValidationException::withMessages([
+                'vendedor' => 'Este vendedor tem vendas e fica no histórico delas: marque-o como inativo em vez de excluir.',
+            ]);
+        }
+
         $vendedor->delete();
 
         return response()->noContent();

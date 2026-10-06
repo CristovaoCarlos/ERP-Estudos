@@ -23,6 +23,8 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0016](0016-frontend-em-vue.md) | Frontend em Vue 3 com shadcn-vue | Aceita |
 | [0017](0017-logout-por-inatividade.md) | Logout automático por inatividade | Aceita |
 | [0018](0018-viacep-no-navegador.md) | Endereço pelo CEP com o ViaCEP, consultado pelo navegador | Aceita |
+| [0019](0019-baixa-de-estoque-na-venda.md) | Baixa de estoque no registro da venda, sem alteração da venda | Aceita |
+| [0020](0020-fachada-de-pdf-com-mpdf.md) | Fachada de PDF, com o mPDF como motor | Aceita |
 
 ## Como criar um ADR
 

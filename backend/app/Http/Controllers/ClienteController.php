@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\ClienteResource;
 use App\Models\Cidade;
 use App\Models\Cliente;
+use App\Models\Venda;
 use App\Rules\Cnpj;
 use App\Rules\Cpf;
 use App\Support\Cnpj as CnpjSupport;
@@ -16,6 +17,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Cadastros › Clientes: lista, inclui, altera e exclui os clientes da prefeitura.
@@ -43,8 +45,15 @@ class ClienteController extends Controller
         return new ClienteResource($cliente->load('cidade'));
     }
 
+    /** Quem já está numa venda não sai do cadastro: o histórico precisa dele. */
     public function destroy(Cliente $cliente): Response
     {
+        if (Venda::where('id_cliente', $cliente->id_cliente)->exists()) {
+            throw ValidationException::withMessages([
+                'cliente' => 'Este cliente tem vendas e fica no histórico delas: marque-o como inativo em vez de excluir.',
+            ]);
+        }
+
         $cliente->delete();
 
         return response()->noContent();

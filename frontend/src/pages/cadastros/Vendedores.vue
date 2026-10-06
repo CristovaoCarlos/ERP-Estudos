@@ -12,6 +12,7 @@ import { DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdo
 import { formatarTelefone } from '@/lib/cadastros-clientes'
 import { useRemoverVendedor, useVendedores, type Vendedor } from '@/lib/cadastros-vendedores'
 import { formatarCpf } from '@/lib/cpf'
+import { errosDosCampos } from '@/lib/empresas'
 import { useSelecao, type Coluna } from '@/lib/listagem'
 import { formatarMoeda } from '@/lib/numeros'
 import FormularioDeVendedor from '@/pages/cadastros/vendedores/FormularioDeVendedor.vue'
@@ -116,7 +117,9 @@ function excluir() {
       toast.success(`Vendedor ${vendedor.nome} excluído.`)
       excluindo.value = null
     },
-    onError: () => toast.error('Não foi possível excluir o vendedor.'),
+    // Quem já está numa venda não sai do cadastro: o servidor explica.
+    onError: (erro) =>
+      toast.error(errosDosCampos(erro)?.vendedor ?? 'Não foi possível excluir o vendedor.'),
   })
 }
 </script>
