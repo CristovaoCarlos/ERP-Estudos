@@ -3,18 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BancoController;
 use App\Http\Controllers\CidadeController;
-use App\Http\Controllers\CnaeController;
-use App\Http\Controllers\DamTipoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
-use App\Http\Controllers\Lcp116Controller;
-use App\Http\Controllers\NotaNumeracaoController;
-use App\Http\Controllers\ParametroReceitaController;
-use App\Http\Controllers\SegmentoController;
-use App\Http\Controllers\SelicController;
 use App\Http\Controllers\SenhaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
@@ -65,35 +57,12 @@ Route::middleware([
         // A lista serve às duas telas: a permissão é conferida no controller.
         Route::get('/grupos', [GrupoController::class, 'index']);
 
-        // Parâmetros › Receitas: um registro só por prefeitura.
-        Route::middleware('can:parametros.receitas')->group(function () {
-            Route::get('/parametros/receitas', [ParametroReceitaController::class, 'show']);
-            Route::put('/parametros/receitas', [ParametroReceitaController::class, 'update']);
-            Route::get('/parametros/receitas/opcoes', [ParametroReceitaController::class, 'opcoes']);
-        });
-
         // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
         // superadmin, na prefeitura administradora.
         Route::middleware('can:gerenciar-tabelas-comuns')->prefix('administracao/tabelas-comuns')->group(function () {
             Route::get('/cidades', [CidadeController::class, 'index']);
             Route::post('/cidades', [CidadeController::class, 'store']);
             Route::put('/cidades/{cidade}', [CidadeController::class, 'update']);
-            Route::get('/bancos', [BancoController::class, 'index']);
-            Route::post('/bancos', [BancoController::class, 'store']);
-            Route::get('/cnae', [CnaeController::class, 'index']);
-            Route::post('/cnae', [CnaeController::class, 'store']);
-            Route::get('/lista-de-servicos', [Lcp116Controller::class, 'index']);
-            Route::post('/lista-de-servicos', [Lcp116Controller::class, 'store']);
-            Route::put('/lista-de-servicos/{item}', [Lcp116Controller::class, 'update']);
-            Route::get('/selic', [SelicController::class, 'index']);
-            Route::post('/selic', [SelicController::class, 'store']);
-            Route::get('/segmentos', [SegmentoController::class, 'index']);
-            Route::post('/segmentos', [SegmentoController::class, 'store']);
-            Route::put('/segmentos/{segmento}', [SegmentoController::class, 'update']);
-            Route::get('/numeracao-de-notas', [NotaNumeracaoController::class, 'index']);
-            Route::post('/numeracao-de-notas', [NotaNumeracaoController::class, 'store']);
-            Route::get('/tipos-de-dam', [DamTipoController::class, 'index']);
-            Route::post('/tipos-de-dam', [DamTipoController::class, 'store']);
         });
 
         // Só o superadmin, na prefeitura administradora.

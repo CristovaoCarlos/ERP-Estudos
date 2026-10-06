@@ -9,6 +9,8 @@ Padrão para toda tela nova do menu que lê e grava uma tabela do banco da prefe
 
 Arquivos da referência (Parâmetros da Empresa › Receitas):
 
+> A tela Receitas foi removida do sistema na reestruturação de 2026-10-06. Os arquivos abaixo continuam no histórico do git, no commit `9c5f1c9`. Para ler um deles: `git show 9c5f1c9:backend/app/Models/ParametroReceita.php`.
+
 | Camada | Arquivo |
 | --- | --- |
 | Model | `backend/app/Models/ParametroReceita.php` |
@@ -46,7 +48,7 @@ As tabelas de `tbcomuns`/`tbinternas` do legado (`tc_*`, `ti_*`) ficam no banco 
 - Tabela de apoio muda pouco: no hook de consulta, `staleTime: Infinity`; as mutações invalidam a consulta.
 - Tabelas grandes (Cidades tem ~5.600 linhas) ainda cabem numa resposta só; a `Listagem` pagina e busca no navegador.
 
-Referências: **Cidades** (listagem com filtro por UF e inclusão com `Select`), **Lista de Serviços** e **Segmentos** (inclusão e alteração da descrição, com o código só para leitura na alteração).
+Referências: **Cidades** (listagem com filtro por UF e inclusão com `Select`), **Lista de Serviços** e **Segmentos** (inclusão e alteração da descrição, com o código só para leitura na alteração; removidas em 2026-10-06, estão no commit `9c5f1c9`).
 
 ## Sem `id_empresa`
 

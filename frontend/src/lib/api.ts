@@ -27,6 +27,11 @@ export function getUltimaRequisicao() {
   return ultimaRequisicao
 }
 
+/** Marca uma requisição autenticada agora (chamada pelo interceptor; exportada para os testes). */
+export function registrarRequisicao() {
+  ultimaRequisicao = Date.now()
+}
+
 export function setToken(novo: string | null) {
   token.value = novo
   if (novo) localStorage.setItem(TOKEN_KEY, novo)
@@ -37,7 +42,7 @@ api.interceptors.request.use((config) => {
   const atual = getToken()
   if (atual) {
     config.headers.Authorization = `Bearer ${atual}`
-    ultimaRequisicao = Date.now()
+    registrarRequisicao()
   }
   return config
 })

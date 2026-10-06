@@ -22,15 +22,14 @@ O [ADR-0007](0007-postgresql.md) padronizou o banco em PostgreSQL 17. A equipe d
 
 Opção escolhida: **MySQL 8.4 LTS, um banco por prefeitura**. É a versão de suporte longo do MySQL e tem o que o schema do legado precisa: `CHECK` aplicado de fato, índices por expressão (sobre JSON inclusive) e `DEFAULT` por expressão em `TEXT`.
 
-- Compose: imagem `mysql:8.4`, porta `127.0.0.1:33061`, volume `mysql-data`, usuário `stm`.
-- `docker/mysql/init/01-permissoes.sql` dá ao `stm` todos os privilégios nos bancos `stm\_%`, para criar e excluir os bancos `stm_tenant_<id>` (a imagem só libera o banco central).
+- Compose: imagem `mysql:8.4`, porta `127.0.0.1:33061`, volume `mysql-data`, usuário `erp_estudos`.
+- `docker/mysql/init/01-permissoes.sql` dá ao `erp_estudos` todos os privilégios nos bancos `erp\_estudos\_%`, para criar e excluir os bancos `erp_estudos_tenant_<id>` (a imagem só libera o banco central).
 - Imagem PHP com `pdo_mysql` no lugar de `pdo_pgsql` (sem `libpq-dev`).
 - `DB_CONNECTION=mysql`; em `config/tenancy.php` ficam só os gerenciadores `sqlite` e `mysql`; a conexão `pgsql` saiu de `config/database.php`.
 - Testes continuam em SQLite ([ADR-0006](0006-testes-em-sqlite.md)).
 - Migrations da prefeitura ajustadas ao MySQL:
   - `jsonb` vira `json`.
   - Coluna de chave estrangeira com o mesmo tipo da chave referenciada (`unsignedBigInteger` para `bigIncrements`, `unsignedInteger` para `increments`): o MySQL recusa a FK se tamanho ou sinal diferirem, o PostgreSQL aceitava.
-  - `stm_migrations.filename` passa de `text` para `varchar(255)`, porque `TEXT` não entra em índice único sem tamanho de prefixo.
   - `tb_parametro_alvara.formula` (`TEXT`) usa default por expressão, `('TAXA')`.
   - Os índices parciais (`WHERE`) e com `INCLUDE` do legado viram índices compostos com a coluna da condição à esquerda. O índice único parcial `uq_processing_iptu_ativo` vira índice único sobre uma expressão `CASE` que dá `NULL` fora da condição, o que mantém a regra "um processamento ativo por lote". Os `CHECK` foram reescritos sem os casts do PostgreSQL.
 - Os dados de desenvolvimento foram levados do PostgreSQL para o MySQL (central e prefeituras), depois de um `pg_dumpall` guardado fora do projeto.
@@ -46,4 +45,4 @@ Opção escolhida: **MySQL 8.4 LTS, um banco por prefeitura**. É a versão de s
 
 ### Confirmação
 
-`docker compose exec app php -m` lista `pdo_mysql`; criar uma prefeitura gera o banco `stm_tenant_<id>` no MySQL (`SHOW DATABASES`); `php artisan tenants:migrate` seguido de `tenants:rollback` e novo `tenants:migrate` roda sem erro.
+`docker compose exec app php -m` lista `pdo_mysql`; criar uma prefeitura gera o banco `erp_estudos_tenant_<id>` no MySQL (`SHOW DATABASES`); `php artisan tenants:migrate` seguido de `tenants:rollback` e novo `tenants:migrate` roda sem erro.
