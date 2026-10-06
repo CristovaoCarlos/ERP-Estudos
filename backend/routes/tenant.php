@@ -43,6 +43,7 @@ Route::middleware([
         Route::put('/me/senha', [AuthController::class, 'alterarSenha']);
         Route::post('/me/foto', [FotoController::class, 'enviar']);
         Route::delete('/me/foto', [FotoController::class, 'remover']);
+        Route::post('/sessao/renovar', [AuthController::class, 'renovar']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Administração › Usuários (permissão da tela).

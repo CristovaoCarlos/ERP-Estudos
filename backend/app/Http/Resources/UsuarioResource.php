@@ -31,6 +31,8 @@ class UsuarioResource extends JsonResource
                 'nome' => $tenant->nome,
                 'dominio' => $tenant->domains->first()?->domain,
             ]),
+            // Minutos sem uso até a sessão cair (o frontend desloga sozinho).
+            'inatividade_minutos' => config('sessao.inatividade_minutos'),
         ];
     }
 }

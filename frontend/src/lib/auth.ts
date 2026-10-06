@@ -25,6 +25,8 @@ export type Usuario = {
   /** Permissões nesta prefeitura: uma por tela (ver `permissaoDaTela`). */
   permissoes: string[]
   prefeituras: PrefeituraDoUsuario[]
+  /** Minutos sem uso até o logout automático (`SESSAO_INATIVIDADE_MINUTOS`). */
+  inatividade_minutos: number
 }
 
 export type Credenciais = {

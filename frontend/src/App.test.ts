@@ -2,7 +2,7 @@ import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { render, screen, within } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 import { AxiosError, AxiosHeaders } from 'axios'
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 import type { Component } from 'vue'
 import { createMemoryHistory } from 'vue-router'
 
@@ -10,6 +10,7 @@ import App from '@/App.vue'
 import { api, getToken, setToken } from '@/lib/api'
 import { permissaoDaTela, telas } from '@/lib/navegacao'
 import { subdominioDaPrefeitura } from '@/lib/prefeitura'
+import { ATIVIDADE_KEY } from '@/lib/sessao'
 import Landing from '@/pages/Landing.vue'
 import { criarRouter } from '@/router'
 
@@ -27,6 +28,7 @@ const usuario = {
     { id: 'demo', nome: 'Demo', dominio: 'demo.localhost' },
     { id: 'prefeitura_teste', nome: null, dominio: 'prefeitura-teste.localhost' },
   ],
+  inatividade_minutos: 5,
 }
 
 /** Usuário comum, só com o grupo Parâmetros. */
@@ -224,6 +226,71 @@ describe('login', () => {
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     await esperarChamada(post, '/logout')
     expect(getToken()).toBeNull()
+  })
+})
+
+describe('sessão por inatividade', () => {
+  const MINUTO = 60_000
+
+  // Só o relógio e o intervalo são falsos: o `setTimeout` real mantém o `findBy*` funcionando.
+  beforeEach(() => vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] }))
+  afterEach(() => {
+    vi.useRealTimers()
+    localStorage.removeItem(ATIVIDADE_KEY)
+  })
+
+  async function entrarLogado() {
+    setToken('tok-123')
+    mockGet({ '/tenant': { id: 'demo' }, '/me': usuario })
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: null })
+    await renderizar(App)
+    await screen.findByRole('heading', { name: 'Olá, Fiscal' })
+    return post
+  }
+
+  it('desloga após 5 minutos sem uso e explica o motivo no login', async () => {
+    const post = await entrarLogado()
+
+    vi.advanceTimersByTime(5 * MINUTO)
+
+    expect(await screen.findByText('Sua sessão foi encerrada por inatividade.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    expect(post).toHaveBeenCalledWith('/logout', null, {
+      headers: { Authorization: 'Bearer tok-123' },
+    })
+    expect(getToken()).toBeNull()
+  })
+
+  it('o uso do teclado ou do mouse adia o logout e renova a sessão no servidor', async () => {
+    const post = await entrarLogado()
+
+    vi.advanceTimersByTime(4 * MINUTO)
+    window.dispatchEvent(new KeyboardEvent('keydown'))
+    vi.advanceTimersByTime(4 * MINUTO)
+
+    expect(post).toHaveBeenCalledWith('/sessao/renovar')
+    expect(post).not.toHaveBeenCalledWith('/logout', expect.anything(), expect.anything())
+    expect(getToken()).toBe('tok-123')
+    expect(screen.getByRole('heading', { name: 'Olá, Fiscal' })).toBeInTheDocument()
+  })
+
+  it('o uso em outra aba também mantém esta aba logada', async () => {
+    await entrarLogado()
+
+    vi.advanceTimersByTime(4 * MINUTO)
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: ATIVIDADE_KEY, newValue: String(Date.now()) }),
+    )
+    vi.advanceTimersByTime(4 * MINUTO)
+
+    expect(getToken()).toBe('tok-123')
+  })
+
+  it('o login explica quando o servidor recusou o token', async () => {
+    mockGet({ '/tenant': { id: 'demo' } })
+    await renderizar(App, '/login?sessao=expirada')
+
+    expect(await screen.findByText('Sua sessão expirou. Entre novamente.')).toBeInTheDocument()
   })
 })
 

@@ -86,6 +86,7 @@ class AuthTest extends TestCase
                     ['id' => 'demo', 'nome' => null, 'dominio' => 'demo.localhost'],
                     ['id' => 'outra', 'nome' => null, 'dominio' => 'outra.localhost'],
                 ],
+                'inatividade_minutos' => 5,
             ]);
     }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ArrowLeft, CircleAlert } from '@lucide/vue'
-import { watchEffect } from 'vue'
-import { useRouter } from 'vue-router'
+import { ArrowLeft, CircleAlert, Clock } from '@lucide/vue'
+import { computed, watchEffect } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { z } from 'zod'
 
 import PaginaDeAcesso from '@/components/PaginaDeAcesso.vue'
@@ -20,8 +20,16 @@ const esquema = z.object({
   password: z.string().min(1, 'Informe a senha.'),
 })
 
+const route = useRoute()
 const router = useRouter()
 const login = useLogin()
+
+/** Por que a sessão anterior acabou (ver `RotaProtegida` e o interceptor de 401 em `lib/api.ts`). */
+const avisoDeSessao = computed(() => {
+  if (route.query.sessao === 'inatividade') return 'Sua sessão foi encerrada por inatividade.'
+  if (route.query.sessao === 'expirada') return 'Sua sessão expirou. Entre novamente.'
+  return null
+})
 const { campo, errors, handleSubmit } = useFormulario(esquema, { cpf: '', password: '' })
 const [cpf] = campo('cpf')
 const [password] = campo('password')
@@ -47,6 +55,10 @@ const entrar = handleSubmit(({ cpf, password }) =>
     <Alert v-if="login.isError.value" variant="destructive">
       <CircleAlert />
       <AlertDescription>{{ mensagemDeErroDoLogin(login.error.value) }}</AlertDescription>
+    </Alert>
+    <Alert v-else-if="avisoDeSessao">
+      <Clock />
+      <AlertDescription>{{ avisoDeSessao }}</AlertDescription>
     </Alert>
 
     <form novalidate class="flex flex-col gap-6" @submit="entrar">
