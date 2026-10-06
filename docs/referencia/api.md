@@ -42,6 +42,19 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `GET` | `/api/cadastros/clientes/cidades?uf=SP` | prefeitura | `cadastros.clientes` | Cidades da UF, com o código do IBGE, para o endereço do cliente |
 | `PUT` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Altera o cliente |
 | `DELETE` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Exclui o cliente |
+| `GET` | `/api/cadastros/produtos` | prefeitura | `cadastros.produtos` | Produtos da prefeitura, com margem e alerta de estoque baixo |
+| `POST` | `/api/cadastros/produtos` | prefeitura | `cadastros.produtos` | Cadastra um produto (o estoque atual nasce em 0) |
+| `GET` | `/api/cadastros/produtos/opcoes` | prefeitura | `cadastros.produtos` | Unidades, origens da NF-e e categorias já usadas |
+| `PUT` | `/api/cadastros/produtos/{id}` | prefeitura | `cadastros.produtos` | Altera o produto (não mexe no estoque atual) |
+| `DELETE` | `/api/cadastros/produtos/{id}` | prefeitura | `cadastros.produtos` | Exclui o produto |
+| `GET` | `/api/cadastros/vendedores` | prefeitura | `cadastros.vendedores` | Vendedores da prefeitura, em ordem de nome |
+| `POST` | `/api/cadastros/vendedores` | prefeitura | `cadastros.vendedores` | Cadastra um vendedor (CPF único, comissão de 0 a 100%) |
+| `GET` | `/api/cadastros/vendedores/regioes` | prefeitura | `cadastros.vendedores` | Regiões já usadas, para sugestão |
+| `PUT` | `/api/cadastros/vendedores/{id}` | prefeitura | `cadastros.vendedores` | Altera o vendedor |
+| `DELETE` | `/api/cadastros/vendedores/{id}` | prefeitura | `cadastros.vendedores` | Exclui o vendedor |
+| `GET` | `/api/administracao/tabelas-comuns/unidades` | prefeitura administradora | superadmin | Unidades de medida dos produtos (`tc_unidade`) |
+| `POST` | `/api/administracao/tabelas-comuns/unidades` | prefeitura administradora | superadmin | Inclui uma unidade (sigla de 1 a 6 letras ou números, única) |
+| `PUT` | `/api/administracao/tabelas-comuns/unidades/{sigla}` | prefeitura administradora | superadmin | Altera a descrição da unidade |
 | `GET` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Cidades do banco central (`tc_cidade`), com UF e código do IBGE |
 | `POST` | `/api/administracao/tabelas-comuns/cidades` | prefeitura administradora | superadmin | Inclui uma cidade (código do IBGE único; `id` = maior + 1) |
 | `PUT` | `/api/administracao/tabelas-comuns/cidades/{id}` | prefeitura administradora | superadmin | Altera nome e UF da cidade (o código do IBGE não muda) |

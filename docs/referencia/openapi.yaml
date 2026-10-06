@@ -943,6 +943,297 @@ paths:
           $ref: '#/components/responses/SemAcesso'
         '404':
           description: Cliente inexistente
+  /api/cadastros/produtos:
+    get:
+      tags: [Cadastros]
+      summary: Listar produtos
+      description: Todos os produtos da prefeitura, em ordem de descrição. Permissão `cadastros.produtos`.
+      operationId: listarProdutos
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Produto'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Cadastros]
+      summary: Cadastrar produto
+      description: |
+        Código de barras, NCM e CEST podem vir com máscara: são gravados sem ela. O estoque atual
+        não vem da API: o produto nasce com 0 e o saldo muda pela entrada de notas.
+      operationId: cadastrarProduto
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoProduto'
+      responses:
+        '201':
+          description: Produto cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Código ou código de barras repetido, GTIN inválido, unidade inexistente etc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/cadastros/produtos/opcoes:
+    get:
+      tags: [Cadastros]
+      summary: Opções do formulário de produto
+      description: Unidades (Tabelas Comuns), origens da mercadoria na NF-e e as categorias já usadas.
+      operationId: opcoesDeProdutos
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [unidades, origens, categorias]
+                properties:
+                  unidades:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        valor:
+                          type: string
+                          examples: [UN]
+                        descricao:
+                          type: string
+                          examples: [Unidade]
+                  origens:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        valor:
+                          type: integer
+                          examples: [0]
+                        descricao:
+                          type: string
+                          examples: [Nacional]
+                  categorias:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  '/api/cadastros/produtos/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Cadastros]
+      summary: Alterar produto
+      description: Não altera o estoque atual.
+      operationId: alterarProduto
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoProduto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Produto'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Produto inexistente
+        '422':
+          description: Mesmas regras do cadastro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Cadastros]
+      summary: Excluir produto
+      operationId: excluirProduto
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Produto excluído
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Produto inexistente
+  /api/cadastros/vendedores:
+    get:
+      tags: [Cadastros]
+      summary: Listar vendedores
+      description: Todos os vendedores da prefeitura, em ordem de nome. Permissão `cadastros.vendedores`.
+      operationId: listarVendedores
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vendedor'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Cadastros]
+      summary: Cadastrar vendedor
+      description: CPF e telefones podem vir com máscara; são gravados sem ela.
+      operationId: cadastrarVendedor
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoVendedor'
+      responses:
+        '201':
+          description: Vendedor cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendedor'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: CPF inválido ou repetido, comissão fora de 0 a 100% etc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/cadastros/vendedores/regioes:
+    get:
+      tags: [Cadastros]
+      summary: Regiões já usadas
+      description: Para sugestão no formulário.
+      operationId: regioesDosVendedores
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+                    examples: [[Centro, Zona Sul]]
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+  '/api/cadastros/vendedores/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    put:
+      tags: [Cadastros]
+      summary: Alterar vendedor
+      operationId: alterarVendedor
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DadosDoVendedor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendedor'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Vendedor inexistente
+        '422':
+          description: Mesmas regras do cadastro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+    delete:
+      tags: [Cadastros]
+      summary: Excluir vendedor
+      operationId: excluirVendedor
+      security:
+        - token: []
+      responses:
+        '204':
+          description: Vendedor excluído
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Vendedor inexistente
   /api/administracao/tabelas-comuns/cidades:
     get:
       tags: [Tabelas Comuns]
@@ -1052,6 +1343,105 @@ paths:
           description: Cidade inexistente
         '422':
           description: Nome vazio ou UF inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/administracao/tabelas-comuns/unidades:
+    get:
+      tags: [Tabelas Comuns]
+      summary: Listar unidades
+      description: Unidades de medida dos produtos, do banco central, em ordem de sigla.
+      operationId: listarUnidades
+      security:
+        - token: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Unidade'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+    post:
+      tags: [Tabelas Comuns]
+      summary: Incluir unidade
+      description: A sigla é gravada em maiúsculas e não muda depois.
+      operationId: incluirUnidade
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Unidade'
+      responses:
+        '201':
+          description: Unidade incluída
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unidade'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Sigla repetida ou fora do formato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  '/api/administracao/tabelas-comuns/unidades/{sigla}':
+    parameters:
+      - name: sigla
+        in: path
+        required: true
+        schema:
+          type: string
+          examples: [UN]
+    put:
+      tags: [Tabelas Comuns]
+      summary: Alterar a descrição da unidade
+      operationId: alterarUnidade
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [descricao]
+              properties:
+                descricao:
+                  type: string
+                  maxLength: 60
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unidade'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Unidade inexistente
+        '422':
+          description: Descrição ausente ou longa demais
           content:
             application/json:
               schema:
@@ -1438,6 +1828,204 @@ components:
                       type: string
                     uf:
                       type: string
+    Unidade:
+      type: object
+      required: [sigla, descricao]
+      properties:
+        sigla:
+          type: string
+          maxLength: 6
+          examples: [UN]
+        descricao:
+          type: string
+          maxLength: 60
+          examples: [Unidade]
+    DadosDoProduto:
+      type: object
+      required: [codigo, descricao, unidade, precos, estoque, fiscal, ativo]
+      properties:
+        codigo:
+          type: string
+          maxLength: 30
+          description: Código interno (SKU); gravado em maiúsculas. Letras, números, ponto, barra e hífen.
+          examples: [CAFE-500]
+        descricao:
+          type: string
+          maxLength: 120
+        codigo_barras:
+          type: [string, 'null']
+          description: GTIN/EAN de 8, 12, 13 ou 14 dígitos, com o dígito verificador conferido.
+          examples: ['7891000315507']
+        unidade:
+          type: string
+          description: Sigla de `/api/administracao/tabelas-comuns/unidades`.
+          examples: [UN]
+        categoria:
+          type: [string, 'null']
+          maxLength: 60
+        precos:
+          type: object
+          required: [venda]
+          properties:
+            custo:
+              type: [number, 'null']
+              minimum: 0
+            venda:
+              type: number
+              minimum: 0
+        estoque:
+          type: object
+          required: [controla]
+          description: O estoque atual não entra aqui; muda pela entrada de notas.
+          properties:
+            controla:
+              type: boolean
+            minimo:
+              type: [number, 'null']
+              minimum: 0
+        fiscal:
+          type: object
+          required: [origem]
+          properties:
+            ncm:
+              type: [string, 'null']
+              examples: ['0901.21.00']
+            cest:
+              type: [string, 'null']
+            origem:
+              type: integer
+              minimum: 0
+              maximum: 8
+              description: Origem da mercadoria na NF-e.
+        pesos:
+          type: object
+          properties:
+            bruto:
+              type: [number, 'null']
+              description: Em kg.
+            liquido:
+              type: [number, 'null']
+              description: Em kg; não passa do bruto.
+        observacoes:
+          type: [string, 'null']
+        ativo:
+          type: boolean
+    Produto:
+      type: object
+      required: [id, codigo, descricao, unidade, precos, estoque, fiscal, pesos, ativo]
+      description: Decimais em texto (`"18.90"`, `"40.000"`).
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        descricao:
+          type: string
+        codigo_barras:
+          type: [string, 'null']
+        unidade:
+          type: string
+        categoria:
+          type: [string, 'null']
+        precos:
+          type: object
+          properties:
+            custo:
+              type: [string, 'null']
+              examples: ['12.5000']
+            venda:
+              type: string
+              examples: ['18.90']
+            margem:
+              type: [number, 'null']
+              description: Margem sobre o custo, em %; `null` sem custo.
+              examples: [51.2]
+        estoque:
+          type: object
+          properties:
+            controla:
+              type: boolean
+            atual:
+              type: string
+              examples: ['40.000']
+            minimo:
+              type: [string, 'null']
+            abaixo_do_minimo:
+              type: boolean
+              description: Estoque controlado e no mínimo ou abaixo dele.
+        fiscal:
+          type: object
+          properties:
+            ncm:
+              type: [string, 'null']
+            cest:
+              type: [string, 'null']
+            origem:
+              type: integer
+        pesos:
+          type: object
+          properties:
+            bruto:
+              type: [string, 'null']
+            liquido:
+              type: [string, 'null']
+        observacoes:
+          type: [string, 'null']
+        ativo:
+          type: boolean
+    DadosDoVendedor:
+      type: object
+      required: [nome, cpf, contato, comercial, ativo]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+        cpf:
+          type: string
+          examples: ['529.982.247-25']
+        data_admissao:
+          type: [string, 'null']
+          format: date
+        contato:
+          type: object
+          required: [celular]
+          properties:
+            email:
+              type: [string, 'null']
+              format: email
+            celular:
+              type: string
+              description: Com DDD, 11 dígitos.
+            telefone:
+              type: [string, 'null']
+        comercial:
+          type: object
+          required: [comissao]
+          properties:
+            comissao:
+              type: number
+              minimum: 0
+              maximum: 100
+              description: Percentual sobre as vendas.
+            meta_mensal:
+              type: [number, 'null']
+              minimum: 0
+            regiao:
+              type: [string, 'null']
+              maxLength: 60
+        observacoes:
+          type: [string, 'null']
+        ativo:
+          type: boolean
+    Vendedor:
+      allOf:
+        - $ref: '#/components/schemas/DadosDoVendedor'
+        - type: object
+          required: [id]
+          description: CPF e telefones sem máscara; decimais em texto (`"3.50"`).
+          properties:
+            id:
+              type: integer
     ErroDeValidacao:
       type: object
       required: [message, errors]

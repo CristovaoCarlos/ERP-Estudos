@@ -1311,8 +1311,11 @@ describe('cadastros › clientes', () => {
     await abrirClientes()
     const dialogo = await novoCliente()
 
-    await userEvent.click(within(dialogo).getByRole('combobox', { name: 'Tipo de pessoa' }))
-    await userEvent.click(await screen.findByRole('option', { name: 'Pessoa jurídica' }))
+    // Pelo teclado, como nos menus: o clique logo na abertura do diálogo às vezes se perde.
+    within(dialogo).getByRole('combobox', { name: 'Tipo de pessoa' }).focus()
+    await userEvent.keyboard('{Enter}')
+    await screen.findByRole('option', { name: 'Pessoa jurídica' })
+    await userEvent.keyboard('{ArrowDown}{Enter}')
 
     const cnpj = await within(dialogo).findByRole('textbox', { name: 'CNPJ' })
     await userEvent.type(cnpj, '12abc34501de35')
@@ -1558,6 +1561,484 @@ describe('cadastros › clientes', () => {
     } finally {
       localStorage.removeItem('erp_estudos.dialogo.cliente')
     }
+  })
+})
+
+describe('cadastros › produtos', () => {
+  const cafe = {
+    id: 1,
+    codigo: 'CAFE-500',
+    descricao: 'Café torrado 500 g',
+    codigo_barras: '7891000315507',
+    unidade: 'UN',
+    categoria: 'Alimentos',
+    precos: { custo: '12.5000', venda: '18.90', margem: 51.2 },
+    estoque: { controla: true, atual: '40.000', minimo: '10.000', abaixo_do_minimo: false },
+    fiscal: { ncm: '09012100', cest: null, origem: 0 },
+    pesos: { bruto: '0.520', liquido: '0.500' },
+    observacoes: null,
+    ativo: true,
+  }
+  const detergente = {
+    ...cafe,
+    id: 2,
+    codigo: 'LIM-0001',
+    descricao: 'Detergente 500 ml',
+    codigo_barras: '78910003',
+    categoria: 'Limpeza',
+    precos: { custo: '1.8000', venda: '2.99', margem: 66.11 },
+    estoque: { controla: true, atual: '3.000', minimo: '5.000', abaixo_do_minimo: true },
+  }
+  const instalacao = {
+    ...cafe,
+    id: 3,
+    codigo: 'SRV-1',
+    descricao: 'Instalação',
+    codigo_barras: null,
+    categoria: null,
+    precos: { custo: null, venda: '150.00', margem: null },
+    estoque: { controla: false, atual: '0.000', minimo: null, abaixo_do_minimo: false },
+    ativo: false,
+  }
+
+  async function abrirProdutos() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/cadastros/produtos': { data: [cafe, detergente, instalacao] },
+      '/cadastros/produtos/opcoes': {
+        unidades: [
+          { valor: 'KG', descricao: 'Quilograma' },
+          { valor: 'UN', descricao: 'Unidade' },
+        ],
+        origens: [
+          { valor: 0, descricao: 'Nacional' },
+          { valor: 1, descricao: 'Estrangeira, importação direta' },
+        ],
+        categorias: ['Alimentos', 'Limpeza'],
+      },
+    })
+    await renderizar(App, '/cadastros/produtos')
+  }
+
+  async function novoProduto() {
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo produto' }))
+    return await screen.findByRole('dialog')
+  }
+
+  it('lista os produtos com preço, estoque e situação', async () => {
+    await abrirProdutos()
+
+    const linha = (await screen.findByText('Café torrado 500 g')).closest('tr')!
+    expect(linha).toHaveTextContent('CAFE-500')
+    expect(linha).toHaveTextContent('R$ 18,90')
+    expect(linha).toHaveTextContent('40 UN')
+    expect(linha).toHaveTextContent('Alimentos')
+
+    expect(screen.getByText('Detergente 500 ml').closest('tr')!).toHaveTextContent('Estoque baixo')
+    const servico = screen.getByText('Instalação').closest('tr')!
+    expect(servico).toHaveTextContent('Sem controle')
+    expect(servico).toHaveTextContent('Inativo')
+  })
+
+  it('a busca rápida acha pelo código de barras, mesmo com a coluna oculta', async () => {
+    await abrirProdutos()
+    await screen.findByText('Café torrado 500 g')
+
+    await userEvent.type(screen.getByLabelText('Busca rápida'), '78910003')
+
+    expect(screen.getByText('Detergente 500 ml')).toBeInTheDocument()
+    expect(screen.queryByText('Instalação')).not.toBeInTheDocument()
+  })
+
+  it('filtra por categoria e por estoque baixo', async () => {
+    await abrirProdutos()
+    await screen.findByText('Café torrado 500 g')
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Alimentos' }))
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByText('Café torrado 500 g')).toBeInTheDocument()
+    expect(screen.queryByText('Detergente 500 ml')).not.toBeInTheDocument()
+
+    // Troca o filtro: desmarca a categoria e marca o estoque baixo (o botão mostra o contador).
+    await abrirMenu(/^Filtros/)
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Alimentos' }))
+    await userEvent.click(
+      await screen.findByRole('menuitemcheckbox', { name: 'No mínimo ou abaixo' }),
+    )
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByText('Detergente 500 ml')).toBeInTheDocument()
+    expect(screen.queryByText('Café torrado 500 g')).not.toBeInTheDocument()
+  })
+
+  it('cadastra um produto, calculando a margem e enviando números sem máscara', async () => {
+    await abrirProdutos()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { ...cafe, id: 4 } })
+    const dialogo = await novoProduto()
+
+    const codigo = within(dialogo).getByRole('textbox', { name: 'Código' })
+    await userEvent.type(codigo, 'cafe-500')
+    expect(codigo).toHaveValue('CAFE-500')
+    await userEvent.type(
+      within(dialogo).getByRole('textbox', { name: 'Descrição' }),
+      'Café torrado 500 g',
+    )
+    await userEvent.type(within(dialogo).getByLabelText('Categoria'), 'Alimentos')
+    await userEvent.type(within(dialogo).getByLabelText('Código de barras (EAN)'), '7891000315507')
+
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Preços e estoque' }))
+    await userEvent.type(await within(dialogo).findByLabelText('Preço de custo (R$)'), '12,50')
+    await userEvent.type(
+      within(dialogo).getByRole('textbox', { name: 'Preço de venda (R$)' }),
+      '18,90',
+    )
+    expect(within(dialogo).getByLabelText('Margem')).toHaveValue('51,2 %')
+
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Fiscal e pesos' }))
+    const ncm = await within(dialogo).findByLabelText('NCM')
+    await userEvent.type(ncm, '09012100')
+    expect(ncm).toHaveValue('0901.21.00')
+
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    await esperarChamada(post, '/cadastros/produtos', {
+      codigo: 'CAFE-500',
+      descricao: 'Café torrado 500 g',
+      codigo_barras: '7891000315507',
+      unidade: 'UN',
+      categoria: 'Alimentos',
+      precos: { custo: 12.5, venda: 18.9 },
+      estoque: { controla: true, minimo: null },
+      fiscal: { ncm: '09012100', cest: null, origem: 0 },
+      pesos: { bruto: null, liquido: null },
+      observacoes: null,
+      ativo: true,
+    })
+  })
+
+  it('recusa código de barras com dígito verificador errado', async () => {
+    await abrirProdutos()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novoProduto()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Código' }), 'X1')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Descrição' }), 'Item')
+    await userEvent.type(within(dialogo).getByLabelText('Código de barras (EAN)'), '7891000315508')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText(
+        'Código de barras inválido: confira os dígitos (EAN de 8, 12, 13 ou 14 números).',
+      ),
+    ).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('o estoque atual é só leitura; sem controle, o mínimo também fica bloqueado', async () => {
+    await abrirProdutos()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Café torrado 500 g' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Preços e estoque' }))
+
+    const atual = await within(dialogo).findByLabelText('Estoque atual')
+    expect(atual).toHaveValue('40')
+    expect(atual).toBeDisabled()
+    expect(within(dialogo).getByText('Atualizado pela entrada de notas.')).toBeInTheDocument()
+
+    const minimo = within(dialogo).getByLabelText('Estoque mínimo')
+    expect(minimo).toBeEnabled()
+    await userEvent.click(within(dialogo).getByRole('checkbox', { name: /Controla estoque/ }))
+    expect(minimo).toBeDisabled()
+  })
+
+  it('mostra no campo o código repetido recusado pelo servidor', async () => {
+    await abrirProdutos()
+    vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, { errors: { codigo: ['Já existe um produto com este código.'] } }),
+    )
+    const dialogo = await novoProduto()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Código' }), 'CAFE-500')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Descrição' }), 'Café')
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Preços e estoque' }))
+    await userEvent.type(
+      await within(dialogo).findByRole('textbox', { name: 'Preço de venda (R$)' }),
+      '10',
+    )
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText('Já existe um produto com este código.'),
+    ).toBeInTheDocument()
+  })
+
+  it('altera um produto com os dados atuais no formulário', async () => {
+    await abrirProdutos()
+    const put = vi.spyOn(api, 'put').mockResolvedValue({ data: cafe })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Café torrado 500 g' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByRole('textbox', { name: 'Código' })).toHaveValue('CAFE-500')
+    await userEvent.click(within(dialogo).getByRole('tab', { name: 'Preços e estoque' }))
+    expect(await within(dialogo).findByLabelText('Preço de custo (R$)')).toHaveValue('12,5')
+    const preco = within(dialogo).getByRole('textbox', { name: 'Preço de venda (R$)' })
+    await userEvent.clear(preco)
+    await userEvent.type(preco, '19,90')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    await esperarChamada(
+      put,
+      '/cadastros/produtos/1',
+      expect.objectContaining({
+        precos: { custo: 12.5, venda: 19.9 },
+        estoque: { controla: true, minimo: 10 },
+        fiscal: { ncm: '09012100', cest: null, origem: 0 },
+        pesos: { bruto: 0.52, liquido: 0.5 },
+      }),
+    )
+  })
+
+  it('exclui um produto depois de confirmar', async () => {
+    await abrirProdutos()
+    const remover = vi.spyOn(api, 'delete').mockResolvedValue({ data: null })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir Detergente 500 ml' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
+
+    await esperarChamada(remover, '/cadastros/produtos/2')
+  })
+
+  it('marca com asterisco os campos obrigatórios', async () => {
+    await abrirProdutos()
+    const dialogo = await novoProduto()
+    const rotulo = (id: string) => dialogo.querySelector(`label[for="${id}"]`)!
+
+    for (const id of ['produto-codigo', 'produto-descricao', 'produto-unidade']) {
+      expect(rotulo(id)).toHaveTextContent('*')
+    }
+    for (const id of ['produto-categoria', 'produto-codigo-barras']) {
+      expect(rotulo(id)).not.toHaveTextContent('*')
+    }
+  })
+})
+
+describe('administração › tabelas comuns › unidades', () => {
+  async function abrirUnidades() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/administracao/tabelas-comuns/unidades': {
+        data: [
+          { sigla: 'KG', descricao: 'Quilograma' },
+          { sigla: 'UN', descricao: 'Unidade' },
+        ],
+      },
+    })
+    await renderizar(App, '/administracao/tabelas-comuns/unidades')
+  }
+
+  it('fica em Tabelas Comuns e lista sigla e descrição', async () => {
+    await abrirUnidades()
+
+    const linha = (await screen.findByRole('cell', { name: 'Quilograma' })).closest('tr')!
+    expect(linha).toHaveTextContent('KG')
+    expect(screen.getByText('2 registros')).toBeInTheDocument()
+    expect(sidebar().getByRole('link', { name: 'Unidades' })).toBeInTheDocument()
+  })
+
+  it('cadastra uma unidade com a sigla em maiúscula', async () => {
+    await abrirUnidades()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({
+      data: { sigla: 'FD', descricao: 'Fardo' },
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova unidade' }))
+    const dialogo = await screen.findByRole('dialog')
+    const sigla = within(dialogo).getByRole('textbox', { name: 'Sigla' })
+    await userEvent.type(sigla, 'fd')
+    expect(sigla).toHaveValue('FD')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Descrição' }), 'Fardo')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    await esperarChamada(post, '/administracao/tabelas-comuns/unidades', {
+      sigla: 'FD',
+      descricao: 'Fardo',
+    })
+  })
+
+  it('altera só a descrição, com a sigla bloqueada', async () => {
+    await abrirUnidades()
+    const put = vi.spyOn(api, 'put').mockResolvedValue({ data: { sigla: 'UN', descricao: 'Und.' } })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Unidade' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByLabelText('Sigla')).toBeDisabled()
+    const descricao = within(dialogo).getByRole('textbox', { name: 'Descrição' })
+    await userEvent.clear(descricao)
+    await userEvent.type(descricao, 'Und.')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    await esperarChamada(put, '/administracao/tabelas-comuns/unidades/UN', { descricao: 'Und.' })
+  })
+})
+
+describe('cadastros › vendedores', () => {
+  const joao = {
+    id: 1,
+    nome: 'João Pereira',
+    cpf: '52998224725',
+    data_admissao: '2024-03-01',
+    contato: { email: 'joao@exemplo.com', celular: '11988887777', telefone: null },
+    comercial: { comissao: '3.50', meta_mensal: '50000.00', regiao: 'Zona Sul' },
+    observacoes: null,
+    ativo: true,
+  }
+  const ana = {
+    ...joao,
+    id: 2,
+    nome: 'Ana Costa',
+    cpf: '11144477735',
+    comercial: { comissao: '2.00', meta_mensal: null, regiao: 'Centro' },
+    ativo: false,
+  }
+
+  async function abrirVendedores() {
+    setToken('tok-123')
+    mockGet({
+      '/tenant': { id: 'demo', nome: 'Demo' },
+      '/me': usuario,
+      '/cadastros/vendedores': { data: [ana, joao] },
+      '/cadastros/vendedores/regioes': { data: ['Centro', 'Zona Sul'] },
+    })
+    await renderizar(App, '/cadastros/vendedores')
+  }
+
+  async function novoVendedor() {
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo vendedor' }))
+    return await screen.findByRole('dialog')
+  }
+
+  it('lista os vendedores com CPF, comissão, meta e situação', async () => {
+    await abrirVendedores()
+
+    const linha = (await screen.findByRole('cell', { name: 'João Pereira' })).closest('tr')!
+    expect(linha).toHaveTextContent('529.982.247-25')
+    expect(linha).toHaveTextContent('(11) 98888-7777')
+    expect(linha).toHaveTextContent('Zona Sul')
+    expect(linha).toHaveTextContent('3,5%')
+    expect(linha).toHaveTextContent('R$ 50.000,00')
+    expect(screen.getByRole('cell', { name: 'Ana Costa' }).closest('tr')!).toHaveTextContent(
+      'Inativo',
+    )
+  })
+
+  it('filtra por região', async () => {
+    await abrirVendedores()
+    await screen.findByRole('cell', { name: 'João Pereira' })
+
+    await abrirMenu('Filtros')
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Centro' }))
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.getByRole('cell', { name: 'Ana Costa' })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'João Pereira' })).not.toBeInTheDocument()
+  })
+
+  it('cadastra um vendedor enviando CPF e celular sem máscara', async () => {
+    await abrirVendedores()
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { ...joao, id: 3 } })
+    const dialogo = await novoVendedor()
+
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'João Pereira')
+    const cpf = within(dialogo).getByRole('textbox', { name: 'CPF' })
+    await userEvent.type(cpf, '52998224725')
+    expect(cpf).toHaveValue('529.982.247-25')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Celular' }), '11988887777')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Comissão (%)' }), '3,5')
+    await userEvent.type(within(dialogo).getByLabelText('Meta mensal (R$)'), '50.000,00')
+    await userEvent.type(within(dialogo).getByLabelText('Região'), 'Zona Sul')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    await esperarChamada(post, '/cadastros/vendedores', {
+      nome: 'João Pereira',
+      cpf: '52998224725',
+      data_admissao: null,
+      contato: { email: null, celular: '11988887777', telefone: null },
+      comercial: { comissao: 3.5, meta_mensal: 50000, regiao: 'Zona Sul' },
+      observacoes: null,
+      ativo: true,
+    })
+  })
+
+  it('exige nome, CPF, celular e comissão', async () => {
+    await abrirVendedores()
+    const post = vi.spyOn(api, 'post')
+    const dialogo = await novoVendedor()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    for (const mensagem of [
+      'Informe o nome.',
+      'Informe um CPF válido.',
+      'Informe o celular.',
+      'Informe a comissão (0 se não houver).',
+    ]) {
+      expect(await within(dialogo).findByText(mensagem)).toBeInTheDocument()
+    }
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('mostra no campo o CPF repetido recusado pelo servidor', async () => {
+    await abrirVendedores()
+    vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, { errors: { cpf: ['Já existe um vendedor com este CPF.'] } }),
+    )
+    const dialogo = await novoVendedor()
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Nome' }), 'João')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'CPF' }), '52998224725')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Celular' }), '11988887777')
+    await userEvent.type(within(dialogo).getByRole('textbox', { name: 'Comissão (%)' }), '0')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
+
+    expect(
+      await within(dialogo).findByText('Já existe um vendedor com este CPF.'),
+    ).toBeInTheDocument()
+  })
+
+  it('altera um vendedor com os dados atuais no formulário', async () => {
+    await abrirVendedores()
+    const put = vi.spyOn(api, 'put').mockResolvedValue({ data: joao })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Alterar João Pereira' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(within(dialogo).getByRole('textbox', { name: 'CPF' })).toHaveValue('529.982.247-25')
+    const comissao = within(dialogo).getByRole('textbox', { name: 'Comissão (%)' })
+    expect(comissao).toHaveValue('3,5')
+    await userEvent.clear(comissao)
+    await userEvent.type(comissao, '4')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+
+    await esperarChamada(
+      put,
+      '/cadastros/vendedores/1',
+      expect.objectContaining({
+        data_admissao: '2024-03-01',
+        comercial: { comissao: 4, meta_mensal: 50000, regiao: 'Zona Sul' },
+      }),
+    )
+  })
+
+  it('exclui um vendedor depois de confirmar', async () => {
+    await abrirVendedores()
+    const remover = vi.spyOn(api, 'delete').mockResolvedValue({ data: null })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Excluir Ana Costa' }))
+    const dialogo = await screen.findByRole('dialog')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Excluir' }))
+
+    await esperarChamada(remover, '/cadastros/vendedores/2')
   })
 })
 

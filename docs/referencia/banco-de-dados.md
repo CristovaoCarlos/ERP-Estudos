@@ -28,6 +28,8 @@ Além das tabelas de grupos e permissões do spatie (`roles`, `permissions` e as
 | `check_pix_api` | legado | `id` |  |
 | `mq_messages` | legado | `id` | índice `ix_mqmessages_priority` (`queue_id`, `status`, `priority`) |
 | `mq_queues` | legado | `id` |  |
+| `tb_vendedor` | ERP | `id_vendedor` | Cadastros › Vendedores: nome, CPF (único), admissão, contatos, comissão (%), meta mensal e região |
+| `tb_produto` | ERP | `id_produto` | Cadastros › Produtos; `unidade` é a sigla de `tc_unidade` do central, sem FK |
 | `tb_cliente` | ERP | `id_cliente` | Cadastros › Clientes; `id_cidade` aponta, sem FK, para `tc_cidade` do central |
 | `trigger_log` | legado | `log_id` |  |
 
@@ -50,13 +52,27 @@ Na API e na tela, CEP, logradouro, número, bairro, cidade e celular são obriga
 
 Dados de exemplo: `php artisan tenants:seed --tenants=<id> --class="Database\Seeders\ClienteSeeder"`, que cria 25 clientes.
 
+### `tb_produto`
+
+| Grupo | Colunas |
+| --- | --- |
+| Identificação | `codigo` (único, SKU em maiúsculas), `descricao` (até 120, limite da NF-e), `codigo_barras` (GTIN, único), `unidade`, `categoria` (texto livre) |
+| Preços | `preco_custo` (4 casas), `preco_venda` (2 casas); a margem é calculada |
+| Estoque | `controla_estoque`, `estoque_atual` (3 casas; muda só pela entrada de notas e pelas vendas, nunca pelo cadastro), `estoque_minimo` |
+| Fiscal | `ncm` (8 dígitos), `cest` (7 dígitos), `origem` (0 a 8, da NF-e) |
+| Pesos | `peso_bruto`, `peso_liquido` (kg) |
+| Outros | `observacoes`, `ativo`, `created_at`, `updated_at` |
+
+Dados de exemplo: `php artisan tenants:seed --tenants=<id> --class="Database\Seeders\ProdutoSeeder"`, que cria 25 produtos.
+
 ## Tabelas do banco central
 
-Além das tabelas do próprio ERP (usuários, tokens, prefeituras, domínios, vínculos, filas e cache), a
-única tabela de apoio do legado que continua é:
+Além das tabelas do próprio ERP (usuários, tokens, prefeituras, domínios, vínculos, filas e cache), as
+tabelas de apoio são:
 
 | Tabela | Colunas | Chave primária | Observação |
 | --- | --- | --- | --- |
+| `tc_unidade` | 2 | `sigla` | Unidades de medida dos produtos; já nasce com UN, PC, CX, KG, G, L, ML, M, M2, M3, PAR, DZ e KIT. Tela Administração › Tabelas Comuns › Unidades |
 | `tc_cidade` | 4 | `id_cidade` | Código do IBGE em `codigo`; usada no endereço dos clientes e na tela Administração › Tabelas Comuns › Cidades |
 
 ## O que não veio do legado

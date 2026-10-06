@@ -20,6 +20,7 @@ class TabelasComunsAcessoTest extends TestCase
     /** Todas as rotas do módulo: método, caminho. */
     private const ROTAS = [
         ['get', 'cidades'], ['post', 'cidades'], ['put', 'cidades/1'],
+        ['get', 'unidades'], ['post', 'unidades'], ['put', 'unidades/UN'],
     ];
 
     protected function tearDown(): void

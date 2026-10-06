@@ -13,14 +13,7 @@ import {
 } from '@/lib/cadastros-clientes'
 import { cnpjValido, normalizarCnpj } from '@/lib/cnpj'
 import { cpfValido, somenteDigitos } from '@/lib/cpf'
-
-/** "1.500,50" ou "1500.50" → 1500.5; vazio → null; texto inválido → NaN. */
-export function lerValor(texto: string): number | null {
-  const limpo = texto.trim()
-  if (limpo === '') return null
-  const normalizado = limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo
-  return /^\d+(\.\d{1,2})?$/.test(normalizado) ? Number(normalizado) : NaN
-}
+import { lerValor } from '@/lib/numeros'
 
 const max = (tamanho: number) => z.string().max(tamanho, `Use no máximo ${tamanho} caracteres.`)
 

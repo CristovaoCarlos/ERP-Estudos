@@ -53,6 +53,7 @@ return [
      */
     'superadmin' => [
         'administracao.tabelas-comuns.cidades',
+        'administracao.tabelas-comuns.unidades',
     ],
 
 ];

@@ -8,8 +8,11 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\SenhaController;
+use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\VendedorController;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -67,12 +70,33 @@ Route::middleware([
             Route::delete('/{cliente}', [ClienteController::class, 'destroy']);
         });
 
+        // Cadastros › Produtos. A rota `opcoes` vem antes de `{produto}`.
+        Route::middleware('can:cadastros.produtos')->prefix('cadastros/produtos')->group(function () {
+            Route::get('/', [ProdutoController::class, 'index']);
+            Route::post('/', [ProdutoController::class, 'store']);
+            Route::get('/opcoes', [ProdutoController::class, 'opcoes']);
+            Route::put('/{produto}', [ProdutoController::class, 'update']);
+            Route::delete('/{produto}', [ProdutoController::class, 'destroy']);
+        });
+
+        // Cadastros › Vendedores. A rota `regioes` vem antes de `{vendedor}`.
+        Route::middleware('can:cadastros.vendedores')->prefix('cadastros/vendedores')->group(function () {
+            Route::get('/', [VendedorController::class, 'index']);
+            Route::post('/', [VendedorController::class, 'store']);
+            Route::get('/regioes', [VendedorController::class, 'regioes']);
+            Route::put('/{vendedor}', [VendedorController::class, 'update']);
+            Route::delete('/{vendedor}', [VendedorController::class, 'destroy']);
+        });
+
         // Tabelas Comuns: gravam no banco central (valem para todas as prefeituras), então só o
         // superadmin, na prefeitura administradora.
         Route::middleware('can:gerenciar-tabelas-comuns')->prefix('administracao/tabelas-comuns')->group(function () {
             Route::get('/cidades', [CidadeController::class, 'index']);
             Route::post('/cidades', [CidadeController::class, 'store']);
             Route::put('/cidades/{cidade}', [CidadeController::class, 'update']);
+            Route::get('/unidades', [UnidadeController::class, 'index']);
+            Route::post('/unidades', [UnidadeController::class, 'store']);
+            Route::put('/unidades/{unidade}', [UnidadeController::class, 'update']);
         });
 
         // Só o superadmin, na prefeitura administradora.
