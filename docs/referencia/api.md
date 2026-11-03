@@ -37,27 +37,29 @@ Contrato completo e legível por ferramentas: [`openapi.yaml`](openapi.yaml) (Op
 | `POST` | `/api/grupos` | prefeitura | `administracao.grupos` | Cria um grupo com as telas escolhidas |
 | `PUT` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Altera nome e telas do grupo |
 | `DELETE` | `/api/grupos/{id}` | prefeitura | `administracao.grupos` | Exclui o grupo (recusa se houver usuários nele) |
-| `GET` | `/api/cadastros/clientes` | prefeitura | `cadastros.clientes` | Clientes da prefeitura, em ordem de nome |
+| `GET` | `/api/cadastros/clientes` | prefeitura | `cadastros.clientes` | Clientes da prefeitura, em ordem de nome. Cache de 5 minutos ([ADR-0021](../adr/0021-cache-das-listagens-no-redis.md)) |
 | `POST` | `/api/cadastros/clientes` | prefeitura | `cadastros.clientes` | Cadastra um cliente (PF ou PJ, com endereço, contatos e dados fiscais) |
 | `GET` | `/api/cadastros/clientes/cidades?uf=SP` | prefeitura | `cadastros.clientes` | Cidades da UF, com o código do IBGE, para o endereço do cliente |
 | `PUT` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Altera o cliente |
 | `DELETE` | `/api/cadastros/clientes/{id}` | prefeitura | `cadastros.clientes` | Exclui o cliente (recusa com 422 se ele tiver vendas) |
-| `GET` | `/api/cadastros/produtos` | prefeitura | `cadastros.produtos` | Produtos da prefeitura, com margem e alerta de estoque baixo |
+| `GET` | `/api/cadastros/produtos` | prefeitura | `cadastros.produtos` | Produtos da prefeitura, com margem e alerta de estoque baixo. Cache de 5 minutos ([ADR-0021](../adr/0021-cache-das-listagens-no-redis.md)) |
 | `POST` | `/api/cadastros/produtos` | prefeitura | `cadastros.produtos` | Cadastra um produto (o estoque atual nasce em 0) |
 | `GET` | `/api/cadastros/produtos/opcoes` | prefeitura | `cadastros.produtos` | Unidades, origens da NF-e e categorias já usadas |
 | `PUT` | `/api/cadastros/produtos/{id}` | prefeitura | `cadastros.produtos` | Altera o produto (não mexe no estoque atual) |
 | `DELETE` | `/api/cadastros/produtos/{id}` | prefeitura | `cadastros.produtos` | Exclui o produto (recusa com 422 se ele já foi vendido) |
-| `GET` | `/api/cadastros/vendedores` | prefeitura | `cadastros.vendedores` | Vendedores da prefeitura, em ordem de nome |
+| `GET` | `/api/cadastros/vendedores` | prefeitura | `cadastros.vendedores` | Vendedores da prefeitura, em ordem de nome. Cache de 5 minutos ([ADR-0021](../adr/0021-cache-das-listagens-no-redis.md)) |
 | `POST` | `/api/cadastros/vendedores` | prefeitura | `cadastros.vendedores` | Cadastra um vendedor (CPF único, comissão de 0 a 100%) |
 | `GET` | `/api/cadastros/vendedores/regioes` | prefeitura | `cadastros.vendedores` | Regiões já usadas, para sugestão |
 | `PUT` | `/api/cadastros/vendedores/{id}` | prefeitura | `cadastros.vendedores` | Altera o vendedor |
 | `DELETE` | `/api/cadastros/vendedores/{id}` | prefeitura | `cadastros.vendedores` | Exclui o vendedor (recusa com 422 se ele tiver vendas) |
-| `GET` | `/api/lancamentos/vendas` | prefeitura | `lancamentos.vendas` | Vendas da prefeitura, da mais recente para a mais antiga, com cliente, vendedor e itens |
+| `GET` | `/api/lancamentos/vendas` | prefeitura | `lancamentos.vendas` | Vendas da prefeitura, da mais recente para a mais antiga, com cliente, vendedor e itens. Cache de 5 minutos ([ADR-0021](../adr/0021-cache-das-listagens-no-redis.md)) |
 | `POST` | `/api/lancamentos/vendas` | prefeitura | `lancamentos.vendas` | Registra a venda e dá baixa no estoque; recusa com 422 o que passa do saldo ([ADR-0019](../adr/0019-baixa-de-estoque-na-venda.md)) |
 | `GET` | `/api/lancamentos/vendas/opcoes` | prefeitura | `lancamentos.vendas` | Formas de pagamento e clientes, vendedores e produtos ativos (com o saldo de estoque) |
 | `POST` | `/api/lancamentos/vendas/{id}/cancelar` | prefeitura | `lancamentos.vendas` | Cancela a venda e devolve os itens ao estoque |
 | `GET` | `/api/relatorios/vendas-periodo?inicio=&fim=` | prefeitura | `relatorios.vendas_periodo` | Relatório em JSON: resumo, totais por pagamento e por vendedor (com comissão estimada) e as vendas. Filtros opcionais `vendedor`, `cliente`, `forma_pagamento` e `incluir_canceladas`; período de até 366 dias |
-| `GET` | `/api/relatorios/vendas-periodo/pdf?inicio=&fim=` | prefeitura | `relatorios.vendas_periodo` | O mesmo relatório em PDF (`attachment`), gerado pela fachada de PDF ([ADR-0020](../adr/0020-fachada-de-pdf-com-mpdf.md)) |
+| `POST` | `/api/relatorios/vendas-periodo/pdf` | prefeitura | `relatorios.vendas_periodo` | Pede o mesmo relatório em PDF, com os filtros no corpo. Responde `202` com `{id, situacao}` e gera o arquivo em segundo plano, na fila ([ADR-0022](../adr/0022-pdf-de-relatorio-em-segundo-plano.md)) |
+| `GET` | `/api/relatorios/vendas-periodo/pdf/{id}` | prefeitura | `relatorios.vendas_periodo` | Situação do pedido: `pendente`, `processando`, `pronto` ou `falhou` (com `erro`). Só o próprio usuário; de outro, `404` |
+| `GET` | `/api/relatorios/vendas-periodo/pdf/{id}/arquivo` | prefeitura | `relatorios.vendas_periodo` | O PDF pronto (`attachment`), gerado pela fachada de PDF ([ADR-0020](../adr/0020-fachada-de-pdf-com-mpdf.md)); antes de pronto, `409` |
 | `GET` | `/api/relatorios/vendas-periodo/opcoes` | prefeitura | `relatorios.vendas_periodo` | Vendedores, clientes (inclusive inativos) e formas de pagamento para os filtros |
 | `GET` | `/api/administracao/tabelas-comuns/unidades` | prefeitura administradora | superadmin | Unidades de medida dos produtos (`tc_unidade`) |
 | `POST` | `/api/administracao/tabelas-comuns/unidades` | prefeitura administradora | superadmin | Inclui uma unidade (sigla de 1 a 6 letras ou números, única) |

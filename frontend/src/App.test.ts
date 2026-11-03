@@ -2610,14 +2610,17 @@ describe('relatórios › vendas no período', () => {
     ],
   }
 
-  async function abrirRelatorio(pdf: unknown = new Blob(['%PDF-'], { type: 'application/pdf' })) {
+  async function abrirRelatorio(
+    situacaoDoPdf: unknown = { id: 5, situacao: 'pronto', erro: null },
+  ) {
     setToken('tok-123')
     const get = mockGet({
       '/tenant': { id: 'demo', nome: 'Demo' },
       '/me': usuario,
       '/relatorios/vendas-periodo/opcoes': opcoes,
       '/relatorios/vendas-periodo': relatorio,
-      '/relatorios/vendas-periodo/pdf': pdf,
+      '/relatorios/vendas-periodo/pdf/5': situacaoDoPdf,
+      '/relatorios/vendas-periodo/pdf/5/arquivo': new Blob(['%PDF-'], { type: 'application/pdf' }),
     })
     await renderizar(App, '/relatorios/vendas_periodo')
     await screen.findByRole('heading', { name: 'Vendas no período' })
@@ -2696,8 +2699,11 @@ describe('relatórios › vendas no período', () => {
     expect(venda).toHaveTextContent('R$ 180,00')
   })
 
-  it('exporta o PDF com os filtros, baixando o arquivo', async () => {
+  it('pede o PDF, espera o worker terminar e baixa o arquivo', async () => {
     const get = await abrirRelatorio()
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ data: { id: 5, situacao: 'pendente', erro: null } })
     const criarEndereco = vi.fn(() => 'blob:relatorio')
     vi.stubGlobal(
       'URL',
@@ -2708,30 +2714,48 @@ describe('relatórios › vendas no período', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }))
 
-    await esperarChamada(get, '/relatorios/vendas-periodo/pdf', {
-      params: { inicio: '2026-09-01', fim: '2026-09-30', incluir_canceladas: 0 },
+    await esperarChamada(post, '/relatorios/vendas-periodo/pdf', {
+      inicio: '2026-09-01',
+      fim: '2026-09-30',
+      incluir_canceladas: 0,
+    })
+    expect(await screen.findByRole('button', { name: /Gerando PDF…/ })).toBeDisabled()
+    // Pendente na resposta do pedido: a tela consulta a situação e, pronta, baixa o arquivo.
+    await vi.waitFor(() => expect(clique).toHaveBeenCalled(), { timeout: 4000 })
+    expect(get).toHaveBeenCalledWith('/relatorios/vendas-periodo/pdf/5')
+    expect(get).toHaveBeenCalledWith('/relatorios/vendas-periodo/pdf/5/arquivo', {
       responseType: 'blob',
     })
-    await vi.waitFor(() => expect(clique).toHaveBeenCalled())
     expect(criarEndereco).toHaveBeenCalledWith(expect.any(Blob))
     const link = clique.mock.contexts[0] as HTMLAnchorElement
     expect(link.download).toBe('vendas-2026-09-01-a-2026-09-30.pdf')
     expect(link.href).toBe('blob:relatorio')
+    expect(screen.getByRole('button', { name: 'Exportar PDF' })).toBeEnabled()
     vi.unstubAllGlobals()
   })
 
-  it('mostra no campo o erro do PDF recusado pelo servidor', async () => {
-    const erro = erroHttp(422, {})
-    erro.response!.data = new Blob(
-      [
-        JSON.stringify({
-          message: 'Erro.',
-          errors: { fim: ['Data final recusada pelo servidor.'] },
-        }),
-      ],
-      { type: 'application/json' },
+  it('avisa quando o worker não consegue gerar o PDF', async () => {
+    const get = await abrirRelatorio()
+    vi.spyOn(api, 'post').mockResolvedValue({
+      data: { id: 5, situacao: 'falhou', erro: 'Não foi possível gerar o PDF. Tente de novo.' },
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }))
+
+    expect(
+      await screen.findByText('Não foi possível gerar o PDF. Tente de novo.'),
+    ).toBeInTheDocument()
+    expect(get).not.toHaveBeenCalledWith(
+      '/relatorios/vendas-periodo/pdf/5/arquivo',
+      expect.anything(),
     )
-    await abrirRelatorio(erro)
+  })
+
+  it('mostra no campo o erro do PDF recusado pelo servidor', async () => {
+    await abrirRelatorio()
+    vi.spyOn(api, 'post').mockRejectedValue(
+      erroHttp(422, { message: 'Erro.', errors: { fim: ['Data final recusada pelo servidor.'] } }),
+    )
 
     await userEvent.click(screen.getByRole('button', { name: 'Exportar PDF' }))
 

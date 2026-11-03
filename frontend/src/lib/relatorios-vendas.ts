@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/vue-query'
-import axios from 'axios'
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
 import { api } from '@/lib/api'
@@ -92,30 +91,45 @@ export function nomeDoPdf(filtros: FiltrosDoRelatorio): string {
   return `vendas-${filtros.inicio}-a-${filtros.fim}.pdf`
 }
 
+/** Pedido de PDF gerado em segundo plano, como a API devolve. */
+export type PedidoDePdf = {
+  id: number
+  situacao: 'pendente' | 'processando' | 'pronto' | 'falhou'
+  erro: string | null
+  concluido_em: string | null
+}
+
+/** O worker terminou o pedido sem gerar o arquivo; `message` é o texto do servidor para a tela. */
+export class FalhaNoPdf extends Error {}
+
+const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms))
+
 /**
- * Baixa o PDF do relatório (gerado no servidor pela fachada de PDF). Um 422 chega como `Blob`: é
- * convertido em JSON para os erros caírem nos campos, como nas demais telas.
+ * Baixa o PDF do relatório, que o servidor gera em segundo plano (fila): pede (`POST`, responde
+ * 202 com o id), consulta a situação a cada `intervalo` ms até ficar pronto e baixa o arquivo. Um
+ * 422 do pedido vem em JSON e cai nos campos, como nas demais telas.
  */
-export async function baixarPdfDoRelatorio(filtros: FiltrosDoRelatorio): Promise<void> {
-  let arquivo: Blob
-  try {
-    arquivo = (
-      await api.get<Blob>('/relatorios/vendas-periodo/pdf', {
-        params: filtros,
-        responseType: 'blob',
-      })
-    ).data
-  } catch (erro) {
-    if (axios.isAxiosError(erro) && erro.response?.data instanceof Blob) {
-      try {
-        erro.response.data = JSON.parse(await erro.response.data.text())
-      } catch {
-        // Corpo que não é JSON: segue como veio.
-      }
-    }
-    throw erro
+export async function baixarPdfDoRelatorio(
+  filtros: FiltrosDoRelatorio,
+  intervalo = 1500,
+): Promise<void> {
+  let pedido = (await api.post<PedidoDePdf>('/relatorios/vendas-periodo/pdf', filtros)).data
+  const limite = Date.now() + 5 * 60 * 1000
+
+  while (pedido.situacao === 'pendente' || pedido.situacao === 'processando') {
+    if (Date.now() > limite) throw new FalhaNoPdf('O PDF está demorando. Tente de novo mais tarde.')
+    await esperar(intervalo)
+    pedido = (await api.get<PedidoDePdf>(`/relatorios/vendas-periodo/pdf/${pedido.id}`)).data
+  }
+  if (pedido.situacao === 'falhou') {
+    throw new FalhaNoPdf(pedido.erro ?? 'Não foi possível gerar o PDF.')
   }
 
+  const arquivo = (
+    await api.get<Blob>(`/relatorios/vendas-periodo/pdf/${pedido.id}/arquivo`, {
+      responseType: 'blob',
+    })
+  ).data
   const endereco = URL.createObjectURL(arquivo)
   const link = document.createElement('a')
   link.href = endereco

@@ -9,7 +9,7 @@ A documentação segue o framework **[Diátaxis](https://diataxis.fr/)**, que se
 | Seção | Serve para | Conteúdo |
 | --- | --- | --- |
 | [Tutoriais](tutoriais/) | aprender, do zero | [Primeiros passos](tutoriais/primeiros-passos.md) |
-| [Guias](guias/) | resolver uma tarefa específica | [Atualizar o ambiente após um pull](guias/atualizar-ambiente.md) · [Criar uma prefeitura (tenant)](guias/criar-tenant.md) · [Criar e vincular usuários](guias/gerenciar-usuarios.md) · [Criar uma tela de cadastro](guias/criar-tela.md) · [Rodar testes e checagens](guias/rodar-testes.md) · [Acessar o banco de dados](guias/acessar-banco.md) · [Publicar em produção](guias/deploy.md) |
+| [Guias](guias/) | resolver uma tarefa específica | [Atualizar o ambiente após um pull](guias/atualizar-ambiente.md) · [Criar uma prefeitura (tenant)](guias/criar-tenant.md) · [Criar e vincular usuários](guias/gerenciar-usuarios.md) · [Criar uma tela de cadastro](guias/criar-tela.md) · [Rodar testes e checagens](guias/rodar-testes.md) · [Processar em segundo plano com filas](guias/filas.md) · [Acessar o banco de dados](guias/acessar-banco.md) · [Publicar em produção](guias/deploy.md) |
 | [Referência](referencia/) | consultar um detalhe | [API](referencia/api.md) ([OpenAPI](referencia/openapi.yaml)) · [Configuração (.env)](referencia/configuracao.md) · [Comandos](referencia/comandos.md) · [Tecnologias](referencia/tecnologias.md) · [Serviços Docker](referencia/servicos-docker.md) · [Banco de dados](referencia/banco-de-dados.md) |
 | [Explicação](arquitetura/) | entender o porquê | [Arquitetura (arc42)](arquitetura/arc42.md) · [Decisões de arquitetura (ADRs)](adr/) |
 

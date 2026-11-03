@@ -6,10 +6,10 @@ use App\Http\Resources\VendedorResource;
 use App\Models\Venda;
 use App\Models\Vendedor;
 use App\Rules\Cpf;
+use App\Support\CacheDeListagens;
 use App\Support\Cpf as CpfSupport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -22,9 +22,13 @@ use Illuminate\Validation\ValidationException;
  */
 class VendedorController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    /** Lista do cache por até 5 minutos (`CacheDeListagens`). */
+    public function index(): JsonResponse
     {
-        return VendedorResource::collection(Vendedor::orderBy('nome')->get());
+        return response()->json(['data' => CacheDeListagens::lembrar(
+            CacheDeListagens::VENDEDORES,
+            fn () => VendedorResource::collection(Vendedor::orderBy('nome')->get())->resolve(),
+        )]);
     }
 
     public function store(Request $request): JsonResponse

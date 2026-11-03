@@ -98,10 +98,13 @@ Route::middleware([
             Route::post('/{venda}/cancelar', [VendaController::class, 'cancelar']);
         });
 
-        // Relatórios › Vendas no período: prévia (JSON), PDF e as listas dos filtros.
+        // Relatórios › Vendas no período: prévia (JSON), PDF em segundo plano (pede, acompanha e
+        // baixa) e as listas dos filtros.
         Route::middleware('can:relatorios.vendas_periodo')->prefix('relatorios/vendas-periodo')->group(function () {
             Route::get('/', [RelatorioDeVendasController::class, 'index']);
-            Route::get('/pdf', [RelatorioDeVendasController::class, 'pdf']);
+            Route::post('/pdf', [RelatorioDeVendasController::class, 'pedirPdf']);
+            Route::get('/pdf/{relatorio}', [RelatorioDeVendasController::class, 'situacaoDoPdf'])->whereNumber('relatorio');
+            Route::get('/pdf/{relatorio}/arquivo', [RelatorioDeVendasController::class, 'arquivoDoPdf'])->whereNumber('relatorio');
             Route::get('/opcoes', [RelatorioDeVendasController::class, 'opcoes']);
         });
 

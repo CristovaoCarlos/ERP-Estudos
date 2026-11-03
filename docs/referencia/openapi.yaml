@@ -792,7 +792,7 @@ paths:
     get:
       tags: [Cadastros]
       summary: Listar clientes
-      description: Todos os clientes da prefeitura, em ordem de nome. Permissão `cadastros.clientes`.
+      description: Todos os clientes da prefeitura, em ordem de nome. Permissão `cadastros.clientes`. Vem do cache (Redis) por até 5 minutos; incluir, alterar ou excluir limpa o cache (ADR-0021).
       operationId: listarClientes
       security:
         - token: []
@@ -957,7 +957,7 @@ paths:
     get:
       tags: [Cadastros]
       summary: Listar produtos
-      description: Todos os produtos da prefeitura, em ordem de descrição. Permissão `cadastros.produtos`.
+      description: Todos os produtos da prefeitura, em ordem de descrição. Permissão `cadastros.produtos`. Vem do cache (Redis) por até 5 minutos; incluir, alterar ou excluir limpa o cache (ADR-0021).
       operationId: listarProdutos
       security:
         - token: []
@@ -1121,7 +1121,7 @@ paths:
     get:
       tags: [Cadastros]
       summary: Listar vendedores
-      description: Todos os vendedores da prefeitura, em ordem de nome. Permissão `cadastros.vendedores`.
+      description: Todos os vendedores da prefeitura, em ordem de nome. Permissão `cadastros.vendedores`. Vem do cache (Redis) por até 5 minutos; incluir, alterar ou excluir limpa o cache (ADR-0021).
       operationId: listarVendedores
       security:
         - token: []
@@ -1260,7 +1260,7 @@ paths:
     get:
       tags: [Lançamentos]
       summary: Listar vendas
-      description: Todas as vendas da prefeitura, da mais recente para a mais antiga, com cliente, vendedor e itens. Permissão `lancamentos.vendas`.
+      description: Todas as vendas da prefeitura, da mais recente para a mais antiga, com cliente, vendedor e itens. Permissão `lancamentos.vendas`. Vem do cache (Redis) por até 5 minutos; registrar ou cancelar venda e alterar cliente ou vendedor limpam o cache (ADR-0021).
       operationId: listarVendas
       security:
         - token: []
@@ -1426,38 +1426,88 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErroDeValidacao'
   /api/relatorios/vendas-periodo/pdf:
+    post:
+      tags: [Relatórios]
+      summary: Pedir o PDF de vendas no período (em segundo plano)
+      description: >-
+        Grava o pedido e põe o job `GerarPdfDeVendas` na fila; responde na hora, sem esperar o
+        PDF (ADR-0022). A tela acompanha pela situação e baixa o arquivo quando fica `pronto`.
+        Mesmos filtros e regras da versão em JSON, no corpo.
+      operationId: pedirPdfDeVendas
+      security:
+        - token: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [inicio, fim]
+              properties:
+                inicio: {type: string, format: date}
+                fim: {type: string, format: date, description: 'Igual ou depois de `inicio`, em até 366 dias.'}
+                vendedor: {type: integer, nullable: true}
+                cliente: {type: integer, nullable: true}
+                forma_pagamento:
+                  type: string
+                  nullable: true
+                  enum: [dinheiro, pix, cartao_debito, cartao_credito, boleto, crediario]
+                incluir_canceladas: {type: string, enum: ['0', '1', 'true', 'false']}
+      responses:
+        '202':
+          description: Pedido aceito e na fila
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDePdf'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '422':
+          description: Mesmas regras da versão em JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroDeValidacao'
+  /api/relatorios/vendas-periodo/pdf/{relatorio}:
     get:
       tags: [Relatórios]
-      summary: Vendas no período (PDF)
-      description: O mesmo relatório em PDF (A4 paisagem), gerado pela fachada de PDF com o mPDF (ADR-0020). Nome do arquivo `vendas-<inicio>-a-<fim>.pdf`.
-      operationId: relatorioDeVendasEmPdf
+      summary: Situação do pedido de PDF
+      operationId: situacaoDoPdfDeVendas
       security:
         - token: []
       parameters:
-        - name: inicio
-          in: query
+        - name: relatorio
+          in: path
           required: true
-          schema: {type: string, format: date}
-        - name: fim
-          in: query
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Situação atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDePdf'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemAcesso'
+        '404':
+          description: Pedido inexistente ou de outro usuário
+  /api/relatorios/vendas-periodo/pdf/{relatorio}/arquivo:
+    get:
+      tags: [Relatórios]
+      summary: Baixar o PDF pronto
+      description: PDF A4 paisagem, gerado pela fachada de PDF com o mPDF (ADR-0020). Nome do arquivo `vendas-<inicio>-a-<fim>.pdf`.
+      operationId: arquivoDoPdfDeVendas
+      security:
+        - token: []
+      parameters:
+        - name: relatorio
+          in: path
           required: true
-          description: Igual ou depois de `inicio`, em até 366 dias.
-          schema: {type: string, format: date}
-        - name: vendedor
-          in: query
           schema: {type: integer}
-        - name: cliente
-          in: query
-          schema: {type: integer}
-        - name: forma_pagamento
-          in: query
-          schema:
-            type: string
-            enum: [dinheiro, pix, cartao_debito, cartao_credito, boleto, crediario]
-        - name: incluir_canceladas
-          in: query
-          description: Lista também as canceladas (que ficam fora dos totais).
-          schema: {type: string, enum: ['0', '1', 'true', 'false']}
       responses:
         '200':
           description: 'PDF para download (`Content-Disposition: attachment`)'
@@ -1470,12 +1520,10 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemAcesso'
-        '422':
-          description: Mesmas regras da versão em JSON
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErroDeValidacao'
+        '404':
+          description: Pedido inexistente ou de outro usuário
+        '409':
+          description: O PDF ainda não está pronto (ou falhou)
   /api/relatorios/vendas-periodo/opcoes:
     get:
       tags: [Relatórios]
@@ -2568,6 +2616,13 @@ components:
               desconto: {type: string}
               total: {type: string}
               situacao: {type: string, enum: [finalizada, cancelada]}
+    PedidoDePdf:
+      type: object
+      properties:
+        id: {type: integer}
+        situacao: {type: string, enum: [pendente, processando, pronto, falhou]}
+        erro: {type: string, nullable: true}
+        concluido_em: {type: string, format: date-time, nullable: true}
     ErroDeValidacao:
       type: object
       required: [message, errors]

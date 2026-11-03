@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BriefcaseBusiness, FileDown, FileSearch, Receipt, UserRound } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import Listagem from '@/components/Listagem.vue'
 import Obrigatorio from '@/components/Obrigatorio.vue'
@@ -34,6 +35,7 @@ import type { Coluna } from '@/lib/listagem'
 import { formatarMoeda } from '@/lib/numeros'
 import {
   baixarPdfDoRelatorio,
+  FalhaNoPdf,
   useOpcoesDoRelatorio,
   useRelatorioDeVendas,
   type FiltrosDoRelatorio,
@@ -140,7 +142,8 @@ const exportar = handleSubmit(async (dados) => {
   try {
     await baixarPdfDoRelatorio(paraFiltros(dados))
   } catch (erro) {
-    mostrarErrosDoServidor(erro, setFieldError, [...CAMPOS], 'Não foi possível gerar o PDF.')
+    if (erro instanceof FalhaNoPdf) toast.error(erro.message)
+    else mostrarErrosDoServidor(erro, setFieldError, [...CAMPOS], 'Não foi possível gerar o PDF.')
   } finally {
     exportando.value = false
   }
@@ -265,7 +268,7 @@ const invalido = (mensagem: string | undefined) => (mensagem ? true : undefined)
           <Button type="button" variant="outline" :disabled="exportando" @click="exportar">
             <Spinner v-if="exportando" data-icon="inline-start" />
             <FileDown v-else data-icon="inline-start" />
-            Exportar PDF
+            {{ exportando ? 'Gerando PDF…' : 'Exportar PDF' }}
           </Button>
           <Button type="submit">
             <FileSearch data-icon="inline-start" />

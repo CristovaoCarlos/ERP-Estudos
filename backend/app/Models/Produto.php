@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CacheDeListagens;
 use Database\Factories\ProdutoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +35,18 @@ class Produto extends Model
     protected $primaryKey = 'id_produto';
 
     protected $guarded = ['id_produto'];
+
+    /**
+     * Inclusão, alteração ou exclusão tira a lista de produtos do cache. A venda guarda código e
+     * descrição no item, então a lista de vendas não muda; o estoque baixado pela venda é tratado em
+     * `App\Support\Vendas`.
+     */
+    protected static function booted(): void
+    {
+        $esquecer = fn () => CacheDeListagens::esquecer(CacheDeListagens::PRODUTOS);
+        static::saved($esquecer);
+        static::deleted($esquecer);
+    }
 
     /**
      * @return array<string, string>

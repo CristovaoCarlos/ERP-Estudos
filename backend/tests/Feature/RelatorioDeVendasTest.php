@@ -2,14 +2,19 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\GerarPdfDeVendas;
 use App\Models\Cliente;
 use App\Models\Produto;
+use App\Models\RelatorioGerado;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendedor;
 use App\Relatorios\Pdf\MotorDePdf;
 use App\Support\Vendas;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\Fakes\MotorFalso;
 use Tests\TestCase;
 
@@ -19,10 +24,14 @@ class RelatorioDeVendasTest extends TestCase
 
     private const SETEMBRO = '/api/relatorios/vendas-periodo?inicio=2026-09-01&fim=2026-09-30';
 
+    private const PDF_DE_SETEMBRO = ['inicio' => '2026-09-01', 'fim' => '2026-09-30'];
+
     protected function tearDown(): void
     {
         tenancy()->end();
         foreach (Tenant::all() as $tenant) {
+            // Os PDFs gerados ficam no disco `local` da prefeitura.
+            $tenant->run(fn () => Storage::disk('local')->deleteDirectory('relatorios'));
             $tenant->delete();
         }
 
@@ -57,6 +66,15 @@ class RelatorioDeVendasTest extends TestCase
     private function emDemo(string $token, string $url)
     {
         $resposta = $this->withToken($token)->getJson("http://demo.localhost{$url}");
+        tenancy()->end();
+        $this->app['auth']->forgetGuards();
+
+        return $resposta;
+    }
+
+    private function postarEmDemo(string $token, string $url, array $dados = [])
+    {
+        $resposta = $this->withToken($token)->postJson("http://demo.localhost{$url}", $dados);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -107,7 +125,7 @@ class RelatorioDeVendasTest extends TestCase
         $token = $this->entrar(['lancamentos.vendas']);
 
         $this->emDemo($token, self::SETEMBRO)->assertForbidden();
-        $this->emDemo($token, '/api/relatorios/vendas-periodo/pdf?inicio=2026-09-01&fim=2026-09-30')->assertForbidden();
+        $this->postarEmDemo($token, '/api/relatorios/vendas-periodo/pdf', self::PDF_DE_SETEMBRO)->assertForbidden();
         $this->emDemo($token, '/api/relatorios/vendas-periodo/opcoes')->assertForbidden();
     }
 
@@ -193,18 +211,58 @@ class RelatorioDeVendasTest extends TestCase
             ]);
     }
 
-    public function test_exporta_o_pdf_com_o_mpdf(): void
+    public function test_pedir_o_pdf_poe_o_job_na_fila_e_responde_na_hora(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+        Queue::fake();
+
+        $id = $this->postarEmDemo($token, '/api/relatorios/vendas-periodo/pdf', self::PDF_DE_SETEMBRO + ['vendedor' => null])
+            ->assertAccepted()
+            ->assertJsonPath('situacao', 'pendente')
+            ->json('id');
+
+        Queue::assertPushed(GerarPdfDeVendas::class, fn (GerarPdfDeVendas $job) => $job->relatorio->id_relatorio_gerado === $id
+            && $job->emissor === 'Fiscal Teste'
+            && $job->relatorio->filtros['fim'] === '2026-09-30');
+        // Sem worker, o pedido fica pendente e o arquivo ainda não sai.
+        $this->emDemo($token, "/api/relatorios/vendas-periodo/pdf/{$id}")->assertOk()->assertJsonPath('situacao', 'pendente');
+        $this->emDemo($token, "/api/relatorios/vendas-periodo/pdf/{$id}/arquivo")->assertStatus(409);
+    }
+
+    public function test_pedir_o_pdf_valida_os_filtros_sem_enfileirar(): void
+    {
+        $this->criarTenant();
+        $token = $this->entrar();
+        Queue::fake();
+
+        $this->postarEmDemo($token, '/api/relatorios/vendas-periodo/pdf', ['inicio' => '2026-09-30', 'fim' => '2026-09-01'])
+            ->assertJsonValidationErrors(['fim' => 'A data final não pode ser antes da inicial.']);
+
+        Queue::assertNothingPushed();
+    }
+
+    public function test_o_worker_gera_o_pdf_com_o_mpdf_e_ele_e_baixado(): void
     {
         $this->criarTenant();
         $token = $this->entrar();
         $this->registrarVendas();
 
-        $resposta = $this->emDemo($token, '/api/relatorios/vendas-periodo/pdf?inicio=2026-09-01&fim=2026-09-30')
+        // Nos testes a fila é `sync`: o job roda dentro da própria requisição.
+        $id = $this->postarEmDemo($token, '/api/relatorios/vendas-periodo/pdf', self::PDF_DE_SETEMBRO)
+            ->assertAccepted()
+            ->assertJsonPath('situacao', 'pronto')
+            ->json('id');
+
+        $this->emDemo($token, "/api/relatorios/vendas-periodo/pdf/{$id}")
+            ->assertJsonPath('situacao', 'pronto')
+            ->assertJsonPath('erro', null);
+        $resposta = $this->emDemo($token, "/api/relatorios/vendas-periodo/pdf/{$id}/arquivo")
             ->assertOk()
             ->assertHeader('Content-Type', 'application/pdf')
-            ->assertHeader('Content-Disposition', 'attachment; filename="vendas-2026-09-01-a-2026-09-30.pdf"');
+            ->assertDownload('vendas-2026-09-01-a-2026-09-30.pdf');
 
-        $this->assertStringStartsWith('%PDF-', $resposta->getContent());
+        $this->assertStringStartsWith('%PDF-', $resposta->streamedContent());
     }
 
     public function test_o_pdf_passa_pela_fachada(): void
@@ -215,8 +273,8 @@ class RelatorioDeVendasTest extends TestCase
         $motor = new MotorFalso;
         $this->app->instance(MotorDePdf::class, $motor);
 
-        $this->emDemo($token, '/api/relatorios/vendas-periodo/pdf?inicio=2026-09-01&fim=2026-09-30&incluir_canceladas=1')
-            ->assertOk();
+        $this->postarEmDemo($token, '/api/relatorios/vendas-periodo/pdf', self::PDF_DE_SETEMBRO + ['incluir_canceladas' => '1'])
+            ->assertAccepted();
 
         $this->assertSame('paisagem', $motor->opcoes->orientacao);
         $this->assertStringContainsString('Prefeitura demo', $motor->opcoes->cabecalho);
@@ -227,6 +285,40 @@ class RelatorioDeVendasTest extends TestCase
         $this->assertStringContainsString('R$ 330,00', $motor->html);
         $this->assertStringContainsString('Cancelada', $motor->html);
         $this->assertStringContainsString('R$ 14,00', $motor->html);
+    }
+
+    public function test_falha_do_job_marca_o_pedido_como_falhou(): void
+    {
+        $tenant = $this->criarTenant();
+        $relatorio = $tenant->run(fn () => RelatorioGerado::create([
+            'user_id' => 1,
+            'tipo' => 'vendas_periodo',
+            'filtros' => self::PDF_DE_SETEMBRO,
+        ]));
+
+        // É o que o worker chama quando as tentativas se esgotam.
+        $tenant->run(fn () => (new GerarPdfDeVendas($relatorio, 'Fiscal'))->failed(new RuntimeException('mPDF quebrou')));
+
+        $tenant->run(function () use ($relatorio) {
+            $relatorio->refresh();
+            $this->assertSame(RelatorioGerado::FALHOU, $relatorio->situacao);
+            $this->assertSame('Não foi possível gerar o PDF. Tente de novo.', $relatorio->erro);
+            $this->assertNotNull($relatorio->concluido_em);
+        });
+    }
+
+    public function test_cada_um_ve_so_os_proprios_pedidos(): void
+    {
+        $this->criarTenant();
+        $dono = $this->entrar();
+        $outro = $this->entrar();
+        Queue::fake();
+
+        $id = $this->postarEmDemo($dono, '/api/relatorios/vendas-periodo/pdf', self::PDF_DE_SETEMBRO)->json('id');
+
+        $this->emDemo($outro, "/api/relatorios/vendas-periodo/pdf/{$id}")->assertNotFound();
+        $this->emDemo($outro, "/api/relatorios/vendas-periodo/pdf/{$id}/arquivo")->assertNotFound();
+        $this->emDemo($dono, "/api/relatorios/vendas-periodo/pdf/{$id}")->assertOk();
     }
 
     public function test_opcoes_trazem_inclusive_os_inativos(): void
