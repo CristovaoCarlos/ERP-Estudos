@@ -25,6 +25,8 @@ Cada decisão de arquitetura relevante é registrada aqui, no formato [MADR](htt
 | [0018](0018-viacep-no-navegador.md) | Endereço pelo CEP com o ViaCEP, consultado pelo navegador | Aceita |
 | [0019](0019-baixa-de-estoque-na-venda.md) | Baixa de estoque no registro da venda, sem alteração da venda | Aceita |
 | [0020](0020-fachada-de-pdf-com-mpdf.md) | Fachada de PDF, com o mPDF como motor | Aceita |
+| [0021](0021-cache-das-listagens-no-redis.md) | Cache das listagens no Redis, com validade de 5 minutos | Aceita |
+| [0022](0022-pdf-de-relatorio-em-segundo-plano.md) | PDF de relatório gerado em segundo plano, na fila | Aceita |
 
 ## Como criar um ADR
 

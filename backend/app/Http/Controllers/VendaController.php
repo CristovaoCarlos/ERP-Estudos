@@ -10,7 +10,6 @@ use App\Models\Vendedor;
 use App\Support\Vendas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -20,14 +19,10 @@ use Illuminate\Validation\Rule;
  */
 class VendaController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    /** Lista do cache por até 5 minutos (`Vendas::listagem`). */
+    public function index(): JsonResponse
     {
-        return VendaResource::collection(
-            Venda::with(['cliente', 'vendedor', 'itens'])
-                ->orderByDesc('data_venda')
-                ->orderByDesc('id_venda')
-                ->get(),
-        );
+        return response()->json(['data' => Vendas::listagem()]);
     }
 
     public function store(Request $request): JsonResponse

@@ -2,22 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GerarPdfDeVendas;
 use App\Models\Cliente;
+use App\Models\RelatorioGerado;
 use App\Models\Venda;
 use App\Models\Vendedor;
-use App\Relatorios\Formatar;
-use App\Relatorios\Pdf\Pdf;
 use App\Relatorios\VendasNoPeriodo;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Relatórios › Vendas no período: a prévia em JSON e o PDF, com os mesmos dados
- * (`App\Relatorios\VendasNoPeriodo`). O PDF sai pela fachada `App\Relatorios\Pdf\Pdf`.
+ * (`App\Relatorios\VendasNoPeriodo`). O PDF é gerado em segundo plano, na fila
+ * (`App\Jobs\GerarPdfDeVendas`): pedir, acompanhar a situação e baixar o arquivo.
  */
 class RelatorioDeVendasController extends Controller
 {
@@ -26,34 +28,44 @@ class RelatorioDeVendasController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return response()->json($this->relatorio($request)->dados());
+        return response()->json((new VendasNoPeriodo($this->filtros($request)))->dados());
     }
 
-    public function pdf(Request $request): Response
+    /**
+     * Pede o PDF: grava o pedido e o põe na fila. Responde na hora (202); quem gera o arquivo é o
+     * worker (`GerarPdfDeVendas`), e a tela acompanha pelo `situacao`.
+     */
+    public function pedirPdf(Request $request): JsonResponse
     {
-        $relatorio = $this->relatorio($request);
-        $dados = $relatorio->dados();
-        $periodo = Formatar::data($dados['filtros']['inicio']).' a '.Formatar::data($dados['filtros']['fim']);
-        $prefeitura = e(tenant('nome') ?? tenant('id'));
-        $emissao = 'Emitido em '.Formatar::dataHora(now()).' por '.e($request->user()->name);
+        $relatorio = RelatorioGerado::create([
+            'user_id' => $request->user()->id,
+            'tipo' => 'vendas_periodo',
+            'filtros' => $this->filtros($request),
+            'situacao' => RelatorioGerado::PENDENTE,
+        ]);
 
-        return Pdf::novo()
-            ->titulo("Vendas no período {$periodo}")
-            ->paisagem()
-            ->cabecalho(<<<HTML
-                <table width="100%" style="border-bottom: 0.5pt solid #999; font-size: 9pt; color: #333;"><tr>
-                    <td><strong style="font-size: 11pt;">{$prefeitura}</strong><br>Relatório de vendas no período</td>
-                    <td style="text-align: right;">Período: {$periodo}</td>
-                </tr></table>
-                HTML)
-            ->rodape(<<<HTML
-                <table width="100%" style="border-top: 0.5pt solid #999; font-size: 7.5pt; color: #666;"><tr>
-                    <td>{$emissao}</td>
-                    <td style="text-align: right;">Página {pagina} de {paginas}</td>
-                </tr></table>
-                HTML)
-            ->view('relatorios.vendas-periodo', ['dados' => $dados, 'formas' => Venda::FORMAS_DE_PAGAMENTO])
-            ->download($relatorio->arquivo());
+        GerarPdfDeVendas::dispatch($relatorio, $request->user()->name);
+
+        return response()->json($relatorio->refresh()->paraApi(), 202);
+    }
+
+    /** Em que pé está o pedido (a tela consulta de tempos em tempos). */
+    public function situacaoDoPdf(Request $request, int $relatorio): JsonResponse
+    {
+        return response()->json($this->doUsuario($request, $relatorio)->paraApi());
+    }
+
+    /** O arquivo, depois de pronto. */
+    public function arquivoDoPdf(Request $request, int $relatorio): StreamedResponse
+    {
+        $pedido = $this->doUsuario($request, $relatorio);
+        abort_unless($pedido->situacao === RelatorioGerado::PRONTO, 409, 'O PDF ainda não está pronto.');
+
+        return Storage::disk('local')->download(
+            $pedido->arquivo,
+            (new VendasNoPeriodo($pedido->filtros))->arquivo(),
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     /**
@@ -78,9 +90,22 @@ class RelatorioDeVendasController extends Controller
         ]);
     }
 
-    private function relatorio(Request $request): VendasNoPeriodo
+    /** Pedido de PDF do próprio usuário; o de outro dá 404, como se não existisse. */
+    private function doUsuario(Request $request, int $id): RelatorioGerado
     {
-        $dados = Validator::make($request->query(), [
+        return RelatorioGerado::where('user_id', $request->user()->id)
+            ->where('tipo', 'vendas_periodo')
+            ->findOrFail($id);
+    }
+
+    /**
+     * Filtros validados, no formato de `VendasNoPeriodo`.
+     *
+     * @return array{inicio: string, fim: string, vendedor: ?int, cliente: ?int, forma_pagamento: ?string, incluir_canceladas: bool}
+     */
+    private function filtros(Request $request): array
+    {
+        $dados = Validator::make($request->all(), [
             'inicio' => ['required', 'date_format:Y-m-d'],
             'fim' => ['required', 'date_format:Y-m-d', 'after_or_equal:inicio'],
             'vendedor' => ['nullable', 'integer', Rule::exists(Vendedor::class, 'id_vendedor')],
@@ -101,19 +126,19 @@ class RelatorioDeVendasController extends Controller
             if ($validador->errors()->isNotEmpty()) {
                 return;
             }
-            $dias = CarbonImmutable::parse($request->query('inicio'))->diffInDays(CarbonImmutable::parse($request->query('fim')));
+            $dias = CarbonImmutable::parse($request->input('inicio'))->diffInDays(CarbonImmutable::parse($request->input('fim')));
             if ($dias >= self::DIAS_NO_PERIODO) {
                 $validador->errors()->add('fim', 'O período vai até '.self::DIAS_NO_PERIODO.' dias.');
             }
         })->validate();
 
-        return new VendasNoPeriodo([
+        return [
             'inicio' => $dados['inicio'],
             'fim' => $dados['fim'],
             'vendedor' => isset($dados['vendedor']) ? (int) $dados['vendedor'] : null,
             'cliente' => isset($dados['cliente']) ? (int) $dados['cliente'] : null,
             'forma_pagamento' => $dados['forma_pagamento'] ?? null,
             'incluir_canceladas' => $request->boolean('incluir_canceladas'),
-        ]);
+        ];
     }
 }

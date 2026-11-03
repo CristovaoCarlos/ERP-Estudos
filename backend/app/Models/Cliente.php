@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CacheDeListagens;
 use Database\Factories\ClienteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,14 @@ class Cliente extends Model
     protected $primaryKey = 'id_cliente';
 
     protected $guarded = ['id_cliente'];
+
+    /** Inclusão, alteração ou exclusão tira do cache a lista de clientes e a de vendas (que mostra o cliente). */
+    protected static function booted(): void
+    {
+        $esquecer = fn () => CacheDeListagens::esquecer(CacheDeListagens::CLIENTES, CacheDeListagens::VENDAS);
+        static::saved($esquecer);
+        static::deleted($esquecer);
+    }
 
     /**
      * @return array<string, string>

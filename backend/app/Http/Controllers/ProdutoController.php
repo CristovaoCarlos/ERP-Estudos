@@ -7,9 +7,9 @@ use App\Models\Produto;
 use App\Models\Unidade;
 use App\Models\VendaItem;
 use App\Rules\Gtin;
+use App\Support\CacheDeListagens;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -23,9 +23,13 @@ use Illuminate\Validation\ValidationException;
  */
 class ProdutoController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    /** Lista do cache por até 5 minutos (`CacheDeListagens`). */
+    public function index(): JsonResponse
     {
-        return ProdutoResource::collection(Produto::orderBy('descricao')->get());
+        return response()->json(['data' => CacheDeListagens::lembrar(
+            CacheDeListagens::PRODUTOS,
+            fn () => ProdutoResource::collection(Produto::orderBy('descricao')->get())->resolve(),
+        )]);
     }
 
     public function store(Request $request): JsonResponse

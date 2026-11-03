@@ -8,11 +8,11 @@ use App\Models\Cliente;
 use App\Models\Venda;
 use App\Rules\Cnpj;
 use App\Rules\Cpf;
+use App\Support\CacheDeListagens;
 use App\Support\Cnpj as CnpjSupport;
 use App\Support\Cpf as CpfSupport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -26,9 +26,13 @@ use Illuminate\Validation\ValidationException;
  */
 class ClienteController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    /** Lista do cache por até 5 minutos (`CacheDeListagens`). */
+    public function index(): JsonResponse
     {
-        return ClienteResource::collection(Cliente::with('cidade')->orderBy('nome')->get());
+        return response()->json(['data' => CacheDeListagens::lembrar(
+            CacheDeListagens::CLIENTES,
+            fn () => ClienteResource::collection(Cliente::with('cidade')->orderBy('nome')->get())->resolve(),
+        )]);
     }
 
     public function store(Request $request): JsonResponse
