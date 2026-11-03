@@ -81,7 +81,8 @@ class EmpresasTest extends TestCase
 
         $tenant = Tenant::find('nova_esperanca');
         $this->assertNotNull($tenant->provisionado_em);
-        $tenant->run(fn () => $this->assertSame(4, Role::count()));
+        // O Administrador e os grupos padrão do catálogo (config/acesso.php).
+        $tenant->run(fn () => $this->assertSame(1 + count(config('acesso.grupos')), Role::count()));
 
         // O administrador da prefeitura entra no padrão admin_<subdominio>, no grupo Administrador.
         $admin = User::where('cpf', '52998224725')->firstOrFail();

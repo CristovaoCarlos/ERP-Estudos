@@ -73,14 +73,14 @@ class CriarUsuarioTest extends TestCase
                 '--cpf' => '52998224725',
                 '--senha' => 'segredo',
                 '--tenant' => ['demo'],
-                '--grupo' => ['Parâmetros', 'Tabelas'],
+                '--grupo' => ['cadastros', 'Lançamentos'],
                 '--superadmin' => true,
             ])->assertSuccessful();
 
             $user = User::first();
             $this->assertTrue($user->superadmin);
             $tenant->run(fn () => $this->assertEqualsCanonicalizing(
-                ['Parâmetros', 'Tabelas'],
+                ['cadastros', 'Lançamentos'],
                 $user->getRoleNames()->all(),
             ));
         } finally {
@@ -113,7 +113,7 @@ class CriarUsuarioTest extends TestCase
             'nome' => 'Maria',
             '--cpf' => '52998224725',
             '--senha' => 'segredo',
-            '--grupo' => ['Tabelas'],
+            '--grupo' => ['Lançamentos'],
         ])->assertFailed();
     }
 }

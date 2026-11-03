@@ -68,7 +68,7 @@ class AcessoTest extends TestCase
         $tenant->run(function () {
             $this->assertSame(count(Acesso::permissoes()), Permission::count());
             $this->assertEqualsCanonicalizing(
-                ['Administrador', 'Parâmetros', 'Tabelas', 'Lançamentos'],
+                ['Administrador', 'cadastros', 'Lançamentos'],
                 Role::pluck('name')->all(),
             );
 
@@ -78,15 +78,21 @@ class AcessoTest extends TestCase
                 Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name')->all(),
             );
 
-            $parametros = Role::findByName('Parâmetros')->permissions->pluck('name');
-            $this->assertContains('parametros.receitas', $parametros);
-            $this->assertNotContains('parametros.empresa', $parametros);
-            $this->assertTrue($parametros->every(fn (string $p) => str_starts_with($p, 'parametros.')));
-            $this->assertContains('tabelas.tomadores.tomador', Role::findByName('Tabelas')->permissions->pluck('name'));
-            $this->assertNotContains('administracao.tabelas-comuns.cnae', Role::findByName('Tabelas')->permissions->pluck('name'));
+            // Cada grupo recebe só as telas do seu módulo.
+            $cadastros = Role::findByName('cadastros')->permissions->pluck('name');
+            $this->assertEqualsCanonicalizing(
+                ['cadastros.clientes', 'cadastros.produtos', 'cadastros.vendedores'],
+                $cadastros->all(),
+            );
+            $this->assertSame(
+                ['lancamentos.vendas'],
+                Role::findByName('Lançamentos')->permissions->pluck('name')->all(),
+            );
             // Tabelas Comuns são só do superadmin: nem o Administrador da prefeitura as recebe.
-            $this->assertNotContains('administracao.tabelas-comuns.cnae', Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name'));
-            $this->assertContains('lancamentos.dam.consultas', Role::findByName('Lançamentos')->permissions->pluck('name'));
+            $administrador = Role::findByName(Acesso::ADMINISTRADOR)->permissions->pluck('name');
+            $this->assertNotContains('administracao.tabelas-comuns.cidades', $administrador);
+            $this->assertNotContains('administracao.tabelas-comuns.unidades', $administrador);
+            $this->assertNotContains(Acesso::EMPRESAS, $administrador);
         });
     }
 
@@ -108,26 +114,25 @@ class AcessoTest extends TestCase
     public function test_me_traz_as_permissoes_dos_grupos_do_usuario(): void
     {
         $this->criarTenant('demo');
-        $user = $this->criarUsuario(['demo' => ['Parâmetros']]);
+        $user = $this->criarUsuario(['demo' => ['cadastros']]);
 
         $resposta = $this->me($user, 'demo')
             ->assertJsonPath('superadmin', false)
-            ->assertJsonPath('grupos', ['Parâmetros']);
+            ->assertJsonPath('grupos', ['cadastros']);
 
-        $this->assertEqualsCanonicalizing(config('acesso.permissoes.parametros'), $resposta->json('permissoes'));
+        $this->assertEqualsCanonicalizing(config('acesso.permissoes.cadastros'), $resposta->json('permissoes'));
     }
 
     public function test_grupos_e_permissoes_sao_separados_por_prefeitura(): void
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        $user = $this->criarUsuario(['demo' => ['Tabelas'], 'outra' => ['Lançamentos']]);
+        $user = $this->criarUsuario(['demo' => ['cadastros'], 'outra' => ['Lançamentos']]);
 
-        $this->assertContains('tabelas.ufm', $this->me($user, 'demo')->json('permissoes'));
+        $this->assertContains('cadastros.clientes', $this->me($user, 'demo')->json('permissoes'));
 
         $outra = $this->me($user, 'outra')->assertJsonPath('grupos', ['Lançamentos'])->json('permissoes');
-        $this->assertContains('lancamentos.iptu', $outra);
-        $this->assertNotContains('tabelas.ufm', $outra);
+        $this->assertSame(['lancamentos.vendas'], $outra);
     }
 
     public function test_superadmin_na_administradora_tem_todas_as_permissoes_e_empresas(): void
@@ -157,11 +162,11 @@ class AcessoTest extends TestCase
     public function test_comando_sincroniza_as_prefeituras(): void
     {
         $tenant = $this->criarTenant('demo');
-        $tenant->run(fn () => Role::findByName('Tabelas')->delete());
+        $tenant->run(fn () => Role::findByName('Lançamentos')->delete());
 
         $this->artisan('acesso:sincronizar')->assertSuccessful();
 
-        $tenant->run(fn () => $this->assertNotNull(Role::where('name', 'Tabelas')->first()));
+        $tenant->run(fn () => $this->assertNotNull(Role::where('name', 'Lançamentos')->first()));
     }
 
     public function test_comando_recusa_prefeitura_inexistente(): void

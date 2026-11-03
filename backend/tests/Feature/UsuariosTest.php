@@ -63,7 +63,7 @@ class UsuariosTest extends TestCase
             'cpf' => '529.982.247-25',
             'email' => 'maria@exemplo.com',
             'password' => 'segredo-forte',
-            'grupos' => ['Tabelas'],
+            'grupos' => ['Lançamentos'],
         ]);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
@@ -75,14 +75,14 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [$eu, $token] = $this->entrar('demo', ['Parâmetros']);
-        $this->entrar('outra', ['Tabelas']);
+        [$eu, $token] = $this->entrar('demo', ['cadastros']);
+        $this->entrar('outra', ['Lançamentos']);
 
         $this->withToken($token)->getJson('http://demo.localhost/api/usuarios')
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $eu->id)
-            ->assertJsonPath('data.0.grupos', ['Parâmetros'])
+            ->assertJsonPath('data.0.grupos', ['cadastros'])
             ->assertJsonPath('data.0.somente_grupos', false)
             ->assertJsonPath('data.0.ativo', true);
     }
@@ -91,7 +91,7 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = User::factory()->create(['cpf' => Cpf::gerar(), 'password' => 'senha']);
         $maria->tenants()->attach(['demo', 'outra']);
         $tokenDela = $maria->createToken('web:demo')->plainTextToken;
@@ -126,7 +126,7 @@ class UsuariosTest extends TestCase
     public function test_usuario_desativado_continua_na_lista_e_pode_ser_alterado(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = User::factory()->create(['cpf' => Cpf::gerar(), 'password' => 'senha']);
         $maria->tenants()->attach('demo', ['ativo' => false]);
 
@@ -143,7 +143,7 @@ class UsuariosTest extends TestCase
     public function test_nao_desativa_o_proprio_acesso(): void
     {
         $this->criarTenant('demo');
-        [$eu, $token] = $this->entrar('demo', ['Parâmetros']);
+        [$eu, $token] = $this->entrar('demo', ['cadastros']);
 
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$eu->id}/status", ['ativo' => false])
             ->assertUnprocessable()
@@ -153,7 +153,7 @@ class UsuariosTest extends TestCase
     public function test_sem_a_permissao_da_tela_nao_desativa(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Tabelas'], administra: false);
+        [, $token] = $this->entrar('demo', ['Lançamentos'], administra: false);
         [$outro] = $this->entrar('demo');
 
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$outro->id}/status", ['ativo' => false])
@@ -163,13 +163,13 @@ class UsuariosTest extends TestCase
     public function test_cadastra_usuario_novo_com_grupos(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
 
         $this->cadastrar($token)
             ->assertCreated()
             ->assertJsonPath('name', 'Maria Souza')
             ->assertJsonPath('cpf', '52998224725')
-            ->assertJsonPath('grupos', ['Tabelas'])
+            ->assertJsonPath('grupos', ['Lançamentos'])
             ->assertJsonPath('vinculado', false);
 
         $maria = User::where('cpf', '52998224725')->firstOrFail();
@@ -181,7 +181,7 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = User::factory()->create([
             'name' => 'Maria da outra',
             'cpf' => '52998224725',
@@ -205,7 +205,7 @@ class UsuariosTest extends TestCase
     public function test_recusa_cpf_invalido_grupo_inexistente_e_email_de_outro_usuario(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         User::factory()->create(['email' => 'ocupado@exemplo.com']);
 
         $this->cadastrar($token, ['cpf' => '111.111.111-11', 'grupos' => ['Fiscalização']])
@@ -222,7 +222,7 @@ class UsuariosTest extends TestCase
     public function test_altera_dados_e_grupos(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = $this->cadastrar($token)->json('id');
 
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$maria}", [
@@ -231,7 +231,7 @@ class UsuariosTest extends TestCase
             'password' => 'outra-senha-forte',
         ])->assertOk()->assertJsonPath('name', 'Maria Souza Lima')
             // Os grupos não mudam por aqui: são alterados em "Editar vínculos".
-            ->assertJsonPath('grupos', ['Tabelas']);
+            ->assertJsonPath('grupos', ['Lançamentos']);
 
         $atualizada = User::find($maria);
         $this->assertSame('maria.lima@exemplo.com', $atualizada->email);
@@ -241,12 +241,12 @@ class UsuariosTest extends TestCase
     public function test_altera_os_vinculos_do_usuario(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = $this->cadastrar($token)->json('id');
 
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$maria}/vinculos", [
-            'grupos' => ['Parâmetros', 'Lançamentos'],
-        ])->assertOk()->assertJsonPath('grupos', ['Lançamentos', 'Parâmetros']);
+            'grupos' => ['cadastros', 'Lançamentos'],
+        ])->assertOk()->assertJsonPath('grupos', ['Lançamentos', 'cadastros']);
         tenancy()->end();
         $this->app['auth']->forgetGuards();
 
@@ -265,7 +265,7 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = User::factory()->create(['name' => 'Maria', 'cpf' => Cpf::gerar(), 'password' => 'senha-antiga']);
         $maria->tenants()->attach(['demo', 'outra']);
 
@@ -279,8 +279,8 @@ class UsuariosTest extends TestCase
 
         // Os grupos, esses sim, podem ser alterados aqui.
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$maria->id}/vinculos", [
-            'grupos' => ['Tabelas'],
-        ])->assertOk()->assertJsonPath('grupos', ['Tabelas']);
+            'grupos' => ['Lançamentos'],
+        ])->assertOk()->assertJsonPath('grupos', ['Lançamentos']);
 
         $maria->refresh();
         $this->assertSame('Maria', $maria->name);
@@ -291,10 +291,10 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         $maria = User::factory()->create(['cpf' => Cpf::gerar(), 'password' => 'senha']);
         $maria->tenants()->attach(['demo', 'outra']);
-        Tenant::find('demo')->run(fn () => $maria->assignRole('Tabelas'));
+        Tenant::find('demo')->run(fn () => $maria->assignRole('Lançamentos'));
         $tokenDela = $maria->createToken('web:demo')->plainTextToken;
 
         $this->withToken($token)->deleteJson("http://demo.localhost/api/usuarios/{$maria->id}")
@@ -311,7 +311,7 @@ class UsuariosTest extends TestCase
     public function test_nao_remove_o_proprio_acesso(): void
     {
         $this->criarTenant('demo');
-        [$eu, $token] = $this->entrar('demo', ['Parâmetros']);
+        [$eu, $token] = $this->entrar('demo', ['cadastros']);
 
         $this->withToken($token)->deleteJson("http://demo.localhost/api/usuarios/{$eu->id}")
             ->assertUnprocessable()
@@ -322,7 +322,7 @@ class UsuariosTest extends TestCase
     {
         $this->criarTenant('demo');
         $this->criarTenant('outra');
-        [, $token] = $this->entrar('demo', ['Parâmetros']);
+        [, $token] = $this->entrar('demo', ['cadastros']);
         [$deOutra] = $this->entrar('outra');
 
         $this->withToken($token)->putJson("http://demo.localhost/api/usuarios/{$deOutra->id}", [
@@ -333,7 +333,7 @@ class UsuariosTest extends TestCase
     public function test_sem_a_permissao_da_tela_nao_acessa(): void
     {
         $this->criarTenant('demo');
-        [, $token] = $this->entrar('demo', ['Tabelas'], administra: false);
+        [, $token] = $this->entrar('demo', ['Lançamentos'], administra: false);
 
         $this->withToken($token)->getJson('http://demo.localhost/api/usuarios')->assertForbidden();
         tenancy()->end();
@@ -349,8 +349,8 @@ class UsuariosTest extends TestCase
         $this->withToken($token)->getJson('http://demo.localhost/api/grupos')
             ->assertOk()
             ->assertJsonPath('data.0.nome', 'Administrador')
+            ->assertJsonCount(3, 'data')
             ->assertJsonPath('data.1.nome', 'Lançamentos')
-            ->assertJsonPath('data.2.nome', 'Parâmetros')
-            ->assertJsonPath('data.3.nome', 'Tabelas');
+            ->assertJsonPath('data.2.nome', 'cadastros');
     }
 }

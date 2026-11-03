@@ -32,13 +32,13 @@ const usuario = {
   inatividade_minutos: 5,
 }
 
-/** Usuário comum, só com o grupo Parâmetros. */
-const usuarioDeParametros = {
+/** Usuário comum, só com o grupo de Cadastros. */
+const usuarioDeCadastros = {
   ...usuario,
   superadmin: false,
-  grupos: ['Parâmetros'],
+  grupos: ['cadastros'],
   permissoes: telas
-    .filter((tela) => tela.url.startsWith('/parametros/'))
+    .filter((tela) => tela.url.startsWith('/cadastros/'))
     .map((tela) => permissaoDaTela(tela.url)),
 }
 
@@ -324,16 +324,10 @@ describe('sistema', () => {
   it('mostra os módulos no menu lateral', async () => {
     await entrarLogado()
 
-    for (const modulo of [
-      'Tabelas',
-      'Lançamentos',
-      'Relatórios',
-      'Parâmetros da Empresa',
-      'Administração',
-    ]) {
+    for (const modulo of ['Cadastros', 'Lançamentos', 'Relatórios', 'Administração']) {
       expect(await screen.findByRole('button', { name: modulo })).toBeInTheDocument()
     }
-    for (const removido of ['Cadastros', 'Tributos', 'Arrecadação', 'Dívida ativa']) {
+    for (const removido of ['Tabelas', 'Parâmetros da Empresa', 'Tributos', 'Dívida ativa']) {
       expect(screen.queryByRole('button', { name: removido })).not.toBeInTheDocument()
     }
     expect(sidebar().getByRole('link', { name: 'Início' })).toHaveAttribute('data-active', 'true')
@@ -342,46 +336,53 @@ describe('sistema', () => {
   it('abre uma tela do menu com breadcrumb', async () => {
     await entrarLogado()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'Convênios' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cadastros' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Clientes' }))
 
-    expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Clientes' })).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).toHaveTextContent('Tabelas')
-    expect(trilha).toHaveTextContent('Convênios')
+    expect(trilha).toHaveTextContent('Cadastros')
+    expect(trilha).toHaveTextContent('Clientes')
   })
 
-  it('lista as telas de Parâmetros no submenu', async () => {
-    await entrarLogado()
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Parâmetros da Empresa' }))
-
-    expect(await screen.findByRole('link', { name: 'Receitas' })).toHaveAttribute(
-      'href',
-      '/parametros/receitas',
-    )
-    expect(screen.queryByRole('link', { name: 'Empresa' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Juros e Multa' })).toHaveAttribute(
-      'href',
-      '/parametros/juros-e-multa',
-    )
-    expect(screen.getByRole('link', { name: 'Base Legal' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Receitas' }).querySelector('svg')).not.toBeNull()
-  })
-
-  it('abre uma tela de submenu aninhado em Tabelas', async () => {
-    await entrarLogado()
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas' }))
-    expect(await screen.findByRole('link', { name: 'Receitas Tributárias' })).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Tomadores de Serviço' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'Tomador estrangeiro' }))
+  it('endereço fora do menu mostra a tela em construção', async () => {
+    await entrarLogado('/cadastros/fornecedores')
 
     expect(await screen.findByText('Esta tela ainda está em construção.')).toBeInTheDocument()
+  })
+
+  it('lista as telas de Cadastros no submenu', async () => {
+    await entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Cadastros' }))
+
+    expect(await screen.findByRole('link', { name: 'Clientes' })).toHaveAttribute(
+      'href',
+      '/cadastros/clientes',
+    )
+    expect(screen.getByRole('link', { name: 'Produtos' })).toHaveAttribute(
+      'href',
+      '/cadastros/produtos',
+    )
+    expect(screen.getByRole('link', { name: 'Vendedores' })).toHaveAttribute(
+      'href',
+      '/cadastros/vendedores',
+    )
+    expect(screen.getByRole('link', { name: 'Clientes' }).querySelector('svg')).not.toBeNull()
+  })
+
+  it('abre uma tela de submenu aninhado em Tabelas Comuns', async () => {
+    await entrarLogado()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Administração' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Tabelas Comuns' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Unidades' }))
+
+    expect(await screen.findByRole('heading', { name: 'Unidades' })).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).toHaveTextContent('Tabelas')
-    expect(trilha).toHaveTextContent('Tomadores de Serviço')
-    expect(trilha).toHaveTextContent('Tomador estrangeiro')
+    expect(trilha).toHaveTextContent('Administração')
+    expect(trilha).toHaveTextContent('Tabelas Comuns')
+    expect(trilha).toHaveTextContent('Unidades')
   })
 
   it('Tabelas Comuns fica em Administração, abaixo de Empresas', async () => {
@@ -395,13 +396,10 @@ describe('sistema', () => {
     expect(itens.indexOf('Tabelas Comuns')).toBe(itens.indexOf('Empresas') + 1)
 
     await userEvent.click(screen.getByRole('button', { name: 'Tabelas Comuns' }))
-    await userEvent.click(await screen.findByRole('link', { name: 'Tipos de DAM' }))
+    await userEvent.click(await screen.findByRole('link', { name: 'Cidades' }))
 
-    expect(await screen.findByRole('heading', { name: 'Tipos de DAM' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Cidades' })).toBeInTheDocument()
     const trilha = screen.getByRole('navigation', { name: 'breadcrumb' })
-    expect(trilha).toHaveTextContent('Administração')
-    expect(trilha).toHaveTextContent('Tabelas Comuns')
-    expect(trilha).toHaveTextContent('Tipos de DAM')
     expect(within(trilha).getByRole('link', { name: 'Tabelas Comuns' })).toHaveAttribute(
       'href',
       // O submenu leva à primeira tela dele.
@@ -409,40 +407,25 @@ describe('sistema', () => {
     )
   })
 
-  it('lista as telas de Lançamentos com os submenus Imóveis e DAM', async () => {
+  it('lista a tela de Vendas em Lançamentos', async () => {
     await entrarLogado()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Lançamentos' }))
-    expect(await screen.findByRole('link', { name: 'Documentos Avulsos' })).toHaveAttribute(
-      'href',
-      '/lancamentos/documentos-avulsos',
-    )
-    await userEvent.click(screen.getByRole('button', { name: 'DAM' }))
 
-    expect(await screen.findByRole('link', { name: 'Arquivo Retorno' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Vendas' })).toHaveAttribute(
       'href',
-      '/lancamentos/dam/arquivo-retorno',
+      '/lancamentos/vendas',
     )
-    expect(screen.getByRole('button', { name: 'Imóveis' })).toBeInTheDocument()
   })
 
-  it('lista as telas de Relatórios com o submenu Notas Fiscais', async () => {
+  it('lista o relatório de vendas em Relatórios', async () => {
     await entrarLogado()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Relatórios' }))
-    expect(await screen.findByRole('link', { name: 'Receitas Apuradas' })).toHaveAttribute(
-      'href',
-      '/relatorios/receitas-apuradas',
-    )
-    await userEvent.click(screen.getByRole('button', { name: 'Notas Fiscais' }))
 
-    expect(await screen.findByRole('link', { name: 'NFs Canceladas' })).toHaveAttribute(
-      'href',
-      '/relatorios/notas-fiscais/canceladas',
-    )
-    for (const submenu of ['Alvarás', 'Contribuintes']) {
-      expect(screen.getByRole('button', { name: submenu })).toBeInTheDocument()
-    }
+    expect(
+      await screen.findByRole('link', { name: 'Relatório de Vendas no Período' }),
+    ).toHaveAttribute('href', '/relatorios/vendas_periodo')
   })
 
   it('ajusta a largura do menu pela borda e lembra a escolha', async () => {
@@ -490,18 +473,18 @@ describe('grupos de acesso', () => {
   }
 
   it('o menu mostra só os módulos dos grupos do usuário', async () => {
-    await entrarComo(usuarioDeParametros)
+    await entrarComo(usuarioDeCadastros)
 
-    expect(await screen.findByRole('button', { name: 'Parâmetros da Empresa' })).toBeInTheDocument()
-    for (const modulo of ['Tabelas', 'Lançamentos', 'Relatórios', 'Administração']) {
+    expect(await screen.findByRole('button', { name: 'Cadastros' })).toBeInTheDocument()
+    for (const modulo of ['Lançamentos', 'Relatórios', 'Administração']) {
       expect(sidebar().queryByRole('button', { name: modulo })).not.toBeInTheDocument()
     }
-    expect(screen.getByRole('link', { name: /^Parâmetros da Empresa/ })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /^Tabelas/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^Cadastros/ })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Lançamentos/ })).not.toBeInTheDocument()
   })
 
   it('tela sem permissão mostra "Sem acesso"', async () => {
-    await entrarComo(usuarioDeParametros, '/tabelas/ufm')
+    await entrarComo(usuarioDeCadastros, '/lancamentos/vendas')
 
     expect(await screen.findByText('Sem acesso')).toBeInTheDocument()
     expect(screen.queryByText('Esta tela ainda está em construção.')).not.toBeInTheDocument()
@@ -648,10 +631,16 @@ describe('empresas', () => {
 })
 
 const gruposMock = [
-  { id: 1, nome: 'Lançamentos', telas: ['lancamentos.iptu'], usuarios: 0, sistema: false },
-  { id: 2, nome: 'Parâmetros', telas: ['parametros.receitas'], usuarios: 1, sistema: false },
-  { id: 3, nome: 'Tabelas', telas: ['tabelas.ufm', 'tabelas.inss'], usuarios: 2, sistema: false },
-  { id: 4, nome: 'Administrador', telas: ['tabelas.ufm'], usuarios: 1, sistema: true },
+  { id: 1, nome: 'Lançamentos', telas: ['lancamentos.vendas'], usuarios: 0, sistema: false },
+  { id: 2, nome: 'cadastros', telas: ['cadastros.clientes'], usuarios: 1, sistema: false },
+  {
+    id: 3,
+    nome: 'Vendas e relatórios',
+    telas: ['lancamentos.vendas', 'relatorios.vendas_periodo'],
+    usuarios: 2,
+    sistema: false,
+  },
+  { id: 4, nome: 'Administrador', telas: ['cadastros.clientes'], usuarios: 1, sistema: true },
 ]
 
 describe('usuarios', () => {
@@ -675,7 +664,7 @@ describe('usuarios', () => {
       foto: null,
       superadmin: false,
       ativo: true,
-      grupos: ['Tabelas'],
+      grupos: ['Vendas e relatórios'],
       somente_grupos: false,
     },
   ]
@@ -697,7 +686,7 @@ describe('usuarios', () => {
     const linha = (await screen.findByText('Maria Souza')).closest('tr')!
     expect(linha).toHaveTextContent('111.444.777-35')
     expect(linha).toHaveTextContent('maria@exemplo.com')
-    expect(linha).toHaveTextContent('Tabelas')
+    expect(linha).toHaveTextContent('Vendas e relatórios')
     expect(
       within(screen.getByRole('table')).getByText('Fiscal Teste').closest('tr'),
     ).toHaveTextContent('Superadmin')
@@ -805,7 +794,7 @@ describe('usuarios', () => {
     await userEvent.type(within(dialogo).getByLabelText('CPF'), '52998224725')
     await userEvent.type(within(dialogo).getByLabelText('E-mail'), 'maria@exemplo.com')
     await userEvent.type(within(dialogo).getByLabelText('Senha'), 'segredo-forte')
-    await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Tabelas' }))
+    await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Vendas e relatórios' }))
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
 
     await esperarChamada(post, '/usuarios', {
@@ -813,7 +802,7 @@ describe('usuarios', () => {
       email: 'maria@exemplo.com',
       password: 'segredo-forte',
       cpf: '52998224725',
-      grupos: ['Tabelas'],
+      grupos: ['Vendas e relatórios'],
     })
   })
 
@@ -842,13 +831,13 @@ describe('usuarios', () => {
       await screen.findByRole('button', { name: 'Editar vínculos de Maria Souza' }),
     )
     const dialogo = await screen.findByRole('dialog')
-    expect(within(dialogo).getByRole('checkbox', { name: /Tabelas/ })).toBeChecked()
+    expect(within(dialogo).getByRole('checkbox', { name: /Vendas e relatórios/ })).toBeChecked()
 
-    await userEvent.click(within(dialogo).getByRole('checkbox', { name: /Parâmetros/ }))
-    await userEvent.click(within(dialogo).getByRole('checkbox', { name: /Tabelas/ }))
+    await userEvent.click(within(dialogo).getByRole('checkbox', { name: /cadastros/ }))
+    await userEvent.click(within(dialogo).getByRole('checkbox', { name: /Vendas e relatórios/ }))
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
-    await esperarChamada(put, '/usuarios/2/vinculos', { grupos: ['Parâmetros'] })
+    await esperarChamada(put, '/usuarios/2/vinculos', { grupos: ['cadastros'] })
   })
 
   it('desativa o acesso depois de confirmar e reativa direto', async () => {
@@ -916,7 +905,7 @@ describe('grupos de acesso', () => {
   it('lista os grupos com a quantidade de telas e de usuários', async () => {
     await abrirGrupos()
 
-    const linha = (await screen.findByRole('cell', { name: 'Tabelas' })).closest('tr')!
+    const linha = (await screen.findByRole('cell', { name: 'Vendas e relatórios' })).closest('tr')!
     // 2 telas e 2 usuários
     expect(within(linha).getAllByText('2')).toHaveLength(2)
     expect(screen.getByRole('cell', { name: 'Lançamentos' }).closest('tr')).toHaveTextContent('1')
@@ -925,21 +914,21 @@ describe('grupos de acesso', () => {
   it('cadastra um grupo com telas de módulos diferentes', async () => {
     await abrirGrupos()
     const post = vi.spyOn(api, 'post').mockResolvedValue({
-      data: { id: 4, nome: 'Fiscalização', telas: ['parametros.alvara'], usuarios: 0 },
+      data: { id: 5, nome: 'Balcão', telas: ['cadastros.clientes'], usuarios: 0 },
     })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Novo grupo' }))
     const dialogo = await screen.findByRole('dialog')
-    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Fiscalização')
-    // "Alvará" e "Habite-se" existem em vários módulos: escolhe as de Parâmetros.
-    const parametros = within(within(dialogo).getByRole('group', { name: 'Parâmetros da Empresa' }))
-    await userEvent.click(parametros.getByRole('checkbox', { name: 'Alvará' }))
-    await userEvent.click(parametros.getByRole('checkbox', { name: 'Habite-se' }))
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Balcão')
+    const cadastros = within(within(dialogo).getByRole('group', { name: 'Cadastros' }))
+    const lancamentos = within(within(dialogo).getByRole('group', { name: 'Lançamentos' }))
+    await userEvent.click(cadastros.getByRole('checkbox', { name: 'Clientes' }))
+    await userEvent.click(lancamentos.getByRole('checkbox', { name: 'Vendas' }))
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cadastrar' }))
 
     await esperarChamada(post, '/grupos', {
-      nome: 'Fiscalização',
-      telas: ['parametros.alvara', 'parametros.habite-se'],
+      nome: 'Balcão',
+      telas: ['cadastros.clientes', 'lancamentos.vendas'],
     })
   })
 
@@ -972,25 +961,29 @@ describe('grupos de acesso', () => {
     expect(administracao.getByRole('checkbox', { name: 'Usuários' })).toBeInTheDocument()
     expect(administracao.queryByRole('checkbox', { name: 'Empresas' })).not.toBeInTheDocument()
     expect(within(dialogo).queryByRole('checkbox', { name: 'Cidades' })).not.toBeInTheDocument()
-    expect(
-      within(dialogo).queryByRole('checkbox', { name: 'Tipos de DAM' }),
-    ).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('checkbox', { name: 'Unidades' })).not.toBeInTheDocument()
   })
 
   it('abre a alteração com as telas do grupo marcadas', async () => {
     await abrirGrupos()
     const put = vi.spyOn(api, 'put').mockResolvedValue({ data: gruposMock[2] })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Alterar Tabelas' }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Alterar Vendas e relatórios' }),
+    )
     const dialogo = await screen.findByRole('dialog')
-    const tabelas = within(within(dialogo).getByRole('group', { name: 'Tabelas' }))
-    expect(tabelas.getByRole('checkbox', { name: 'UFM' })).toBeChecked()
-    expect(tabelas.getByRole('checkbox', { name: 'Convênios' })).not.toBeChecked()
+    const lancamentos = within(within(dialogo).getByRole('group', { name: 'Lançamentos' }))
+    const cadastros = within(within(dialogo).getByRole('group', { name: 'Cadastros' }))
+    expect(lancamentos.getByRole('checkbox', { name: 'Vendas' })).toBeChecked()
+    expect(cadastros.getByRole('checkbox', { name: 'Clientes' })).not.toBeChecked()
 
-    await userEvent.click(tabelas.getByRole('checkbox', { name: 'UFM' }))
+    await userEvent.click(lancamentos.getByRole('checkbox', { name: 'Vendas' }))
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
-    await esperarChamada(put, '/grupos/3', { nome: 'Tabelas', telas: ['tabelas.inss'] })
+    await esperarChamada(put, '/grupos/3', {
+      nome: 'Vendas e relatórios',
+      telas: ['relatorios.vendas_periodo'],
+    })
   })
 
   it('o grupo do sistema não pode ser alterado nem excluído', async () => {
